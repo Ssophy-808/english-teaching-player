@@ -174,31 +174,23 @@
     const cards = unit.sentenceCards || [];
     if (!cards.length) return dialogueChoiceSteps(unit, totalDuration, sentences);
 
-    const questions = cards.flatMap((card) => {
-      const choices = [...new Set(card.sentences.map((sentence) => sentence.word))];
-      return card.sentences.map((sentence) => ({
-        prompt: `${sentence.before} ____${sentence.after}`,
-        answer: sentence.word,
-        choices,
-        image: card.image || "",
-        sprite: card.sprite,
-        word: card.word
-      }));
-    });
+    const sentencePages = cards.flatMap((card) => card.sentences.map((sentence) => ({
+      ...card,
+      sentences: [sentence]
+    })));
 
-    return questions.map((question, index) => step(
-      `read-and-choose-${index + 1}`,
-      "quiz",
-      "Read and Choose",
-      distributeDuration(totalDuration, questions.length, index),
-      "Look at the picture, read the sentence, and choose the correct word.",
+    return sentencePages.map((sentenceCard, index) => step(
+      `sentence-practice-${index + 1}`,
+      "grammar",
+      "Sentence Practice",
+      distributeDuration(totalDuration, sentencePages.length, index),
+      "Look at the picture and read the sentence aloud.",
       {
-        activity: "multiple-choice",
-        phaseTitle: "Read and Choose",
-        vocabulary: vocabularyItems(unit.vocabulary),
-        question,
+        activity: "sentence-card",
+        phaseTitle: "Sentence Practice",
+        sentenceCard,
         questionIndex: index + 1,
-        questionTotal: questions.length
+        questionTotal: sentencePages.length
       }
     ));
   }

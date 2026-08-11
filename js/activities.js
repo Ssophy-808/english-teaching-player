@@ -130,16 +130,19 @@
     const card = step.sentenceCard;
     const picture = renderPictureAsset(card, "sentence-card-image", "sentence-card-visual");
     const sentences = card.sentences.map((sentence) => `
-      <p class="sentence-card-line">
-        ${escapeHtml(sentence.before)} <strong>${escapeHtml(sentence.word)}</strong>${escapeHtml(sentence.after)}
-      </p>
+      <div class="sentence-card-text">
+        <p class="sentence-card-line">
+          ${escapeHtml(sentence.before)} <strong>${escapeHtml(sentence.word)}</strong>${escapeHtml(sentence.after)}
+        </p>
+        ${sentence.translation ? `<p class="sentence-card-translation">${escapeHtml(sentence.translation)}</p>` : ""}
+      </div>
     `).join("");
 
     return `
       <article class="step-card sentence-pattern-card" data-step-type="grammar">
         <div class="quiz-topline">
           <div class="step-meta">
-            <span class="phase-badge">Sentence Pattern · ${escapeHtml(step.questionIndex)} / ${escapeHtml(step.questionTotal)}</span>
+            <span class="phase-badge">Sentence Practice · ${escapeHtml(step.questionIndex)} / ${escapeHtml(step.questionTotal)}</span>
             ${duration}
           </div>
           <span class="quiz-mini-progress" aria-hidden="true"><i style="width:${((step.questionIndex || 1) / (step.questionTotal || 1)) * 100}%"></i></span>

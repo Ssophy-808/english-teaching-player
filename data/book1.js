@@ -23,12 +23,12 @@
         { word: "teacher", image: "assets/images/unit1-teacher.png" }
       ],
       sentenceCards: [
-        { label: "① boy / girl", word: "boy", image: "assets/images/unit1-boy.png", sentences: [{ before: "I am a", word: "boy", after: "." }, { before: "I am not a", word: "girl", after: "." }] },
-        { label: "② girl / boy", word: "girl", image: "assets/images/unit1-girl.png", sentences: [{ before: "You are a", word: "girl", after: "." }, { before: "You are not a", word: "boy", after: "." }] },
-        { label: "③ student / teacher", word: "student", image: "assets/images/unit1-student.png", sentences: [{ before: "I am a", word: "student", after: "." }, { before: "I am not a", word: "teacher", after: "." }] },
-        { label: "④ teacher / student", word: "teacher", image: "assets/images/unit1-teacher.png", sentences: [{ before: "You are a", word: "teacher", after: "." }, { before: "You are not a", word: "student", after: "." }] },
-        { label: "⑤ man / woman", word: "man", image: "assets/images/unit1-man.png", sentences: [{ before: "I am a", word: "man", after: "." }, { before: "I am not a", word: "woman", after: "." }] },
-        { label: "⑥ woman / man", word: "woman", image: "assets/images/unit1-woman.png", sentences: [{ before: "You are a", word: "woman", after: "." }, { before: "You are not a", word: "man", after: "." }] }
+        { label: "① boy / girl", word: "boy", image: "assets/images/unit1-boy.png", sentences: [{ before: "I am a", word: "boy", after: ".", translation: "我是一個男孩。" }, { before: "I am not a", word: "girl", after: ".", translation: "我不是女孩。" }] },
+        { label: "② girl / boy", word: "girl", image: "assets/images/unit1-girl.png", sentences: [{ before: "You are a", word: "girl", after: ".", translation: "你是一個女孩。" }, { before: "You are not a", word: "boy", after: ".", translation: "你不是男孩。" }] },
+        { label: "③ student / teacher", word: "student", image: "assets/images/unit1-student.png", sentences: [{ before: "I am a", word: "student", after: ".", translation: "我是學生。" }, { before: "I am not a", word: "teacher", after: ".", translation: "我不是老師。" }] },
+        { label: "④ teacher / student", word: "teacher", image: "assets/images/unit1-teacher.png", sentences: [{ before: "You are a", word: "teacher", after: ".", translation: "你是老師。" }, { before: "You are not a", word: "student", after: ".", translation: "你不是學生。" }] },
+        { label: "⑤ man / woman", word: "man", image: "assets/images/unit1-man.png", sentences: [{ before: "I am a", word: "man", after: ".", translation: "我是男人。" }, { before: "I am not a", word: "woman", after: ".", translation: "我不是女人。" }] },
+        { label: "⑥ woman / man", word: "woman", image: "assets/images/unit1-woman.png", sentences: [{ before: "You are a", word: "woman", after: ".", translation: "你是女人。" }, { before: "You are not a", word: "man", after: ".", translation: "你不是男人。" }] }
       ],
       quiz: [{ prompt: "You are a ____.", answer: "girl", choices: ["boy", "girl", "teacher"], visual: "👧", image: "" }],
       materials: {

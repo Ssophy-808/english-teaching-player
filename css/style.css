@@ -147,6 +147,10 @@ button:focus-visible { outline: 4px solid rgba(43, 89, 195, 0.28); outline-offse
 .sentence-card-line:nth-child(2) { border-left-color: var(--coral); }
 .sentence-card-line strong { color: var(--blue); font-weight: 950; }
 .sentence-card-translation { margin: 22px 0 0; color: #53657c; font-size: clamp(1.5rem, 2.7vw, 2.4rem); font-weight: 700; letter-spacing: 0.04em; }
+.activity-image-card { display: grid; align-content: center; justify-items: center; gap: 18px; }
+.activity-image-card h2 { font-size: clamp(2.6rem, 5.5vw, 5rem); }
+.activity-main-image { display: block; max-width: min(1050px, 100%); max-height: 58vh; border: 3px solid #d8e8fa; border-radius: 28px; object-fit: contain; background: white; box-shadow: 0 18px 42px rgba(31, 70, 130, 0.14); }
+.activity-image-caption { margin: 0; color: #41516a; font-size: clamp(1.3rem, 2.4vw, 2rem); font-weight: 750; }
 .wordwall-card { display: grid; width: min(1280px, 100%); min-height: 100%; align-content: stretch; gap: 18px; }
 .wordwall-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
 .wordwall-toolbar .step-meta { justify-content: flex-start; margin: 0; }

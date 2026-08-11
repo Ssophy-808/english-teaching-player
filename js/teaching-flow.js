@@ -216,24 +216,14 @@
 
     if (day === 1) {
       const warmUpInstruction = unitNumber === 1
-        ? `Activity: Throw and Catch
-
-1. Prepare a soft ball.
-2. Have the students sit or stand in a circle.
-3. Throw the ball to one student.
-4. The student catches the ball and says, “I am [name].”
-5. The student throws the ball to the next person.
-6. Continue until every student has introduced themselves.`
+        ? `1. Stand in a circle and throw a soft ball.
+2. Catch the ball and say: “I am [name].”
+3. Throw it to the next student.`
         : b1WarmUp(day);
       const letsTalkInstruction = unitNumber === 1
-        ? `Activity: How Are You?
-
-1. Prepare a class name sheet and give one copy to each student.
-2. Students walk around the classroom and find a classmate.
-3. Student A says: “I am [name]. How are you?”
-4. Student B answers: “I am [name]. I am fine, thank you.”
-5. Circle the classmate’s name, then find a new partner.
-6. Set a time limit. When time is up, ask students how many people they talked to.`
+        ? `1. Walk around and find a classmate.
+2. Ask: “I am [name]. How are you?” Answer: “I am fine, thank you.”
+3. Circle the classmate’s name and find a new partner.`
         : `Play the dialogue once without stopping. Ask comprehension questions, then replay and repeat sentence by sentence.\n\n${sentences}`;
       const answerQuicklySteps = unitNumber === 1
         ? [step(
@@ -242,11 +232,8 @@
           "Answer Quickly",
           5,
           `1. Divide the class into two teams.
-2. Pick one student from each team to come to the front.
-3. Show a vocabulary picture. Students say the word as quickly as possible.
-4. The first correct answer earns one point for the team.
-5. Change players so every student has a chance to participate.
-6. Review all six words, calculate the points, and celebrate the winning team.`,
+2. Show a picture. The first student to say the word wins a point.
+3. Change players and continue with all six words.`,
           { activity: "review", phaseTitle: "Let’s Learn", vocabulary: vocabularyItems(unit.vocabulary) }
         )]
         : [];
@@ -256,11 +243,9 @@
           "game",
           "Match!",
           5,
-          `1. Prepare a 4 × 3 grid. Write each word twice: boy, girl, man, woman, student, teacher.
-2. Draw a blank coordinate grid on the board.
-3. Divide the class into two teams. Each team chooses two coordinates.
-4. Reveal both words. A successful match earns one point.
-5. Continue until all pairs are found. The team with the most points wins.`,
+          `1. Put each vocabulary word twice in a 4 × 3 grid.
+2. Teams take turns choosing two coordinates.
+3. A matching pair wins one point.`,
           { activity: "matching", phaseTitle: "Review Vocabulary", vocabulary: vocabularyItems(unit.vocabulary) }
         )]
         : [];
@@ -294,13 +279,12 @@
           "warmup",
           "Dialogue Puzzles",
           10,
-          `1. Make two copies of the dialogue and cut each sentence into word cards.
-Cards: Hello, / I am / Ludi. / I am / a boy.
-How / are / you? / I am / fine. / Thank / you.
-2. Put one complete set of cards into a box for each team.
-3. Divide the class into two teams. One student from each team draws a card.
-4. The student shows the card to the team. The team reads the complete sentence containing that word.
-5. Continue until every card has been drawn and every sentence has been read.`,
+          `1. Cut two sets of dialogue word cards and put each set in a box.
+2. One student draws a card. The team says the complete sentence.
+3. Continue until all cards are used.
+
+Hello, / I am / Ludi. / I am / a boy.
+How / are / you? / I am / fine. / Thank / you.`,
           { activity: "review", phaseTitle: "Warm Up" }
         )
         : step("warm-up", "warmup", "Warm Up", 10, b1WarmUp(day), { activity: "review" });
@@ -310,12 +294,14 @@ How / are / you? / I am / fine. / Thank / you.
           "game",
           "Sticky Ball",
           10,
-          `1. Draw a large circle on the board and divide it into six equal parts.
-2. Write one Unit 1 word in each part and prepare a sticky ball or sticky dart.
-3. Students take turns throwing the ball at the circle.
-4. The student says the word they hit and uses it in a sentence.
-5. Example: “Teacher. I am not a teacher.” The class responds: “You are not a teacher.”`,
-          { activity: "practice", phaseTitle: "Let’s Practice", vocabulary: vocabularyItems(unit.vocabulary) }
+          "",
+          {
+            activity: "practice",
+            phaseTitle: "Let’s Practice",
+            vocabulary: vocabularyItems(unit.vocabulary),
+            activityImage: "assets/images/sticky-ball-activity.png",
+            imageAlt: "A sticky ball board divided into six vocabulary sections"
+          }
         )]
         : [];
       const secondPatternReview = unitNumber === 1
@@ -324,11 +310,9 @@ How / are / you? / I am / fine. / Thank / you.
           "game",
           "Matching Game",
           15,
-          `1. Draw a 4 × 4 grid containing eight pairs of symbols.
-2. Divide the class into two teams.
-3. Ask one student from each team a target sentence question.
-4. After answering correctly, the student chooses two boxes.
-5. A matching pair earns one point. Continue until all pairs are found.`,
+          `1. Draw a 4 × 4 grid with eight pairs of symbols.
+2. Answer a sentence question, then choose two boxes.
+3. A matching pair wins one point.`,
           { activity: "matching", phaseTitle: "Review Sentence Patterns", mainSentences: unit.mainSentences }
         )
         : step("review-patterns-2", "grammar", "Grammar Practice", 15, "Review the patterns with a team activity and complete the Live Grammar practice.", { activity: "matching", mainSentences: unit.mainSentences });
@@ -338,11 +322,9 @@ How / are / you? / I am / fine. / Thank / you.
           "game",
           "Word-Step Game",
           15,
-          `1. Put the boy, girl, man, and woman flashcards on the floor in lyric order.
-2. Mark alternating left-foot and right-foot steps beside the cards, ending with “Hooray!”
-3. Students line up. Play the chant while they chant and step on the matching cards.
-4. Students sit down after completing the steps correctly, but continue chanting.
-5. A student who stops chanting goes to the back of the line and tries again.`,
+          `1. Put boy, girl, man, and woman cards on the floor.
+2. Play the chant. Students chant and step on each matching card.
+3. Finish with “Hooray!” and keep chanting after sitting down.`,
           { activity: "song", phaseTitle: "Let’s Chant" }
         )
         : step("music", "game", musicTitle, 15, `Demonstrate the ${musicTitle === "Let’s Sing" ? "song" : "chant"}, practice line by line, then perform together.`, { activity: "song" });

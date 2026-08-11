@@ -158,6 +158,20 @@
     `;
   }
 
+  function renderActivityImageStep(step, duration) {
+    return `
+      <article class="step-card activity-image-card" data-step-type="${escapeHtml(step.type)}">
+        <div class="step-meta">
+          <span class="phase-badge">${escapeHtml(step.phaseTitle || getTypeLabel(step.type))}</span>
+          ${duration}
+        </div>
+        <h2>${escapeHtml(step.title)}</h2>
+        <img class="activity-main-image" src="${escapeHtml(step.activityImage)}" alt="${escapeHtml(step.imageAlt || step.title)}">
+        ${step.instruction ? `<p class="activity-image-caption">${escapeHtml(step.instruction)}</p>` : ""}
+      </article>
+    `;
+  }
+
   function parseWordwallUrl(value) {
     const input = String(value || "").trim();
     const iframeSource = input.match(/src\s*=\s*["']([^"']+)["']/i)?.[1];
@@ -237,6 +251,10 @@
 
     if (step.dialogueChoice) {
       return renderDialogueChoiceStep(step, duration);
+    }
+
+    if (step.activityImage) {
+      return renderActivityImageStep(step, duration);
     }
 
     if (step.sentenceCard) {

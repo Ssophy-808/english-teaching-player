@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#2b59c3">
+    <meta name="description" content="A simple, projection-friendly lesson player for English teachers.">
+    <title>English Teaching Player</title>
+    <link rel="stylesheet" href="css/style.css">
+  </head>
+  <body>
+    <noscript>請啟用 JavaScript 才能使用教材播放器。</noscript>
+
+    <main id="home-view" class="view" aria-labelledby="home-title">
+      <header class="home-hero">
+        <div>
+          <p class="eyebrow">CLASSROOM TOOL</p>
+          <h1 id="home-title">English Teaching Player</h1>
+          <p class="hero-copy">Choose a lesson, then teach one clear step at a time.</p>
+        </div>
+        <button id="continue-button" class="button button-primary continue-button" type="button" hidden>
+          <span>Continue Lesson</span>
+          <small id="continue-label"></small>
+        </button>
+      </header>
+
+      <section class="library" aria-labelledby="library-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">LESSON LIBRARY</p>
+            <h2 id="library-title">Choose a book</h2>
+          </div>
+          <p id="library-path" class="library-path" aria-live="polite"></p>
+        </div>
+        <div id="library-grid" class="library-grid"></div>
+      </section>
+    </main>
+
+    <main id="player-view" class="player-view" hidden aria-label="Lesson player">
+      <header class="player-header">
+        <button id="home-button" class="icon-button" type="button" aria-label="Back to home" title="Back to home">⌂</button>
+        <div class="lesson-identity">
+          <p id="player-context"></p>
+          <h1 id="lesson-name"></h1>
+        </div>
+        <div class="player-tools">
+          <span id="step-count" class="step-count" aria-live="polite"></span>
+          <button id="fullscreen-button" class="icon-button fullscreen-button" type="button" aria-label="Enter fullscreen" title="Fullscreen">⛶</button>
+        </div>
+      </header>
+
+      <div class="progress-track" aria-hidden="true">
+        <div id="progress-bar" class="progress-bar"></div>
+      </div>
+
+      <section id="step-stage" class="step-stage" tabindex="-1" aria-live="polite"></section>
+
+      <footer class="player-controls">
+        <button id="previous-button" class="nav-button nav-button-secondary" type="button">
+          <span class="nav-arrow">←</span>
+          <span><small>Previous</small><strong>上一頁</strong></span>
+        </button>
+        <p class="keyboard-hint">Use <kbd>←</kbd> <kbd>→</kbd> to navigate</p>
+        <button id="next-button" class="nav-button nav-button-primary" type="button">
+          <span><small>Next</small><strong>下一頁</strong></span>
+          <span class="nav-arrow">→</span>
+        </button>
+      </footer>
+    </main>
+
+    <script src="data/book1.js?v=6" defer></script>
+    <script src="data/book2-unit1.js" defer></script>
+    <script src="js/teaching-flow.js" defer></script>
+    <script src="js/activities.js?v=4" defer></script>
+    <script src="js/player.js" defer></script>
+    <script src="js/app.js" defer></script>
+  </body>
+</html>

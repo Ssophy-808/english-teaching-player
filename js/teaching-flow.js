@@ -235,6 +235,21 @@
 5. Circle the classmate’s name, then find a new partner.
 6. Set a time limit. When time is up, ask students how many people they talked to.`
         : `Play the dialogue once without stopping. Ask comprehension questions, then replay and repeat sentence by sentence.\n\n${sentences}`;
+      const answerQuicklySteps = unitNumber === 1
+        ? [step(
+          "answer-quickly",
+          "game",
+          "Answer Quickly",
+          5,
+          `1. Divide the class into two teams.
+2. Pick one student from each team to come to the front.
+3. Show a vocabulary picture. Students say the word as quickly as possible.
+4. The first correct answer earns one point for the team.
+5. Change players so every student has a chance to participate.
+6. Review all six words, calculate the points, and celebrate the winning team.`,
+          { activity: "review", phaseTitle: "Let’s Learn", vocabulary: vocabularyItems(unit.vocabulary) }
+        )]
+        : [];
       const afterVocabulary = unitNumber === 1
         ? step("live-grammar", "grammar", "Live Grammar", 10, "Introduce words and sentences. Focus on a capital letter, spaces, and a period.", { activity: "sentence-pattern" })
         : step("reader", "presentation", "Reader", 10, "Play the reader animation. Pause page by page, read together, and let students try reading independently.", { activity: "reader" });
@@ -242,7 +257,8 @@
       return [
         step("warm-up", "warmup", unitNumber === 1 ? "Throw and Catch" : "Warm Up", 10, warmUpInstruction, { activity: "review" }),
         step("lets-talk", "presentation", unitNumber === 1 ? "How Are You?" : "Let’s Talk", 15, letsTalkInstruction, { activity: "dialogue", phaseTitle: "Let’s Talk", mainSentences: unit.mainSentences }),
-        ...vocabularySteps(unit, 15),
+        ...vocabularySteps(unit, unitNumber === 1 ? 10 : 15),
+        ...answerQuicklySteps,
         ...vocabularyPracticeSteps(unit, 15),
         afterVocabulary,
         step("break", "break", "Break Time", 10, "Take a ten-minute break.", { activity: "break" }),

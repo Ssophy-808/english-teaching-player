@@ -273,10 +273,26 @@
     if (day === 2) {
       const musicTitle = B1_SONG_UNITS.has(unitNumber) ? "Let's Sing" : "Let's Chant";
       const hasReadAndChoose = Boolean(unit.sentenceCards?.length);
+      const reviewVocabularyMatchSteps = unitNumber === 1
+        ? [step(
+          "review-vocabulary-match",
+          "game",
+          "Match!",
+          10,
+          `1. Prepare a 4 × 3 grid. Write each word twice: boy, girl, man, woman, student, teacher.
+2. Draw a matching blank grid on the board and label the columns A–C and rows 1–4.
+3. Divide the class into two teams.
+4. A team chooses two coordinates, such as A1 and C2. Reveal both words.
+5. If the words match, the team earns one point. If not, cover them again.
+6. Teams take turns until all pairs are found. The team with the most points wins.`,
+          { activity: "matching", phaseTitle: "Review Vocabulary", vocabulary: vocabularyItems(unit.vocabulary) }
+        )]
+        : [];
       return [
         step("warm-up", "warmup", "Warm Up", 10, b1WarmUp(day), { activity: "review" }),
+        ...reviewVocabularyMatchSteps,
         ...(hasReadAndChoose ? [] : quizSteps(unit, 10)),
-        ...sentencePatternSteps(unit, hasReadAndChoose ? 25 : 15, sentences),
+        ...sentencePatternSteps(unit, hasReadAndChoose && unitNumber !== 1 ? 25 : 15, sentences),
         wordwallStep(unit, "book-1", "day-2", 10),
         step("review-patterns-1", "grammar", "Review Sentence Patterns", 15, `Replay and repeat the target patterns.\n\n${sentences}`, { activity: "sentence-pattern", mainSentences: unit.mainSentences }),
         step("break", "break", "Break Time", 10, "Take a ten-minute break.", { activity: "break" }),

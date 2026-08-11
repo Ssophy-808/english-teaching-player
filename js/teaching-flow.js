@@ -187,7 +187,7 @@
       "Look at the picture and read the sentence aloud.",
       {
         activity: "sentence-card",
-        phaseTitle: "Sentence Practice",
+        phaseTitle: "Let’s Practice",
         sentenceCard,
         questionIndex: index + 1,
         questionTotal: sentencePages.length
@@ -250,6 +250,20 @@
           { activity: "review", phaseTitle: "Let’s Learn", vocabulary: vocabularyItems(unit.vocabulary) }
         )]
         : [];
+      const reviewVocabularyMatchSteps = unitNumber === 1
+        ? [step(
+          "review-vocabulary-match",
+          "game",
+          "Match!",
+          5,
+          `1. Prepare a 4 × 3 grid. Write each word twice: boy, girl, man, woman, student, teacher.
+2. Draw a blank coordinate grid on the board.
+3. Divide the class into two teams. Each team chooses two coordinates.
+4. Reveal both words. A successful match earns one point.
+5. Continue until all pairs are found. The team with the most points wins.`,
+          { activity: "matching", phaseTitle: "Review Vocabulary", vocabulary: vocabularyItems(unit.vocabulary) }
+        )]
+        : [];
       const afterVocabulary = unitNumber === 1
         ? step("live-grammar", "grammar", "Live Grammar", 10, "Introduce words and sentences. Focus on a capital letter, spaces, and a period.", { activity: "sentence-pattern" })
         : step("reader", "presentation", "Reader", 10, "Play the reader animation. Pause page by page, read together, and let students try reading independently.", { activity: "reader" });
@@ -263,7 +277,8 @@
         afterVocabulary,
         step("break", "break", "Break Time", 10, "Take a ten-minute break.", { activity: "break" }),
         step("theme-song", "warmup", "Theme Song", 5, "Take attendance after the break and warm up with the LiveABC Theme Song.", { activity: "song" }),
-        wordwallStep(unit, "book-1", "day-1", 10),
+        ...reviewVocabularyMatchSteps,
+        { ...wordwallStep(unit, "book-1", "day-1", unitNumber === 1 ? 5 : 10), phaseTitle: "Review Vocabulary", title: "Wordwall Review" },
         step("review-dialogue", "speaking", "Review Dialogue", 10, `Replay the dialogue. Students listen, point to each sentence, repeat, and role-play.\n\n${sentences}`, { activity: "dialogue", mainSentences: unit.mainSentences }),
         step("sound-it-out", "phonics", "Sound It Out", 15, phonics, { activity: "phonics-drill", phonics: unit.phonics }),
         step("wrap-up", "homework", "Wrap Up", 5, "Assign homework, preview one or two questions, and return Communication Books.", { activity: "homework" })
@@ -273,31 +288,74 @@
     if (day === 2) {
       const musicTitle = B1_SONG_UNITS.has(unitNumber) ? "Let's Sing" : "Let's Chant";
       const hasReadAndChoose = Boolean(unit.sentenceCards?.length);
-      const reviewVocabularyMatchSteps = unitNumber === 1
-        ? [step(
-          "review-vocabulary-match",
-          "game",
-          "Match!",
+      const warmUp = unitNumber === 1
+        ? step(
+          "warm-up",
+          "warmup",
+          "Dialogue Puzzles",
           10,
-          `1. Prepare a 4 × 3 grid. Write each word twice: boy, girl, man, woman, student, teacher.
-2. Draw a matching blank grid on the board and label the columns A–C and rows 1–4.
-3. Divide the class into two teams.
-4. A team chooses two coordinates, such as A1 and C2. Reveal both words.
-5. If the words match, the team earns one point. If not, cover them again.
-6. Teams take turns until all pairs are found. The team with the most points wins.`,
-          { activity: "matching", phaseTitle: "Review Vocabulary", vocabulary: vocabularyItems(unit.vocabulary) }
+          `1. Make two copies of the dialogue and cut each sentence into word cards.
+Cards: Hello, / I am / Ludi. / I am / a boy.
+How / are / you? / I am / fine. / Thank / you.
+2. Put one complete set of cards into a box for each team.
+3. Divide the class into two teams. One student from each team draws a card.
+4. The student shows the card to the team. The team reads the complete sentence containing that word.
+5. Continue until every card has been drawn and every sentence has been read.`,
+          { activity: "review", phaseTitle: "Warm Up" }
+        )
+        : step("warm-up", "warmup", "Warm Up", 10, b1WarmUp(day), { activity: "review" });
+      const stickyBallSteps = unitNumber === 1
+        ? [step(
+          "sticky-ball",
+          "game",
+          "Sticky Ball",
+          10,
+          `1. Draw a large circle on the board and divide it into six equal parts.
+2. Write one Unit 1 word in each part and prepare a sticky ball or sticky dart.
+3. Students take turns throwing the ball at the circle.
+4. The student says the word they hit and uses it in a sentence.
+5. Example: “Teacher. I am not a teacher.” The class responds: “You are not a teacher.”`,
+          { activity: "practice", phaseTitle: "Let’s Practice", vocabulary: vocabularyItems(unit.vocabulary) }
         )]
         : [];
+      const secondPatternReview = unitNumber === 1
+        ? step(
+          "review-patterns-2",
+          "game",
+          "Matching Game",
+          15,
+          `1. Draw a 4 × 4 grid containing eight pairs of symbols.
+2. Divide the class into two teams.
+3. Ask one student from each team a target sentence question.
+4. After answering correctly, the student chooses two boxes.
+5. A matching pair earns one point. Continue until all pairs are found.`,
+          { activity: "matching", phaseTitle: "Review Sentence Patterns", mainSentences: unit.mainSentences }
+        )
+        : step("review-patterns-2", "grammar", "Grammar Practice", 15, "Review the patterns with a team activity and complete the Live Grammar practice.", { activity: "matching", mainSentences: unit.mainSentences });
+      const musicStep = unitNumber === 1
+        ? step(
+          "music",
+          "game",
+          "Word-Step Game",
+          15,
+          `1. Put the boy, girl, man, and woman flashcards on the floor in lyric order.
+2. Mark alternating left-foot and right-foot steps beside the cards, ending with “Hooray!”
+3. Students line up. Play the chant while they chant and step on the matching cards.
+4. Students sit down after completing the steps correctly, but continue chanting.
+5. A student who stops chanting goes to the back of the line and tries again.`,
+          { activity: "song", phaseTitle: "Let’s Chant" }
+        )
+        : step("music", "game", musicTitle, 15, `Demonstrate the ${musicTitle === "Let’s Sing" ? "song" : "chant"}, practice line by line, then perform together.`, { activity: "song" });
       return [
-        step("warm-up", "warmup", "Warm Up", 10, b1WarmUp(day), { activity: "review" }),
-        ...reviewVocabularyMatchSteps,
+        warmUp,
         ...(hasReadAndChoose ? [] : quizSteps(unit, 10)),
+        { ...wordwallStep(unit, "book-1", "day-2", 10), phaseTitle: "Review Vocabulary & Quiz", title: "Vocabulary Quiz" },
         ...sentencePatternSteps(unit, hasReadAndChoose && unitNumber !== 1 ? 25 : 15, sentences),
-        wordwallStep(unit, "book-1", "day-2", 10),
+        ...stickyBallSteps,
         step("review-patterns-1", "grammar", "Review Sentence Patterns", 15, `Replay and repeat the target patterns.\n\n${sentences}`, { activity: "sentence-pattern", mainSentences: unit.mainSentences }),
         step("break", "break", "Break Time", 10, "Take a ten-minute break.", { activity: "break" }),
-        step("review-patterns-2", "grammar", "Grammar Practice", 15, "Review the patterns with a team activity and complete the Live Grammar practice.", { activity: "matching", mainSentences: unit.mainSentences }),
-        step("music", "game", musicTitle, 15, `Demonstrate the ${musicTitle === "Let’s Sing" ? "song" : "chant"}, practice line by line, then perform together.`, { activity: "song" }),
+        secondPatternReview,
+        musicStep,
         step("sound-it-out", "phonics", "Sound It Out", 15, phonics, { activity: "phonics-drill", phonics: unit.phonics }),
         step("wrap-up", "homework", "Wrap Up", 5, "Assign homework, preview one or two questions, and return Communication Books.", { activity: "homework" })
       ];

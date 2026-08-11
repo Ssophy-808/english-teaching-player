@@ -142,7 +142,7 @@
       <article class="step-card sentence-pattern-card" data-step-type="grammar">
         <div class="quiz-topline">
           <div class="step-meta">
-            <span class="phase-badge">Sentence Practice · ${escapeHtml(step.questionIndex)} / ${escapeHtml(step.questionTotal)}</span>
+            <span class="phase-badge">${escapeHtml(step.phaseTitle || "Sentence Practice")} · ${escapeHtml(step.questionIndex)} / ${escapeHtml(step.questionTotal)}</span>
             ${duration}
           </div>
           <span class="quiz-mini-progress" aria-hidden="true"><i style="width:${((step.questionIndex || 1) / (step.questionTotal || 1)) * 100}%"></i></span>

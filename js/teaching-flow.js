@@ -215,12 +215,22 @@
     const phonics = phonicsText(unit.phonics);
 
     if (day === 1) {
+      const warmUpInstruction = unitNumber === 1
+        ? `Activity: Throw and Catch
+
+1. Prepare a soft ball.
+2. Have the students sit or stand in a circle.
+3. Throw the ball to one student.
+4. The student catches the ball and says, “I am [name].”
+5. The student throws the ball to the next person.
+6. Continue until every student has introduced themselves.`
+        : b1WarmUp(day);
       const afterVocabulary = unitNumber === 1
         ? step("live-grammar", "grammar", "Live Grammar", 10, "Introduce words and sentences. Focus on a capital letter, spaces, and a period.", { activity: "sentence-pattern" })
         : step("reader", "presentation", "Reader", 10, "Play the reader animation. Pause page by page, read together, and let students try reading independently.", { activity: "reader" });
 
       return [
-        step("warm-up", "warmup", "Warm Up", 10, b1WarmUp(day), { activity: "review" }),
+        step("warm-up", "warmup", unitNumber === 1 ? "Throw and Catch" : "Warm Up", 10, warmUpInstruction, { activity: "review" }),
         step("lets-talk", "presentation", "Let’s Talk", 15, `Play the dialogue once without stopping. Ask comprehension questions, then replay and repeat sentence by sentence.\n\n${sentences}`, { activity: "dialogue", mainSentences: unit.mainSentences }),
         ...vocabularySteps(unit, 15),
         ...vocabularyPracticeSteps(unit, 15),

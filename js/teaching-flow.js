@@ -225,13 +225,23 @@
 5. The student throws the ball to the next person.
 6. Continue until every student has introduced themselves.`
         : b1WarmUp(day);
+      const letsTalkInstruction = unitNumber === 1
+        ? `Activity: How Are You?
+
+1. Prepare a class name sheet and give one copy to each student.
+2. Students walk around the classroom and find a classmate.
+3. Student A says: “I am [name]. How are you?”
+4. Student B answers: “I am [name]. I am fine, thank you.”
+5. Circle the classmate’s name, then find a new partner.
+6. Set a time limit. When time is up, ask students how many people they talked to.`
+        : `Play the dialogue once without stopping. Ask comprehension questions, then replay and repeat sentence by sentence.\n\n${sentences}`;
       const afterVocabulary = unitNumber === 1
         ? step("live-grammar", "grammar", "Live Grammar", 10, "Introduce words and sentences. Focus on a capital letter, spaces, and a period.", { activity: "sentence-pattern" })
         : step("reader", "presentation", "Reader", 10, "Play the reader animation. Pause page by page, read together, and let students try reading independently.", { activity: "reader" });
 
       return [
         step("warm-up", "warmup", unitNumber === 1 ? "Throw and Catch" : "Warm Up", 10, warmUpInstruction, { activity: "review" }),
-        step("lets-talk", "presentation", "Let’s Talk", 15, `Play the dialogue once without stopping. Ask comprehension questions, then replay and repeat sentence by sentence.\n\n${sentences}`, { activity: "dialogue", mainSentences: unit.mainSentences }),
+        step("lets-talk", "presentation", unitNumber === 1 ? "How Are You?" : "Let’s Talk", 15, letsTalkInstruction, { activity: "dialogue", phaseTitle: "Let’s Talk", mainSentences: unit.mainSentences }),
         ...vocabularySteps(unit, 15),
         ...vocabularyPracticeSteps(unit, 15),
         afterVocabulary,

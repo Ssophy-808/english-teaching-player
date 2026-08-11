@@ -231,10 +231,14 @@
           "game",
           "Answer Quickly",
           5,
-          `1. Divide the class into two teams.
-2. Show a picture. The first student to say the word wins a point.
-3. Change players and continue with all six words.`,
-          { activity: "review", phaseTitle: "Let’s Learn", vocabulary: vocabularyItems(unit.vocabulary) }
+          "",
+          {
+            activity: "review",
+            phaseTitle: "Let’s Learn",
+            vocabulary: vocabularyItems(unit.vocabulary),
+            activityImage: "assets/images/answer-quickly-activity.png",
+            imageAlt: "Two teams answering a vocabulary picture quickly"
+          }
         )]
         : [];
       const reviewVocabularyMatchSteps = unitNumber === 1
@@ -243,10 +247,14 @@
           "game",
           "Match!",
           5,
-          `1. Put each vocabulary word twice in a 4 × 3 grid.
-2. Teams take turns choosing two coordinates.
-3. A matching pair wins one point.`,
-          { activity: "matching", phaseTitle: "Review Vocabulary", vocabulary: vocabularyItems(unit.vocabulary) }
+          "",
+          {
+            activity: "matching",
+            phaseTitle: "Review Vocabulary",
+            vocabulary: vocabularyItems(unit.vocabulary),
+            activityImage: "assets/images/vocabulary-match-activity.png",
+            imageAlt: "A four by three vocabulary coordinate matching grid"
+          }
         )]
         : [];
       const afterVocabulary = unitNumber === 1
@@ -254,8 +262,36 @@
         : step("reader", "presentation", "Reader", 10, "Play the reader animation. Pause page by page, read together, and let students try reading independently.", { activity: "reader" });
 
       return [
-        step("warm-up", "warmup", unitNumber === 1 ? "Throw and Catch" : "Warm Up", 10, warmUpInstruction, { activity: "review" }),
-        step("lets-talk", "presentation", unitNumber === 1 ? "How Are You?" : "Let’s Talk", 15, letsTalkInstruction, { activity: "dialogue", phaseTitle: "Let’s Talk", mainSentences: unit.mainSentences }),
+        step(
+          "warm-up",
+          "warmup",
+          unitNumber === 1 ? "Throw and Catch" : "Warm Up",
+          10,
+          unitNumber === 1 ? "" : warmUpInstruction,
+          {
+            activity: "review",
+            ...(unitNumber === 1 ? {
+              activityImage: "assets/images/throw-and-catch-activity.png",
+              imageAlt: "Students passing a soft ball in a circle and saying their names"
+            } : {})
+          }
+        ),
+        step(
+          "lets-talk",
+          "presentation",
+          unitNumber === 1 ? "How Are You?" : "Let’s Talk",
+          15,
+          unitNumber === 1 ? "" : letsTalkInstruction,
+          {
+            activity: "dialogue",
+            phaseTitle: "Let’s Talk",
+            mainSentences: unit.mainSentences,
+            ...(unitNumber === 1 ? {
+              activityImage: "assets/images/how-are-you-activity.png",
+              imageAlt: "Two students asking and answering How are you"
+            } : {})
+          }
+        ),
         ...vocabularySteps(unit, unitNumber === 1 ? 10 : 15),
         ...answerQuicklySteps,
         ...vocabularyPracticeSteps(unit, 15),
@@ -279,13 +315,13 @@
           "warmup",
           "Dialogue Puzzles",
           10,
-          `1. Cut two sets of dialogue word cards and put each set in a box.
-2. One student draws a card. The team says the complete sentence.
-3. Continue until all cards are used.
-
-Hello, / I am / Ludi. / I am / a boy.
-How / are / you? / I am / fine. / Thank / you.`,
-          { activity: "review", phaseTitle: "Warm Up" }
+          "",
+          {
+            activity: "review",
+            phaseTitle: "Warm Up",
+            activityImage: "assets/images/dialogue-puzzles-activity.png",
+            imageAlt: "Two teams assembling Hello I am Ludi dialogue puzzle cards"
+          }
         )
         : step("warm-up", "warmup", "Warm Up", 10, b1WarmUp(day), { activity: "review" });
       const stickyBallSteps = unitNumber === 1
@@ -310,10 +346,14 @@ How / are / you? / I am / fine. / Thank / you.`,
           "game",
           "Matching Game",
           15,
-          `1. Draw a 4 × 4 grid with eight pairs of symbols.
-2. Answer a sentence question, then choose two boxes.
-3. A matching pair wins one point.`,
-          { activity: "matching", phaseTitle: "Review Sentence Patterns", mainSentences: unit.mainSentences }
+          "",
+          {
+            activity: "matching",
+            phaseTitle: "Review Sentence Patterns",
+            mainSentences: unit.mainSentences,
+            activityImage: "assets/images/matching-game-activity.png",
+            imageAlt: "A four by four classroom matching card game"
+          }
         )
         : step("review-patterns-2", "grammar", "Grammar Practice", 15, "Review the patterns with a team activity and complete the Live Grammar practice.", { activity: "matching", mainSentences: unit.mainSentences });
       const musicStep = unitNumber === 1
@@ -322,10 +362,13 @@ How / are / you? / I am / fine. / Thank / you.`,
           "game",
           "Word-Step Game",
           15,
-          `1. Put boy, girl, man, and woman cards on the floor.
-2. Play the chant. Students chant and step on each matching card.
-3. Finish with “Hooray!” and keep chanting after sitting down.`,
-          { activity: "song", phaseTitle: "Let’s Chant" }
+          "",
+          {
+            activity: "song",
+            phaseTitle: "Let’s Chant",
+            activityImage: "assets/images/word-step-game-activity.png",
+            imageAlt: "Students stepping on boy girl man and woman word cards"
+          }
         )
         : step("music", "game", musicTitle, 15, `Demonstrate the ${musicTitle === "Let’s Sing" ? "song" : "chant"}, practice line by line, then perform together.`, { activity: "song" });
       return [

@@ -27,6 +27,17 @@
   ];
   const B1_SONG_UNITS = new Set([2, 4, 6, 8]);
 
+  const B1_CUSTOM_ACTIVITY_IMAGES = {
+    "unit-1|day1|throw and catch": "assets/images/throw-and-catch-activity.png",
+    "unit-1|day1|how are you": "assets/images/how-are-you-activity.png",
+    "unit-1|day1|answer quickly": "assets/images/answer-quickly-activity.png",
+    "unit-1|day1|match": "assets/images/vocabulary-match-activity.png",
+    "unit-1|day2|dialogue puzzles": "assets/images/dialogue-puzzles-activity.png",
+    "unit-1|day2|sticky ball": "assets/images/sticky-ball-activity.png",
+    "unit-1|day2|matching game": "assets/images/matching-game-activity.png",
+    "unit-1|day2|word step game": "assets/images/word-step-game-activity.png"
+  };
+
   const WORD_VISUALS = {
     boy: "👦", man: "👨", student: "🧑‍🎓", girl: "👧", woman: "👩", teacher: "🧑‍🏫",
     grandfather: "👴", grandpa: "👴", grandmother: "👵", grandma: "👵", father: "👨", dad: "👨",
@@ -70,6 +81,64 @@
 
   function step(id, type, title, duration, instruction, extra = {}) {
     return { id, type, title, duration, instruction, ...extra };
+  }
+
+  function normalizeActivityName(name) {
+    return String(name).toLowerCase().replace(/[’'!?.,-]/g, " ").replace(/\s+/g, " ").trim();
+  }
+
+  function activityImageFor(unit, day, name) {
+    const normalized = normalizeActivityName(name);
+    const customKey = `${unit.id}|day${day}|${normalized}`;
+    if (B1_CUSTOM_ACTIVITY_IMAGES[customKey]) return B1_CUSTOM_ACTIVITY_IMAGES[customKey];
+
+    if (/survey|how are you/.test(normalized)) return "assets/images/activity-survey.png";
+    if (/role|charade|dialogue|q and a|being an animal|says|talking/.test(normalized)) return "assets/images/activity-roleplay.png";
+    if (/spell|write|draw|artist|word puzzle|circle the words|rewrite/.test(normalized)) return "assets/images/activity-spelling.png";
+    if (/match|partner|puzzle|unscramble|memory|card|decoding/.test(normalized)) return "assets/images/activity-matching.png";
+    if (/read|sentence|say exercise|spot the mistakes/.test(normalized)) return "assets/images/activity-reading.png";
+    if (/dice|die|number|tic tac toe|lucky|countdown|21/.test(normalized)) return "assets/images/activity-dice.png";
+    if (/chair|stand|walk|jump|step|march|move|wind|squat|frog|frontline/.test(normalized)) return "assets/images/activity-movement.png";
+    if (/ball|slap|hit|throw|kick|toss|dunk|cowboy|blow|potato|bang/.test(normalized)) return "assets/images/activity-ball.png";
+    return "assets/images/activity-roleplay.png";
+  }
+
+  function activityStep(unit, day, name, index) {
+    const id = normalizeActivityName(name).replace(/[^a-z0-9]+/g, "-") || `activity-${index + 1}`;
+    return step(`day-${day}-activity-${index + 1}-${id}`, "game", name, 0, "", {
+      activity: "visual-activity",
+      phaseTitle: `Day ${day} Activity`,
+      activityImage: activityImageFor(unit, day, name),
+      imageAlt: `${name} classroom activity`
+    });
+  }
+
+  function addBook1Activities(unit, day, lessonSteps) {
+    const names = window.BOOK1_ACTIVITIES?.[unit.id]?.[`day${day}`] || [];
+    const existing = new Set(lessonSteps.map((item) => normalizeActivityName(item.title)));
+    const additions = names
+      .filter((name) => !existing.has(normalizeActivityName(name)))
+      .map((name, index) => activityStep(unit, day, name, index));
+    const wrapUpIndex = lessonSteps.findIndex((item) => item.id === "wrap-up");
+    const insertionIndex = wrapUpIndex < 0 ? lessonSteps.length : wrapUpIndex;
+    return [...lessonSteps.slice(0, insertionIndex), ...additions, ...lessonSteps.slice(insertionIndex)];
+  }
+
+  function book1ExtraActivityLesson(unit, unitIndex) {
+    const activities = window.BOOK1_ACTIVITIES?.[unit.id] || {};
+    const day3 = (activities.day3 || []).map((name, index) => activityStep(unit, 3, name, index));
+    const day4 = (activities.day4 || []).map((name, index) => activityStep(unit, 4, name, index));
+    return {
+      id: "activities-day-3-4",
+      title: `${unit.title} · Activities`,
+      day: "Day 3–4",
+      source: {
+        document: "B1_教學流程.pdf",
+        pages: [B1_DAY_PAGES[unitIndex][2], B1_DAY_PAGES[unitIndex][3]]
+      },
+      curriculum: curriculumFor(unit),
+      steps: [...day3, ...day4]
+    };
   }
 
   function wordwallStep(unit, bookId, lessonId, duration) {
@@ -411,7 +480,7 @@
   }
 
   function book1LessonsFromUnit(unit, unitIndex) {
-    return [1, 2].map((day) => ({
+    const teachingDays = [1, 2].map((day) => ({
       id: `day-${day}`,
       title: `${unit.title} · Day ${day}`,
       day: `Day ${day}`,
@@ -420,8 +489,9 @@
         page: B1_DAY_PAGES[unitIndex][day - 1]
       },
       curriculum: curriculumFor(unit),
-      steps: book1DaySteps(unit, unitIndex + 1, day)
+      steps: addBook1Activities(unit, day, book1DaySteps(unit, unitIndex + 1, day))
     }));
+    return [...teachingDays, book1ExtraActivityLesson(unit, unitIndex)];
   }
 
   function defaultInstruction(template, unit, unitIndex) {

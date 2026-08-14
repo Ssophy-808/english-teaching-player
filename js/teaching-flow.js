@@ -260,6 +260,71 @@
     ));
   }
 
+  function sentencePicture(unit, text, index) {
+    const items = vocabularyItems(unit.vocabulary);
+    const lowerText = text.toLowerCase();
+    const negativeAlternatives = {
+      boy: "girl", girl: "boy", one: "eight", happy: "sad",
+      eraser: "pen", red: "blue", hat: "coat", hungry: "thirsty"
+    };
+    const matchingItem = [...items]
+      .sort((a, b) => b.word.length - a.word.length)
+      .find((item) => lowerText.includes(item.word.toLowerCase()));
+    if (matchingItem && lowerText.includes("not")) {
+      const alternative = items.find((item) => item.word.toLowerCase() === negativeAlternatives[matchingItem.word.toLowerCase()]);
+      if (alternative) return alternative;
+    }
+    return matchingItem || items[index % items.length] || { word: "picture", visual: "🖼️" };
+  }
+
+  function orderedChoices(answer, distractors, index) {
+    const choices = [...new Set([answer, ...distractors, "I don’t know.", "Please say it again."])].slice(0, 3);
+    if (index % 3 === 1) return [choices[1], choices[0], choices[2]];
+    if (index % 3 === 2) return [choices[1], choices[2], choices[0]];
+    return choices;
+  }
+
+  function letsTalkChoiceSteps(unit, totalDuration) {
+    const sentences = [...new Set(unit.mainSentences)];
+    const statements = sentences.filter((sentence) => !sentence.trim().endsWith("?"));
+    const labels = ["A", "B", "C"];
+
+    return sentences.map((sentence, index) => {
+      const isQuestion = sentence.trim().endsWith("?");
+      const originalIndex = unit.mainSentences.indexOf(sentence);
+      const nextSentence = unit.mainSentences[originalIndex + 1];
+      const answer = isQuestion && nextSentence && !nextSentence.trim().endsWith("?") ? nextSentence : sentence;
+      const choiceTexts = orderedChoices(answer, statements, index);
+      const picture = sentencePicture(unit, `${sentence} ${answer}`, index);
+      const dialogueChoice = {
+        instruction: isQuestion ? "Look at the picture and answer:" : "Look at the picture and choose:",
+        prompt: isQuestion ? sentence : "Which sentence is correct?",
+        answer: labels[choiceTexts.indexOf(answer)],
+        image: picture.image || "",
+        sprite: picture.sprite,
+        visual: picture.visual,
+        word: picture.word,
+        choices: choiceTexts.map((choice, choiceIndex) => ({ label: labels[choiceIndex], lines: [choice] }))
+      };
+
+      return step(
+        `lets-talk-choice-${index + 1}`,
+        "practice",
+        "Let’s Talk",
+        distributeDuration(totalDuration, sentences.length, index),
+        "Look at the picture and choose the correct sentence.",
+        {
+          activity: "dialogue-choice",
+          phaseTitle: "Let’s Talk",
+          mainSentences: unit.mainSentences,
+          dialogueChoice,
+          questionIndex: index + 1,
+          questionTotal: sentences.length
+        }
+      );
+    });
+  }
+
   function sentencePatternSteps(unit, totalDuration, sentences) {
     const cards = unit.sentenceCards || [];
     if (!cards.length) return dialogueChoiceSteps(unit, totalDuration, sentences);
@@ -310,11 +375,6 @@
 2. Catch the ball and say: “I am [name].”
 3. Throw it to the next student.`
         : b1WarmUp(day);
-      const letsTalkInstruction = unitNumber === 1
-        ? `1. Walk around and find a classmate.
-2. Ask: “I am [name]. How are you?” Answer: “I am fine, thank you.”
-3. Circle the classmate’s name and find a new partner.`
-        : `Play the dialogue once without stopping. Ask comprehension questions, then replay and repeat sentence by sentence.\n\n${sentences}`;
       const answerQuicklySteps = unitNumber === 1
         ? [step(
           "answer-quickly",
@@ -366,22 +426,21 @@
             } : {})
           }
         ),
-        step(
+        ...(unitNumber === 1 ? [step(
           "lets-talk",
           "presentation",
-          unitNumber === 1 ? "How Are You?" : "Let’s Talk",
-          15,
-          unitNumber === 1 ? "" : letsTalkInstruction,
+          "How Are You?",
+          5,
+          "",
           {
             activity: "dialogue",
             phaseTitle: "Let’s Talk",
             mainSentences: unit.mainSentences,
-            ...(unitNumber === 1 ? {
-              activityImage: "assets/images/how-are-you-activity.png",
-              imageAlt: "Two students asking and answering How are you"
-            } : {})
+            activityImage: "assets/images/how-are-you-activity.png",
+            imageAlt: "Two students asking and answering How are you"
           }
-        ),
+        )] : []),
+        ...letsTalkChoiceSteps(unit, unitNumber === 1 ? 10 : 15),
         ...vocabularySteps(unit, unitNumber === 1 ? 10 : 15),
         ...answerQuicklySteps,
         ...vocabularyPracticeSteps(unit, 15),

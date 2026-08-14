@@ -108,7 +108,7 @@
       <article class="step-card dialogue-choice-card" data-step-type="practice">
         <div class="quiz-topline">
           <div class="step-meta">
-            <span class="phase-badge">Presentation · ${escapeHtml(step.questionIndex)} / ${escapeHtml(step.questionTotal)}</span>
+            <span class="phase-badge">${escapeHtml(step.phaseTitle || "Presentation")} · ${escapeHtml(step.questionIndex)} / ${escapeHtml(step.questionTotal)}</span>
             ${duration}
           </div>
           <span class="quiz-mini-progress" aria-hidden="true"><i style="width:${((step.questionIndex || 1) / (step.questionTotal || 1)) * 100}%"></i></span>

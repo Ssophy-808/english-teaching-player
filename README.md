@@ -18,7 +18,7 @@ A static, projection-friendly lesson player for English teachers. It includes th
 ├─ data/
 │  ├─ book1.js        # Book 1 curriculum, Units 1–9
 │  ├─ book1-passport.js # Book 1 passport review sentences
-│  └─ book2-unit1.js  # Course content only
+│  └─ book2.js        # Book 2 curriculum, Units 1–9
 └─ assets/
    ├─ images/
    └─ audio/
@@ -73,7 +73,7 @@ The basic data shape is:
 }
 ```
 
-`js/teaching-flow.js` automatically turns curriculum data into lesson steps. Book 1 uses Day 1 and Day 2 from `B1_教學流程.pdf`; each Unit contains two 120-minute lessons and a separate Day 3–4 Activities lesson. Other books currently use the default sequence:
+`js/teaching-flow.js` automatically turns curriculum data into lesson steps. Book 1 uses Day 1 and Day 2 from `B1_教學流程.pdf`; each Unit contains two 120-minute lessons and a separate Day 3–4 Activities lesson. Book 2 contains Units 1–9 with two 120-minute lessons per Unit, official vocabulary pictures, long-vowel phonics, and one-page-per-sentence Passport Review. Other books currently use the default sequence:
 
 `Warm Up → Vocabulary → Sentence Pattern → Practice → Speaking → Game → Phonics → Show Book → Quiz → Homework`
 

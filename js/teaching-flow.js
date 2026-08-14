@@ -263,13 +263,18 @@
   function sentencePicture(unit, text, index) {
     const items = vocabularyItems(unit.vocabulary);
     const lowerText = text.toLowerCase();
+    const containsWord = (candidate) => {
+      const escaped = candidate.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      return new RegExp(`(^|[^a-z])${escaped}([^a-z]|$)`).test(lowerText);
+    };
     const negativeAlternatives = {
       boy: "girl", girl: "boy", one: "eight", happy: "sad",
       eraser: "pen", red: "blue", hat: "coat", hungry: "thirsty"
     };
     const matchingItem = [...items]
       .sort((a, b) => b.word.length - a.word.length)
-      .find((item) => lowerText.includes(item.word.toLowerCase()));
+      .find((item) => [item.word, ...(item.aliases || [])]
+        .some(containsWord));
     if (matchingItem && lowerText.includes("not")) {
       const alternative = items.find((item) => item.word.toLowerCase() === negativeAlternatives[matchingItem.word.toLowerCase()]);
       if (alternative) return alternative;
@@ -326,7 +331,7 @@
   }
 
   function passportSentenceSteps(unit) {
-    const entries = window.BOOK1_PASSPORT_SENTENCES?.[unit.id] || [];
+    const entries = unit.passportSentences || window.BOOK1_PASSPORT_SENTENCES?.[unit.id] || [];
     return entries.map(([text, translation], index) => {
       const picture = sentencePicture(unit, text, index);
       return step(
@@ -348,6 +353,35 @@
           },
           questionIndex: index + 1,
           questionTotal: entries.length
+        }
+      );
+    });
+  }
+
+  function sentenceReviewSteps(unit, totalDuration) {
+    const passport = unit.passportSentences || [];
+    return unit.mainSentences.map((text, index) => {
+      const translation = passport.find(([sentence]) => sentence === text)?.[1] || "";
+      const picture = sentencePicture(unit, text, index);
+      return step(
+        `sentence-review-${index + 1}`,
+        "grammar",
+        "Sentence Practice",
+        distributeDuration(totalDuration, unit.mainSentences.length, index),
+        "Look at the picture and read the sentence aloud.",
+        {
+          activity: "passport-sentence",
+          phaseTitle: "Sentence Practice",
+          passportSentence: {
+            text,
+            translation,
+            image: picture.image || "",
+            sprite: picture.sprite,
+            visual: picture.visual,
+            word: picture.word
+          },
+          questionIndex: index + 1,
+          questionTotal: unit.mainSentences.length
         }
       );
     });
@@ -603,6 +637,50 @@
     return [...teachingDays, book1ExtraActivityLesson(unit, unitIndex)];
   }
 
+  function book2DaySteps(unit, day) {
+    const sentences = unit.mainSentences.join("\n");
+    const phonics = phonicsText(unit.phonics);
+
+    if (day === 1) {
+      return [
+        step("warm-up", "warmup", "Warm Up", 10, `Introduce today’s topic: ${unit.topic}. Use the classroom toolbox for a quick picture reveal.`, { activity: "review" }),
+        ...vocabularySteps(unit, 20),
+        ...vocabularyPracticeSteps(unit, 15),
+        ...letsTalkChoiceSteps(unit, 15),
+        ...passportSentenceSteps(unit),
+        step("reader", "presentation", "Reader", 10, "Read or play the dialogue once, then repeat sentence by sentence.", { activity: "reader" }),
+        step("break", "break", "Break Time", 10, "Take a ten-minute break.", { activity: "break" }),
+        { ...wordwallStep(unit, "book-2", "day-1", 10), phaseTitle: "Game", title: "Wordwall Game" },
+        step("review-dialogue", "speaking", "Review Dialogue", 10, `Students listen, point, repeat, and role-play.\n\n${sentences}`, { activity: "dialogue", mainSentences: unit.mainSentences }),
+        step("sound-it-out", "phonics", "Sound It Out", 15, phonics, { activity: "phonics-drill", phonics: unit.phonics }),
+        step("wrap-up", "homework", "Wrap Up", 5, "Review today’s words and assign the passport sentences for home practice.", { activity: "homework" })
+      ];
+    }
+
+    return [
+      step("warm-up", "warmup", "Picture Review", 10, "Use Random Vocabulary or Picture Reveal from the classroom toolbox.", { activity: "review", vocabulary: vocabularyItems(unit.vocabulary) }),
+      ...vocabularyPracticeSteps(unit, 10),
+      { ...wordwallStep(unit, "book-2", "day-2", 10), phaseTitle: "Review Vocabulary", title: "Wordwall Review" },
+      ...sentenceReviewSteps(unit, 20),
+      step("review-patterns", "grammar", "Review Sentence Patterns", 10, sentences, { activity: "sentence-pattern", mainSentences: unit.mainSentences }),
+      step("break", "break", "Break Time", 10, "Take a ten-minute break.", { activity: "break" }),
+      step("speaking", "speaking", "Speaking Challenge", 15, "Show a random picture. Students ask and answer using today’s pattern.", { activity: "speaking-prompt", vocabulary: vocabularyItems(unit.vocabulary), mainSentences: unit.mainSentences }),
+      step("game", "game", "Team Picture Quiz", 15, "Split the class into teams. Reveal a picture and let the first student answer earn a point.", { activity: "random-prompt", vocabulary: vocabularyItems(unit.vocabulary) }),
+      step("sound-it-out", "phonics", "Sound It Out", 15, phonics, { activity: "phonics-drill", phonics: unit.phonics }),
+      step("wrap-up", "homework", "Wrap Up", 5, "Assign homework and preview the next Unit.", { activity: "homework" })
+    ];
+  }
+
+  function book2LessonsFromUnit(unit) {
+    return [1, 2].map((day) => ({
+      id: `day-${day}`,
+      title: `${unit.title} · Day ${day}`,
+      day: `Day ${day}`,
+      curriculum: curriculumFor(unit),
+      steps: book2DaySteps(unit, day)
+    }));
+  }
+
   function defaultInstruction(template, unit, unitIndex) {
     const instructions = {
       "warm-up": unitIndex === 0 ? `Introduce today’s topic: ${unit.topic}.` : `Review the previous unit, then introduce ${unit.topic}.`,
@@ -643,7 +721,11 @@
         id: unit.id,
         title: `Unit ${unitIndex + 1}`,
         topic: unit.title,
-        lessons: book.id === "book-1" ? book1LessonsFromUnit(unit, unitIndex) : defaultLessonFromUnit(unit, unitIndex, book.id)
+        lessons: book.id === "book-1"
+          ? book1LessonsFromUnit(unit, unitIndex)
+          : book.id === "book-2"
+            ? book2LessonsFromUnit(unit)
+            : defaultLessonFromUnit(unit, unitIndex, book.id)
       }))
     }));
   }

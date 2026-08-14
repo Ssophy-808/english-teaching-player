@@ -20,6 +20,7 @@
     elements.next = document.getElementById("next-button");
     elements.home = document.getElementById("home-button");
     elements.fullscreen = document.getElementById("fullscreen-button");
+    elements.toolbox = document.getElementById("toolbox-button");
   }
 
   function saveProgress() {
@@ -65,6 +66,7 @@
     elements.homeView.hidden = true;
     elements.playerView.hidden = false;
     document.body.classList.add("is-playing");
+    window.ClassroomTools?.setLesson(lessonContext);
     render();
   }
 
@@ -98,7 +100,7 @@
   }
 
   function handleKeydown(event) {
-    if (!currentLesson || event.altKey || event.ctrlKey || event.metaKey) return;
+    if (!currentLesson || !document.getElementById("toolbox-modal")?.hidden || event.altKey || event.ctrlKey || event.metaKey) return;
     if (event.key === "ArrowRight") {
       event.preventDefault();
       goTo(currentIndex + 1);
@@ -116,6 +118,7 @@
     elements.next.addEventListener("click", () => goTo(currentIndex + 1));
     elements.home.addEventListener("click", close);
     elements.fullscreen.addEventListener("click", toggleFullscreen);
+    elements.toolbox.addEventListener("click", () => window.ClassroomTools?.open());
     document.addEventListener("fullscreenchange", updateFullscreenButton);
     document.addEventListener("keydown", handleKeydown);
   }

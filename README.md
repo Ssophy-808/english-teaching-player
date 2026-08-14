@@ -1,6 +1,6 @@
-# English Teaching Player — Phase 1
+# English Teaching Player
 
-A static, projection-friendly lesson player for English teachers. Phase 1 includes the lesson library, Book → Unit → Lesson navigation, one-step-at-a-time playback, Previous / Next controls, keyboard navigation, progress, fullscreen, and saved local progress.
+A static, projection-friendly lesson player for English teachers. It includes the lesson library, Book → Unit → Lesson navigation, one-step-at-a-time playback, Previous / Next controls, keyboard navigation, progress, fullscreen, saved local progress, Wordwall, picture quizzes, and a no-prep classroom toolbox.
 
 ## Project structure
 
@@ -13,7 +13,8 @@ A static, projection-friendly lesson player for English teachers. Phase 1 includ
 │  ├─ app.js          # Library navigation and Continue Lesson
 │  ├─ player.js       # Lesson playback and controls
 │  ├─ teaching-flow.js # Fixed curriculum-to-lesson template
-│  └─ activities.js   # Step renderer; later phases can add activity renderers
+│  ├─ activities.js   # Lesson activity renderers
+│  └─ classroom-tools.js # Random cards, reveal, matching, dice, timer, scores
 ├─ data/
 │  ├─ book1.js        # Book 1 curriculum, Units 1–9
 │  └─ book2-unit1.js  # Course content only
@@ -71,22 +72,16 @@ The basic data shape is:
 }
 ```
 
-`js/teaching-flow.js` automatically turns curriculum data into lesson steps. Book 1 uses Day 1 and Day 2 from `B1_教學流程.pdf`; each Unit contains two 120-minute lessons and keeps the guide's suggested times. Other books currently use the default sequence:
+`js/teaching-flow.js` automatically turns curriculum data into lesson steps. Book 1 uses Day 1 and Day 2 from `B1_教學流程.pdf`; each Unit contains two 120-minute lessons and a separate Day 3–4 Activities lesson. Other books currently use the default sequence:
 
 `Warm Up → Vocabulary → Sentence Pattern → Practice → Speaking → Game → Phonics → Show Book → Quiz → Homework`
 
-Activity metadata for flashcards, random prompts, matching, embeds, phonics drills, and multiple choice is reserved for later phases. Phase 1 intentionally renders only the common step title, teaching phase, duration, and instruction.
+The star button in the player opens a classroom toolbox. Random Vocabulary, Picture Reveal, Memory Match, Virtual Dice, Timer, and Team Scoreboard automatically use the vocabulary from the open Unit, so teachers do not need separate cards, dice, timers, or a scoreboard.
 
-Vocabulary is expanded into one player page per word. Each word supports `image`, `meaning`, and `audio`; when no image is supplied, the first version shows a large built-in pictogram. Book 1 Unit 1 includes six dedicated character illustrations and six picture sentence-pattern pages with paired affirmative and negative sentences.
+Vocabulary is expanded into one player page per word. Each word supports `image`, `sprite`, `meaning`, and `audio`. Book 1 uses dedicated illustrations and reusable picture atlases for people, feelings, stationery, colors, clothing, and animals.
 
 Every lesson includes its own Wordwall Game step. Book 1 has separate Wordwall slots for every Unit's Day 1 and Day 2; later books receive the same interface automatically. Paste a Wordwall Embed URL or the complete iframe code in the player. Each lesson stores its own URL locally, displays the activity inside the player, and provides an Open externally fallback.
 
 Every Book 1 Day 1 lesson also generates one picture-based multiple-choice practice question for every vocabulary word. The choices are built automatically from the Unit vocabulary data, so future vocabulary additions produce matching practice questions without editing the player code.
 
-## Phase boundary
-
-Included early by request: one-word vocabulary pages, a reusable picture-based Read and Choose activity, and a Dialogue Choice / New Sentence activity with Correct / Try again feedback.
-
-Unit 2 includes a reusable family-character sprite sheet and multiple questions for both activity types. New questions are added as curriculum data; no renderer changes are required.
-
-Not included yet: Show Answer, Random, Wordwall embeds, a full quiz bank, and Teacher / Student Mode. These belong to later phases.
+Book 1 activity names are stored separately in `data/book1-activities.js`, keeping curriculum content and the player engine independent.

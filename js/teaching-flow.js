@@ -51,6 +51,26 @@
     cat: "🐈", horse: "🐎", rat: "🐀", pig: "🐖", sheep: "🐑", rabbit: "🐇", chicken: "🐓", cow: "🐄", duck: "🦆", dog: "🐕"
   };
 
+  const GENERATED_WORD_SPRITES = {};
+  const SCHOOL_ATLAS = "assets/images/vocabulary-people-school-clothes.png";
+  const ANIMAL_ATLAS = "assets/images/vocabulary-colors-animals-feelings.png";
+
+  [
+    ["sad", 0, 0], ["happy", 1, 0], ["chubby", 2, 0], ["thin", 3, 0], ["young", 4, 0],
+    ["old", 0, 1], ["short", 1, 1], ["tall", 2, 1], ["cute", 3, 1], ["school bag", 4, 1],
+    ["ruler", 0, 2], ["book", 1, 2], ["pencil case", 2, 2], ["pencil", 3, 2], ["pen", 4, 2],
+    ["eraser", 0, 3], ["desk", 1, 3], ["chair", 2, 3], ["coat", 3, 3], ["dress", 4, 3],
+    ["jacket", 0, 4], ["t-shirt", 1, 4], ["cap", 2, 4], ["hat", 3, 4], ["skirt", 4, 4]
+  ].forEach(([word, col, row]) => { GENERATED_WORD_SPRITES[word] = { src: SCHOOL_ATLAS, cols: 5, rows: 5, col, row }; });
+
+  [
+    ["red", 0, 0], ["yellow", 1, 0], ["green", 2, 0], ["blue", 3, 0], ["pink", 4, 0], ["black", 5, 0],
+    ["white", 0, 1], ["brown", 1, 1], ["orange", 2, 1], ["purple", 3, 1], ["cat", 4, 1], ["horse", 5, 1],
+    ["rat", 0, 2], ["pig", 1, 2], ["sheep", 2, 2], ["rabbit", 3, 2], ["chicken", 4, 2], ["cow", 5, 2],
+    ["duck", 0, 3], ["dog", 1, 3], ["hungry", 2, 3], ["thirsty", 3, 3], ["angry", 4, 3], ["lazy", 5, 3],
+    ["noisy", 0, 4], ["quiet", 1, 4], ["sleepy", 2, 4], ["tired", 3, 4]
+  ].forEach(([word, col, row]) => { GENERATED_WORD_SPRITES[word] = { src: ANIMAL_ATLAS, cols: 6, rows: 5, col, row }; });
+
   function vocabularyItems(words) {
     return words.map((entry) => {
       const item = typeof entry === "string" ? { word: entry } : entry;
@@ -59,6 +79,7 @@
         image: "",
         audio: "",
         visual: WORD_VISUALS[item.word.toLowerCase()] || "🖼️",
+        sprite: GENERATED_WORD_SPRITES[item.word.toLowerCase()],
         ...item
       };
     });

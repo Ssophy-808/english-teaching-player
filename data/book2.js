@@ -173,6 +173,51 @@
     )
   ];
 
+  const atlasLayouts = {
+    "unit-1": {
+      src: "assets/images/book2/atlases/classroom.png",
+      cells: [[0, 0], [1, 0], [2, 0], [3, 0], [0, 1], [1, 1], [2, 1], [3, 1], [0, 2], [1, 2]]
+    },
+    "unit-3": {
+      src: "assets/images/book2/atlases/toys-fruit.png",
+      cells: [[0, 0], [1, 0], [2, 0], [3, 0], [0, 1], [1, 1], [2, 1], [3, 1]]
+    },
+    "unit-4": {
+      src: "assets/images/book2/atlases/toys-fruit.png",
+      cells: [[0, 2], [1, 2], [2, 2], [3, 2], [0, 3], [1, 3], [2, 3], [3, 3]]
+    },
+    "unit-5": {
+      src: "assets/images/book2/atlases/fruit-actions.png",
+      cells: [[0, 0], [1, 0], [2, 0], [3, 0], [0, 1], [1, 1], [2, 1], [3, 1]]
+    },
+    "unit-6": {
+      src: "assets/images/book2/atlases/fruit-actions.png",
+      cells: [[0, 2], [1, 2], [2, 2], [3, 2], [0, 3], [1, 3], [2, 3], [3, 3]]
+    },
+    "unit-7": {
+      src: "assets/images/book2/atlases/locations-rooms.png",
+      cells: [[0, 0], [1, 0], [2, 0], [3, 0], [0, 1], [1, 1], [2, 1], [3, 1]]
+    },
+    "unit-8": {
+      src: "assets/images/book2/atlases/locations-rooms.png",
+      cells: [[0, 2], [1, 2], [2, 2], [3, 2], [0, 3], [1, 3], [2, 3], [3, 3]]
+    },
+    "unit-9": {
+      src: "assets/images/book2/atlases/animals.png",
+      cells: [[0, 0], [1, 0], [2, 0], [3, 0], [0, 1], [1, 1], [2, 1], [3, 1], [0, 2], [1, 2]]
+    }
+  };
+
+  units.forEach((courseUnit) => {
+    const layout = atlasLayouts[courseUnit.id];
+    if (!layout) return;
+    courseUnit.vocabulary.forEach((item, index) => {
+      const [col, row] = layout.cells[index];
+      item.image = "";
+      item.sprite = { src: layout.src, cols: 4, rows: 4, col, row };
+    });
+  });
+
   window.CURRICULUM_BOOKS.push({ id: "book-2", title: "Book 2", subtitle: "Everyday English", units });
   window.CURRICULUM_BOOKS.push({ id: "book-3", title: "Book 3", subtitle: "Growing Skills", units: [] });
 })();

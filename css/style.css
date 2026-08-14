@@ -149,6 +149,15 @@ button:focus-visible { outline: 4px solid rgba(43, 89, 195, 0.28); outline-offse
 .sentence-card-line:nth-child(2) { border-left-color: var(--coral); }
 .sentence-card-line strong { color: var(--blue); font-weight: 950; }
 .sentence-card-translation { margin: 22px 0 0; color: #53657c; font-size: clamp(1.5rem, 2.7vw, 2.4rem); font-weight: 700; letter-spacing: 0.04em; }
+.passport-sentence-card { display: grid; width: min(1200px, 100%); min-height: 100%; align-content: space-between; }
+.passport-sentence-layout { display: grid; grid-template-columns: minmax(280px, 0.8fr) minmax(520px, 1.2fr); align-items: center; gap: clamp(40px, 7vw, 100px); }
+.passport-sentence-picture { display: grid; width: min(100%, 420px); aspect-ratio: 1; place-items: center; justify-self: center; overflow: hidden; border: 3px solid #d8e8fa; border-radius: 36px; background: #edf7ff; box-shadow: 0 20px 48px rgba(31, 70, 130, 0.14); }
+.passport-sentence-image { width: 100%; height: 100%; object-fit: contain; }
+.passport-sentence-visual { font-size: clamp(7rem, 15vw, 12rem); }
+.passport-sentence-copy { text-align: left; }
+.passport-sentence-kicker { margin: 0 0 18px; color: var(--blue); font-size: 1rem; font-weight: 950; letter-spacing: 0.14em; }
+.passport-sentence-copy h2 { color: var(--navy); font-size: clamp(3rem, 6vw, 5.8rem); line-height: 1.12; letter-spacing: -0.045em; }
+.passport-sentence-translation { margin: 28px 0 0; color: #53657c; font-size: clamp(1.5rem, 2.8vw, 2.5rem); font-weight: 750; }
 .activity-image-card { display: grid; align-content: center; justify-items: center; gap: 18px; }
 .activity-image-card h2 { font-size: clamp(2.6rem, 5.5vw, 5rem); }
 .activity-main-image { display: block; max-width: min(1050px, 100%); max-height: 58vh; border: 3px solid #d8e8fa; border-radius: 28px; object-fit: contain; background: white; box-shadow: 0 18px 42px rgba(31, 70, 130, 0.14); }
@@ -270,6 +279,9 @@ kbd { display: inline-grid; min-width: 28px; height: 26px; place-items: center; 
   .sentence-card-picture { width: 230px; }
   .sentence-card-copy { text-align: center; }
   .sentence-card-line { padding: 16px 20px; text-align: left; }
+  .passport-sentence-layout { grid-template-columns: 1fr; gap: 20px; }
+  .passport-sentence-picture { width: 230px; }
+  .passport-sentence-copy { text-align: center; }
   .wordwall-toolbar { align-items: stretch; flex-direction: column; }
   .wordwall-actions { justify-content: space-between; }
   .wordwall-frame { height: 58vh; }
@@ -302,6 +314,8 @@ kbd { display: inline-grid; min-width: 28px; height: 26px; place-items: center; 
   .sentence-card-label { margin-bottom: 12px; }
   .sentence-card-lines { gap: 12px; }
   .sentence-card-line { padding-block: 14px; font-size: clamp(1.8rem, 3.6vw, 2.8rem); }
+  .passport-sentence-picture { width: 230px; }
+  .passport-sentence-copy h2 { font-size: clamp(2.4rem, 5vw, 4rem); }
 }
 
 @media (prefers-reduced-motion: reduce) {

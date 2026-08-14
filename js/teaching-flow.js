@@ -325,6 +325,34 @@
     });
   }
 
+  function passportSentenceSteps(unit) {
+    const entries = window.BOOK1_PASSPORT_SENTENCES?.[unit.id] || [];
+    return entries.map(([text, translation], index) => {
+      const picture = sentencePicture(unit, text, index);
+      return step(
+        `passport-sentence-${index + 1}`,
+        "grammar",
+        "Passport Review",
+        0,
+        "Read the sentence aloud.",
+        {
+          activity: "passport-sentence",
+          phaseTitle: "Passport Review",
+          passportSentence: {
+            text,
+            translation,
+            image: picture.image || "",
+            sprite: picture.sprite,
+            visual: picture.visual,
+            word: picture.word
+          },
+          questionIndex: index + 1,
+          questionTotal: entries.length
+        }
+      );
+    });
+  }
+
   function sentencePatternSteps(unit, totalDuration, sentences) {
     const cards = unit.sentenceCards || [];
     if (!cards.length) return dialogueChoiceSteps(unit, totalDuration, sentences);
@@ -444,6 +472,7 @@
           }
         )] : []),
         ...letsTalkChoiceSteps(unit, unitNumber === 1 ? 10 : 15),
+        ...passportSentenceSteps(unit),
         afterVocabulary,
         step("break", "break", "Break Time", 10, "Take a ten-minute break.", { activity: "break" }),
         step("theme-song", "warmup", "Theme Song", 5, "Take attendance after the break and warm up with the LiveABC Theme Song.", { activity: "song" }),

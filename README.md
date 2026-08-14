@@ -17,6 +17,7 @@ A static, projection-friendly lesson player for English teachers. It includes th
 │  └─ classroom-tools.js # Random cards, reveal, matching, dice, timer, scores
 ├─ data/
 │  ├─ book1.js        # Book 1 curriculum, Units 1–9
+│  ├─ book1-passport.js # Book 1 passport review sentences
 │  └─ book2-unit1.js  # Course content only
 └─ assets/
    ├─ images/
@@ -79,6 +80,8 @@ The basic data shape is:
 The star button in the player opens a classroom toolbox. Random Vocabulary, Picture Reveal, Memory Match, Virtual Dice, Timer, and Team Scoreboard automatically use the vocabulary from the open Unit, so teachers do not need separate cards, dice, timers, or a scoreboard.
 
 Book 1 Let’s Talk is automatically expanded into one picture-based A/B/C question per target sentence. Question sentences use the following answer pattern, while statement pages ask students to choose the sentence that matches the picture. Correct and incorrect choices provide immediate feedback.
+
+After Let’s Talk, every Book 1 Day 1 lesson includes its Unit's Passport Review. The complete Unit 1–9 passport set contains 123 pages: one English sentence, supporting picture, and Chinese translation per page.
 
 Vocabulary is expanded into one player page per word. Each word supports `image`, `sprite`, `meaning`, and `audio`. Book 1 uses dedicated illustrations and reusable picture atlases for people, feelings, stationery, colors, clothing, and animals.
 

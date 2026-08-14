@@ -158,6 +158,30 @@
     `;
   }
 
+  function renderPassportSentenceStep(step, duration) {
+    const sentence = step.passportSentence;
+    const picture = renderPictureAsset(sentence, "passport-sentence-image", "passport-sentence-visual");
+    return `
+      <article class="step-card passport-sentence-card" data-step-type="grammar">
+        <div class="quiz-topline">
+          <div class="step-meta">
+            <span class="phase-badge">${escapeHtml(step.phaseTitle || "Passport Review")} · ${escapeHtml(step.questionIndex)} / ${escapeHtml(step.questionTotal)}</span>
+            ${duration}
+          </div>
+          <span class="quiz-mini-progress" aria-hidden="true"><i style="width:${((step.questionIndex || 1) / (step.questionTotal || 1)) * 100}%"></i></span>
+        </div>
+        <div class="passport-sentence-layout">
+          <div class="passport-sentence-picture">${picture}</div>
+          <div class="passport-sentence-copy">
+            <p class="passport-sentence-kicker">READ ALOUD</p>
+            <h2>${escapeHtml(sentence.text)}</h2>
+            <p class="passport-sentence-translation">${escapeHtml(sentence.translation)}</p>
+          </div>
+        </div>
+      </article>
+    `;
+  }
+
   function renderActivityImageStep(step, duration) {
     return `
       <article class="step-card activity-image-card" data-step-type="${escapeHtml(step.type)}">
@@ -259,6 +283,10 @@
 
     if (step.sentenceCard) {
       return renderSentenceCardStep(step, duration);
+    }
+
+    if (step.passportSentence) {
+      return renderPassportSentenceStep(step, duration);
     }
 
     if (step.type === "embed") {

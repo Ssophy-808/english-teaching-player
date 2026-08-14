@@ -426,6 +426,9 @@
             } : {})
           }
         ),
+        ...vocabularySteps(unit, unitNumber === 1 ? 10 : 15),
+        ...answerQuicklySteps,
+        ...vocabularyPracticeSteps(unit, 15),
         ...(unitNumber === 1 ? [step(
           "lets-talk",
           "presentation",
@@ -441,9 +444,6 @@
           }
         )] : []),
         ...letsTalkChoiceSteps(unit, unitNumber === 1 ? 10 : 15),
-        ...vocabularySteps(unit, unitNumber === 1 ? 10 : 15),
-        ...answerQuicklySteps,
-        ...vocabularyPracticeSteps(unit, 15),
         afterVocabulary,
         step("break", "break", "Break Time", 10, "Take a ten-minute break.", { activity: "break" }),
         step("theme-song", "warmup", "Theme Song", 5, "Take attendance after the break and warm up with the LiveABC Theme Song.", { activity: "song" }),

@@ -60,9 +60,98 @@
         <div class="word-picture">${image}</div>
         <h2 class="word-title">${escapeHtml(word.word)}</h2>
         ${meaning}
-        <p class="word-prompt">Listen and repeat.</p>
+        ${word.audio
+          ? `<button class="audio-play-button" type="button" data-audio-src="${escapeHtml(word.audio)}">▶ Play audio</button>`
+          : `<p class="word-prompt">Repeat after your teacher.</p>`}
       </article>
     `;
+  }
+
+  function flowGameContent(step) {
+    const words = step.vocabulary || [];
+    const sentences = step.mainSentences || [];
+    const index = Number(step.gameRound || 0);
+    const word = words[index % Math.max(words.length, 1)] || {};
+    const sentence = sentences[index % Math.max(sentences.length, 1)] || "Use today’s sentence pattern.";
+    if (step.gameScope === "vocabulary") {
+      const picture = renderPictureAsset(word, "flow-game-image", "flow-game-visual");
+      const isReveal = step.activeGame === "reveal";
+      return `
+        <div class="flow-game-play ${isReveal && !step.isRevealed ? "is-covered" : ""}">
+          <div class="flow-game-picture">${picture}<button class="reveal-cover" type="button" data-game-reveal>?</button></div>
+          <h3>${step.activeGame === "random" || step.isRevealed ? escapeHtml(word.word) : "Say the word!"}</h3>
+          ${step.activeGame === "dice" ? `<p class="dice-result">🎲 ${(index % 6) + 1}</p>` : ""}
+        </div>`;
+    }
+    const question = sentences.find((item) => item.includes("?")) || sentence;
+    const answer = sentences.find((item) => !item.includes("?")) || sentence;
+    const prompt = step.activeGame === "sentence-match" ? question
+      : step.activeGame === "substitution" ? sentence.replace(/\b(boy|girl|man|woman|student|teacher)\b/i, "____")
+        : step.activeGame === "dice-qa" ? `🎲 ${(index % 6) + 1} · ${question}`
+          : step.activeGame === "quick-response" ? question : sentence;
+    return `
+      <div class="flow-game-play grammar-game-play">
+        <p class="game-mode-label">${escapeHtml(step.suggestedGames.find((game) => game.id === step.activeGame)?.title || "Grammar Game")}</p>
+        <h3>${escapeHtml(prompt)}</h3>
+        <button class="button button-secondary" type="button" data-game-reveal>${step.isRevealed ? "Hide answer" : "Show answer"}</button>
+        ${step.isRevealed ? `<p class="grammar-model-answer">${escapeHtml(answer)}</p>` : ""}
+      </div>`;
+  }
+
+  function renderFlowGamesStep(step, duration) {
+    const words = (step.vocabulary || []).map((item) => `<span>${escapeHtml(item.word)}</span>`).join("");
+    const gameButtons = (step.suggestedGames || []).map((game) => `
+      <button class="flow-game-choice ${step.activeGame === game.id ? "is-active" : ""}" type="button" data-flow-game="${escapeHtml(game.id)}">
+        <strong>${escapeHtml(game.title)}</strong><small>${escapeHtml(game.description)}</small>
+      </button>`).join("");
+    const ideas = (step.activityIdeas || []).slice(0, 4).map((idea) => `
+      <article class="activity-idea"><img src="${escapeHtml(idea.image)}" alt=""><span>${escapeHtml(idea.title)}</span></article>`).join("");
+    return `
+      <article class="step-card flow-games-card" data-step-type="game">
+        <div class="step-meta"><span class="phase-badge">${escapeHtml(step.phaseTitle)}</span>${duration}</div>
+        <div class="flow-games-heading">
+          <div><p class="step-kicker">TEACH → PLAY → CHECK</p><h2>${escapeHtml(step.title)}</h2><p>建議選 2–3 個遊戲；可重玩、完成或跳過。</p></div>
+          <span class="game-status ${step.completed ? "is-complete" : ""}">${step.completed ? "✓ 已完成" : "尚未標記"}</span>
+        </div>
+        ${step.gameScope === "vocabulary" ? `<div class="taught-word-list"><strong>已教單字</strong>${words}</div>` : `<div class="taught-word-list"><strong>本課句型</strong>${(step.mainSentences || []).slice(0, 6).map((line) => `<span>${escapeHtml(line)}</span>`).join("")}</div>`}
+        <div class="flow-game-layout">
+          <div class="flow-game-menu">${gameButtons}</div>
+          <div class="flow-game-stage">${step.activeGame ? flowGameContent(step) : `<div class="game-empty"><span>🎮</span><p>選一個遊戲開始</p></div>`}</div>
+        </div>
+        ${ideas ? `<div class="activity-ideas"><strong>教材活動建議</strong><div>${ideas}</div></div>` : ""}
+        <div class="flow-game-actions">
+          <button class="button button-secondary" type="button" data-game-replay ${step.activeGame ? "" : "disabled"}>↻ 重新玩</button>
+          <button class="button button-primary" type="button" data-game-complete>✓ 標記完成</button>
+          <button class="button button-quiet" type="button" data-game-skip>跳過這一階段</button>
+        </div>
+      </article>`;
+  }
+
+  function renderGrammarCheck(step, duration) {
+    const sentences = step.mainSentences || [];
+    const index = Number(step.checkIndex || 0) % Math.max(sentences.length, 1);
+    const prompt = sentences[index] || "Say one complete sentence.";
+    return `
+      <article class="step-card grammar-check-card" data-step-type="check">
+        <div class="step-meta"><span class="phase-badge">Grammar Check</span>${duration}</div>
+        <p class="step-kicker">READY TO MOVE ON?</p><h2>口說／理解檢核</h2>
+        <p class="grammar-check-prompt">${escapeHtml(prompt.includes("?") ? prompt : "Say a complete sentence about the picture or prompt.")}</p>
+        <button class="button button-secondary" type="button" data-check-answer>${step.checkRevealed ? "Hide model answer" : "Show model answer"}</button>
+        ${step.checkRevealed ? `<p class="grammar-model-answer">${escapeHtml(prompt)}</p>` : ""}
+        <button class="button button-primary" type="button" data-check-next>Next prompt</button>
+      </article>`;
+  }
+
+  function renderTopicConversation(step, duration) {
+    const labels = { intro: "主題導入", "teacher-question": "教師提問", pair: "Pair Practice", challenge: "綜合口說活動" };
+    return `
+      <article class="step-card topic-card" data-step-type="speaking">
+        <div class="step-meta"><span class="phase-badge">Topic Conversation · ${escapeHtml(step.phaseStepIndex)} / ${escapeHtml(step.phaseStepTotal)}</span>${duration}</div>
+        <p class="step-kicker">${escapeHtml(labels[step.topicRole] || "CONVERSATION")}</p>
+        <h2>${escapeHtml(step.title)}</h2>
+        <p class="topic-prompt">${escapeHtml(step.instruction)}</p>
+        ${step.modelAnswer ? `<details class="model-answer"><summary>Show model answer</summary><p>${escapeHtml(step.modelAnswer)}</p></details>` : ""}
+      </article>`;
   }
 
   function renderQuizStep(step, duration) {
@@ -261,9 +350,14 @@
   }
 
   function renderStep(step) {
-    const duration = Number(step.duration) > 0
-      ? `<span class="duration-badge">◷ ${escapeHtml(step.duration)} min</span>`
-      : "";
+    const minutes = Number(step.phaseDuration) > 0 ? step.phaseDuration : step.duration;
+    const duration = Number(minutes) > 0
+      ? `<span class="duration-badge">◷ ${escapeHtml(minutes)} min</span>`
+      : `<span class="duration-badge is-flexible">彈性</span>`;
+
+    if (step.activity === "flow-games") return renderFlowGamesStep(step, duration);
+    if (step.activity === "grammar-check") return renderGrammarCheck(step, duration);
+    if (step.activity === "topic-conversation") return renderTopicConversation(step, duration);
 
     if (step.type === "vocabulary" && step.word) {
       return renderVocabularyStep(step, duration);
@@ -309,6 +403,52 @@
   function activateStep(container, step) {
     container.onclick = null;
     container.onsubmit = null;
+
+    const audioButton = container.querySelector("[data-audio-src]");
+    if (audioButton) {
+      audioButton.addEventListener("click", () => {
+        const audio = new Audio(audioButton.dataset.audioSrc);
+        audio.play().catch(() => { audioButton.textContent = "Audio unavailable"; });
+      });
+    }
+
+    if (step.activity === "flow-games") {
+      container.onclick = (event) => {
+        const game = event.target.closest("[data-flow-game]");
+        if (game) {
+          step.activeGame = game.dataset.flowGame;
+          step.gameRound = (Number(step.gameRound) || 0) + 1;
+          step.isRevealed = false;
+          document.dispatchEvent(new CustomEvent("lesson:trail", { detail: { title: step.suggestedGames.find((item) => item.id === step.activeGame)?.title || "" } }));
+        } else if (event.target.closest("[data-game-replay]")) {
+          step.gameRound = (Number(step.gameRound) || 0) + 1;
+          step.isRevealed = false;
+        } else if (event.target.closest("[data-game-reveal]")) {
+          step.isRevealed = !step.isRevealed;
+        } else if (event.target.closest("[data-game-complete]")) {
+          step.completed = true;
+        } else if (event.target.closest("[data-game-skip]")) {
+          step.completed = false;
+          step.skipped = true;
+        } else return;
+        container.innerHTML = renderStep(step);
+        activateStep(container, step);
+      };
+      return;
+    }
+
+    if (step.activity === "grammar-check") {
+      container.onclick = (event) => {
+        if (event.target.closest("[data-check-answer]")) step.checkRevealed = !step.checkRevealed;
+        else if (event.target.closest("[data-check-next]")) {
+          step.checkIndex = (Number(step.checkIndex) || 0) + 1;
+          step.checkRevealed = false;
+        } else return;
+        container.innerHTML = renderStep(step);
+        activateStep(container, step);
+      };
+      return;
+    }
 
     if (step.type === "embed") {
       container.onclick = (event) => {

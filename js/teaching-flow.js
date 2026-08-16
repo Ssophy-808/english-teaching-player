@@ -714,6 +714,165 @@
     return [{ id: "lesson-1", title: unit.title, day: "Core Lesson", curriculum: curriculumFor(unit), steps }];
   }
 
+  const CLASSROOM_FLOW = [
+    { id: "warm-up", groupId: "warm-up", groupTitle: "Warm Up", title: "Warm Up", duration: 5, activityType: "teaching" },
+    { id: "vocabulary-teaching", groupId: "vocabulary", groupTitle: "Vocabulary", title: "Vocabulary Teaching", duration: 3, activityType: "teaching" },
+    { id: "vocabulary-games", groupId: "vocabulary", groupTitle: "Vocabulary", title: "Vocabulary Games", duration: 5, activityType: "game", skippable: true },
+    { id: "vocabulary-check", groupId: "vocabulary", groupTitle: "Vocabulary", title: "Vocabulary Check", duration: 2, activityType: "check" },
+    { id: "grammar-teaching", groupId: "grammar", groupTitle: "Grammar / Sentence Pattern", title: "Grammar Teaching", duration: 3, activityType: "teaching" },
+    { id: "grammar-games", groupId: "grammar", groupTitle: "Grammar / Sentence Pattern", title: "Grammar Games", duration: 5, activityType: "game", skippable: true },
+    { id: "topic-conversation", groupId: "topic", groupTitle: "Topic / Conversation", title: "Topic Conversation", duration: 2, activityType: "conversation" },
+    { id: "show-book", groupId: "book-review", groupTitle: "Book & Review", title: "Show Book", duration: 10, activityType: "book" },
+    { id: "writing-book", groupId: "book-review", groupTitle: "Book & Review", title: "Writing Book", duration: 10, activityType: "book" },
+    { id: "better-reader", groupId: "book-review", groupTitle: "Book & Review", title: "Better Reader", duration: 20, activityType: "reader" },
+    { id: "quiz", groupId: "book-review", groupTitle: "Book & Review", title: "Quiz", duration: 8, activityType: "check" },
+    { id: "homework", groupId: "book-review", groupTitle: "Book & Review", title: "Homework", duration: 2, activityType: "homework" }
+  ];
+
+  const VOCABULARY_GAMES = [
+    { id: "random", title: "Random", description: "隨機抽一個單字，全班快速說出答案。" },
+    { id: "reveal", title: "Reveal", description: "慢慢揭曉圖片，猜出正確單字。" },
+    { id: "matching", title: "Matching", description: "把圖片和英文單字配對。" },
+    { id: "dice", title: "Dice", description: "擲骰子決定要回答的單字。" }
+  ];
+
+  const GRAMMAR_GAMES = [
+    { id: "sentence-match", title: "Sentence Match", description: "配對問句與正確回答。" },
+    { id: "substitution", title: "Substitution", description: "抽字替換句型中的關鍵字。" },
+    { id: "picture-sentence", title: "Picture Sentence", description: "看圖片，用本課句型造句。" },
+    { id: "dice-qa", title: "Dice Q&A", description: "擲骰子決定問答題。" },
+    { id: "quick-response", title: "Quick Response", description: "看提示快速說出完整句子。" }
+  ];
+
+  function phaseById(id) {
+    return CLASSROOM_FLOW.find((phase) => phase.id === id);
+  }
+
+  function makePhase(id, phaseSteps, extra = {}) {
+    const definition = phaseById(id);
+    const steps = phaseSteps.map((page, index) => ({
+      ...page,
+      duration: null,
+      phase: definition.groupId,
+      phaseId: definition.id,
+      phaseTitle: definition.title,
+      phaseGroupId: definition.groupId,
+      phaseGroupTitle: definition.groupTitle,
+      phaseDuration: definition.duration,
+      activityType: page.activityType || definition.activityType,
+      content: page.content || page.instruction || "",
+      skippable: page.skippable ?? definition.skippable ?? false,
+      phaseStepIndex: index + 1,
+      phaseStepTotal: phaseSteps.length
+    }));
+    return { ...definition, ...extra, steps };
+  }
+
+  function warmUpPages(unit, unitIndex, day) {
+    if (unitIndex === 0 && day === 1) {
+      return [step("warm-up-throw-catch", "warmup", "Throw and Catch", null, "準備一顆軟球。接到球的學生說：I am [name].，再把球傳給下一位。", {
+        activity: "visual-activity",
+        activityImage: "assets/images/throw-and-catch-activity.png",
+        imageAlt: "Students introduce themselves while throwing and catching a soft ball"
+      })];
+    }
+    return [step("warm-up-review", "warmup", day === 1 ? "Hello & Topic Warm Up" : "Quick Review", null,
+      day === 1
+        ? `Greet the class and introduce today’s topic: ${unit.topic}.`
+        : "Use two quick questions to review the previous lesson, then introduce today’s goal.",
+      { activity: "review" })];
+  }
+
+  function vocabularyGameIdeas(bookId, unit, day) {
+    const names = bookId === "book-1" ? (window.BOOK1_ACTIVITIES?.[unit.id]?.[`day${day}`] || []) : [];
+    return names.map((name, index) => ({
+      title: name,
+      image: activityImageFor(unit, day, name),
+      id: `idea-${index + 1}`
+    }));
+  }
+
+  function grammarTeachingPages(unit) {
+    const pages = unit.sentenceCards?.length
+      ? sentencePatternSteps(unit, 0, unit.mainSentences)
+      : sentenceReviewSteps(unit, 0);
+    return pages.length ? pages : [step("grammar-pattern", "grammar", "Grammar Teaching", null, unit.mainSentences.join("\n"), {
+      activity: "sentence-pattern",
+      mainSentences: unit.mainSentences
+    })];
+  }
+
+  function grammarCheckPage(unit) {
+    return step("grammar-check", "check", "Grammar Check", null, "Show one prompt at a time. Students answer with a complete sentence before revealing the model answer.", {
+      activity: "grammar-check",
+      activityType: "check",
+      vocabulary: vocabularyItems(unit.vocabulary),
+      mainSentences: unit.mainSentences,
+      topic: unit.topic
+    });
+  }
+
+  function topicPages(unit) {
+    const sampleQuestion = unit.mainSentences.find((sentence) => sentence.includes("?")) || `What can you say about ${unit.topic}?`;
+    const sampleAnswer = unit.mainSentences.find((sentence) => !sentence.includes("?")) || unit.mainSentences[0] || "Answer in a complete sentence.";
+    return [
+      step("topic-intro", "speaking", "Topic Introduction", null, `Connect today’s words and sentence pattern to the situation: ${unit.topic}.`, { activity: "topic-conversation", topicRole: "intro", topic: unit.topic }),
+      step("teacher-question", "speaking", "Teacher Questions", null, sampleQuestion, { activity: "topic-conversation", topicRole: "teacher-question", modelAnswer: sampleAnswer, mainSentences: unit.mainSentences }),
+      step("pair-practice", "speaking", "Pair Practice", null, "Student A asks. Student B answers in a complete sentence. Then switch roles.", { activity: "topic-conversation", topicRole: "pair", mainSentences: unit.mainSentences }),
+      step("speaking-challenge", "speaking", "Speaking Challenge", null, `Use at least one vocabulary word and one sentence pattern to talk about ${unit.topic}.`, { activity: "topic-conversation", topicRole: "challenge", vocabulary: vocabularyItems(unit.vocabulary), mainSentences: unit.mainSentences })
+    ];
+  }
+
+  function sharedLessonFromUnit(unit, unitIndex, bookId, day) {
+    const vocabulary = vocabularyItems(unit.vocabulary);
+    const activityIdeas = vocabularyGameIdeas(bookId, unit, day);
+    const ideaSplit = Math.ceil(activityIdeas.length / 2);
+    const vocabularyIdeas = activityIdeas.slice(0, ideaSplit);
+    const grammarIdeas = activityIdeas.slice(ideaSplit);
+    const vocabCheck = vocabularyPracticeSteps(unit, 0);
+    const passport = passportSentenceSteps(unit);
+    const phases = [
+      makePhase("warm-up", warmUpPages(unit, unitIndex, day)),
+      makePhase("vocabulary-teaching", vocabularySteps(unit, 0, "vocabulary", "Vocabulary Teaching"), { vocabulary }),
+      makePhase("vocabulary-games", [
+        step("vocabulary-games", "game", "Vocabulary Games", null, "Choose 2–3 games. Every game can be replayed, completed, or skipped.", {
+          activity: "flow-games", gameScope: "vocabulary", vocabulary, suggestedGames: VOCABULARY_GAMES, activityIdeas: vocabularyIdeas, skippable: true
+        }),
+        wordwallStep(unit, bookId, `day-${day}`, 0)
+      ], { vocabulary, suggestedGames: VOCABULARY_GAMES, skippable: true }),
+      makePhase("vocabulary-check", vocabCheck.length ? vocabCheck : [step("vocabulary-check", "check", "Vocabulary Check", null, "Show a picture and ask students to say or choose the correct word.", { activity: "vocabulary-check", vocabulary })]),
+      makePhase("grammar-teaching", grammarTeachingPages(unit), { grammar: unit.mainSentences }),
+      makePhase("grammar-games", [
+        step("grammar-games", "game", "Grammar Games", null, "Choose 2–3 sentence games before the check.", {
+          activity: "flow-games", gameScope: "grammar", vocabulary, mainSentences: unit.mainSentences, suggestedGames: GRAMMAR_GAMES, activityIdeas: grammarIdeas, skippable: true
+        }),
+        grammarCheckPage(unit)
+      ], { grammar: unit.mainSentences, suggestedGames: GRAMMAR_GAMES, skippable: true }),
+      makePhase("topic-conversation", topicPages(unit), { topic: unit.topic }),
+      makePhase("show-book", [step("show-book", "showbook", "Show Book", null, "Open the original e-book or teaching slides and complete the assigned pages.", { activity: "book-resource", embedUrl: unit.materials?.bookUrl || "" })]),
+      makePhase("writing-book", [step("writing-book", "writing", "Writing Book", null, "Model the first item, then let students complete the assigned writing practice.", { activity: "book-resource" })]),
+      makePhase("better-reader", [
+        step("better-reader", "reader", "Better Reader", null, "Read once for meaning, read again together, then ask one comprehension question.", { activity: "reader" }),
+        ...passport
+      ]),
+      makePhase("quiz", quizSteps(unit, 0)),
+      makePhase("homework", [step("homework", "homework", "Homework", null, "Review today’s vocabulary and sentence pattern. Finish the assigned book pages.", { activity: "homework" })])
+    ];
+    const steps = phases.flatMap((phase) => phase.steps);
+    const totalDuration = phases.reduce((total, phase) => total + (Number(phase.duration) || 0), 0);
+    return {
+      id: `day-${day}`,
+      title: `${unit.title} · Day ${day}`,
+      day: `Day ${day}`,
+      curriculum: curriculumFor(unit),
+      phases,
+      duration: totalDuration,
+      durationMinutes: totalDuration,
+      steps,
+      source: bookId === "book-1" ? { document: "B1_教學流程.pdf", page: B1_DAY_PAGES[unitIndex]?.[day - 1] } : undefined
+    };
+  }
+
   function buildCatalog(books) {
     return books.map((book) => ({
       ...book,
@@ -721,15 +880,11 @@
         id: unit.id,
         title: `Unit ${unitIndex + 1}`,
         topic: unit.title,
-        lessons: book.id === "book-1"
-          ? book1LessonsFromUnit(unit, unitIndex)
-          : book.id === "book-2"
-            ? book2LessonsFromUnit(unit)
-            : defaultLessonFromUnit(unit, unitIndex, book.id)
+        lessons: [1, 2].map((day) => sharedLessonFromUnit(unit, unitIndex, book.id, day))
       }))
     }));
   }
 
-  window.TeachingFlow = { FLOW_TEMPLATE: DEFAULT_FLOW_TEMPLATE, buildCatalog };
+  window.TeachingFlow = { FLOW_TEMPLATE: CLASSROOM_FLOW, buildCatalog };
   window.COURSE_CATALOG = buildCatalog(window.CURRICULUM_BOOKS || []);
 })();

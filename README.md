@@ -1,6 +1,6 @@
 # English Teaching Player
 
-A static, projection-friendly lesson player for English teachers. It includes the lesson library, Book → Unit → Lesson navigation, one-step-at-a-time playback, Previous / Next controls, keyboard navigation, progress, fullscreen, saved local progress, Wordwall, picture quizzes, and a no-prep classroom toolbox.
+A static, projection-friendly lesson player for English teachers. It includes a phase-based 75-minute teaching flow, Book → Unit → Lesson navigation, one-step-at-a-time playback, Previous / Next controls, keyboard navigation, progress, fullscreen, saved local progress, Wordwall, picture quizzes, in-flow review games, and a no-prep classroom toolbox.
 
 ## Project structure
 
@@ -73,19 +73,19 @@ The basic data shape is:
 }
 ```
 
-`js/teaching-flow.js` automatically turns curriculum data into lesson steps. Book 1 uses Day 1 and Day 2 from `B1_教學流程.pdf`; each Unit contains two 120-minute lessons and a separate Day 3–4 Activities lesson. Book 2 contains Units 1–9 with two 120-minute lessons per Unit, purpose-built fixed-grid vocabulary illustrations, long-vowel phonics, and one-page-per-sentence Passport Review. Other books currently use the default sequence:
+`js/teaching-flow.js` automatically turns curriculum data into Day 1 and Day 2 lessons. Book 1 and Book 2 share the same phase model; new books receive it automatically. The stage durations are stored once and automatically total 75 minutes:
 
-`Warm Up → Vocabulary → Sentence Pattern → Practice → Speaking → Game → Phonics → Show Book → Quiz → Homework`
+`Warm Up → Vocabulary Teaching → Vocabulary Games → Vocabulary Check → Grammar Teaching → Grammar Games + Check → Topic Conversation → Show Book → Writing Book → Better Reader → Quiz → Homework`
 
-The star button in the player opens a classroom toolbox. Random Vocabulary, Picture Reveal, Memory Match, Virtual Dice, Timer, and Team Scoreboard automatically use the vocabulary from the open Unit, so teachers do not need separate cards, dice, timers, or a scoreboard.
+Generated lessons expose both `phases` and flattened `steps`. Every page has `phase`, `phaseId`, `activityType`, `title`, `content`, `phaseDuration`, curriculum-specific data, suggested games, and `skippable` where appropriate. Add curriculum data to a book file; do not copy the player or hard-code a new page sequence.
 
-Book 1 Let’s Talk is automatically expanded into one picture-based A/B/C question per target sentence. Question sentences use the following answer pattern, while statement pages ask students to choose the sentence that matches the picture. Correct and incorrect choices provide immediate feedback.
+Vocabulary Games and Grammar Games are formal lesson stages. Vocabulary uses Random, Reveal, Matching, and Dice with the current Unit words. Grammar uses sentence matching, substitution, picture sentences, dice Q&A, and quick response with the current Unit patterns. Teachers can replay, mark complete, or skip. The star button still opens the independent classroom toolbox with Random Vocabulary, Picture Reveal, Memory Match, Virtual Dice, Timer, and Team Scoreboard.
 
-After Let’s Talk, every Book 1 Day 1 lesson includes its Unit's Passport Review. The complete Unit 1–9 passport set contains 123 pages: one English sentence, supporting picture, and Chinese translation per page.
+The Grammar Teaching and Grammar Check stages use the current Unit's sentence cards and patterns. Topic Conversation follows the check with topic introduction, teacher questions, pair practice, and an integrated speaking challenge. Book 1 Passport Review sentences are preserved in Better Reader as one English sentence, supporting picture, and Chinese translation per page.
 
 Vocabulary is expanded into one player page per word. Each word supports `image`, `sprite`, `meaning`, and `audio`. Book 1 uses dedicated illustrations and reusable picture atlases for people, feelings, stationery, colors, clothing, and animals.
 
-Every lesson includes its own Wordwall Game step. Book 1 has separate Wordwall slots for every Unit's Day 1 and Day 2; later books receive the same interface automatically. Paste a Wordwall Embed URL or the complete iframe code in the player. Each lesson stores its own URL locally, displays the activity inside the player, and provides an Open externally fallback.
+Every Vocabulary Games phase retains its own Wordwall page. Paste a Wordwall Embed URL or complete iframe code; the player stores each lesson URL locally, displays the activity inside the player, and provides an Open externally fallback.
 
 Every Book 1 Day 1 lesson also generates one picture-based multiple-choice practice question for every vocabulary word. The choices are built automatically from the Unit vocabulary data, so future vocabulary additions produce matching practice questions without editing the player code.
 

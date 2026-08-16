@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#2b59c3">
     <meta name="description" content="A simple, projection-friendly lesson player for English teachers.">
     <title>English Teaching Player</title>
-    <link rel="stylesheet" href="css/style.css?v=6">
+    <link rel="stylesheet" href="css/style.css?v=7">
   </head>
   <body>
     <noscript>請啟用 JavaScript 才能使用教材播放器。</noscript>
@@ -42,8 +42,10 @@
         <div class="lesson-identity">
           <p id="player-context"></p>
           <h1 id="lesson-name"></h1>
+          <p id="phase-trail" class="phase-trail" aria-live="polite"></p>
         </div>
         <div class="player-tools">
+          <button id="flow-button" class="flow-button" type="button" aria-haspopup="dialog">課程流程</button>
           <button id="toolbox-button" class="icon-button toolbox-button" type="button" aria-label="Open classroom toolbox" title="Classroom toolbox">★</button>
           <span id="step-count" class="step-count" aria-live="polite"></span>
           <button id="fullscreen-button" class="icon-button fullscreen-button" type="button" aria-label="Enter fullscreen" title="Fullscreen">⛶</button>
@@ -68,6 +70,21 @@
         </button>
       </footer>
     </main>
+
+    <section id="flow-modal" class="flow-modal" hidden aria-label="課程流程" aria-modal="true" role="dialog">
+      <div class="flow-shell">
+        <header class="flow-header">
+          <div>
+            <p class="eyebrow">LESSON MAP</p>
+            <h2>課程流程</h2>
+            <p id="flow-summary" class="flow-summary"></p>
+          </div>
+          <button id="flow-close" class="icon-button" type="button" aria-label="關閉課程流程">×</button>
+        </header>
+        <div id="flow-groups" class="flow-groups"></div>
+        <button id="flow-return" class="button button-primary flow-return" type="button">返回目前進度</button>
+      </div>
+    </section>
 
     <section id="toolbox-modal" class="toolbox-modal" hidden aria-label="Classroom toolbox" aria-modal="true" role="dialog">
       <div class="toolbox-shell">
@@ -94,10 +111,10 @@
     <script src="data/book1-activities.js" defer></script>
     <script src="data/book1-passport.js?v=1" defer></script>
     <script src="data/book2.js?v=2" defer></script>
-    <script src="js/teaching-flow.js?v=14" defer></script>
-    <script src="js/activities.js?v=9" defer></script>
+    <script src="js/teaching-flow.js?v=15" defer></script>
+    <script src="js/activities.js?v=10" defer></script>
     <script src="js/classroom-tools.js?v=1" defer></script>
-    <script src="js/player.js?v=2" defer></script>
-    <script src="js/app.js" defer></script>
+    <script src="js/player.js?v=3" defer></script>
+    <script src="js/app.js?v=2" defer></script>
   </body>
 </html>

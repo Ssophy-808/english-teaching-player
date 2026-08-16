@@ -11,6 +11,10 @@
   let selectedBook = null;
   let selectedUnit = null;
 
+  function scrollToTop() {
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }
+
   function escapeHtml(value) {
     return String(value ?? "")
       .replaceAll("&", "&amp;")
@@ -42,10 +46,11 @@
     libraryGrid.innerHTML = catalog.map((book, index) => cardMarkup({
       number: index + 1,
       title: book.title,
-      subtitle: book.units.length ? `${book.subtitle} · ${book.units.length} unit` : `${book.subtitle} · Coming soon`,
+      subtitle: book.units.length ? `${book.subtitle} · ${book.units.length} units` : `${book.subtitle} · Coming soon`,
       action: `book:${book.id}`,
       comingSoon: !book.units.length
     })).join("");
+    scrollToTop();
   }
 
   function renderUnits(book) {
@@ -60,6 +65,7 @@
       action: `unit:${unit.id}`,
       comingSoon: !unit.lessons.length
     })).join("");
+    scrollToTop();
   }
 
   function renderLessons(book, unit) {
@@ -68,7 +74,8 @@
     libraryTitle.textContent = "Choose a lesson";
     libraryPath.textContent = `${book.title}  /  ${unit.title} ${unit.topic}`;
     libraryGrid.innerHTML = backCard(`book:${book.id}`, "All units") + unit.lessons.map((lesson, index) => {
-      const minutes = lesson.steps.reduce((sum, step) => sum + (Number(step.duration) || 0), 0);
+      const minutes = lesson.phases?.reduce((sum, phase) => sum + (Number(phase.duration) || 0), 0)
+        ?? lesson.steps.reduce((sum, step) => sum + (Number(step.duration) || 0), 0);
       return cardMarkup({
         number: index + 1,
         title: lesson.title,
@@ -76,6 +83,7 @@
         action: `lesson:${lesson.id}`
       });
     }).join("");
+    scrollToTop();
   }
 
   function buildLessonContext(book, unit, lesson) {
@@ -97,6 +105,7 @@
   }
 
   function openLesson(book, unit, lesson, stepIndex = 0) {
+    scrollToTop();
     window.LessonPlayer.open(buildLessonContext(book, unit, lesson), stepIndex);
   }
 

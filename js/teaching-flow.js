@@ -723,25 +723,23 @@
     { id: "grammar-games", groupId: "grammar", groupTitle: "Grammar / Sentence Pattern", title: "Grammar Games", duration: 5, activityType: "game", skippable: true },
     { id: "topic-conversation", groupId: "topic", groupTitle: "Topic / Conversation", title: "Topic Conversation", duration: 2, activityType: "conversation" },
     { id: "show-book", groupId: "book-review", groupTitle: "Book & Review", title: "Show Book", duration: 10, activityType: "book" },
-    { id: "writing-book", groupId: "book-review", groupTitle: "Book & Review", title: "Writing Book", duration: 10, activityType: "book" },
-    { id: "better-reader", groupId: "book-review", groupTitle: "Book & Review", title: "Better Reader", duration: 20, activityType: "reader" },
     { id: "quiz", groupId: "book-review", groupTitle: "Book & Review", title: "Quiz", duration: 8, activityType: "check" },
     { id: "homework", groupId: "book-review", groupTitle: "Book & Review", title: "Homework", duration: 2, activityType: "homework" }
   ];
 
   const VOCABULARY_GAMES = [
-    { id: "random", title: "Random", description: "隨機抽一個單字，全班快速說出答案。" },
-    { id: "reveal", title: "Reveal", description: "慢慢揭曉圖片，猜出正確單字。" },
-    { id: "matching", title: "Matching", description: "把圖片和英文單字配對。" },
-    { id: "dice", title: "Dice", description: "擲骰子決定要回答的單字。" }
+    { id: "random", title: "Random" },
+    { id: "reveal", title: "Reveal" },
+    { id: "matching", title: "Matching" },
+    { id: "dice", title: "Dice" }
   ];
 
   const GRAMMAR_GAMES = [
-    { id: "sentence-match", title: "Sentence Match", description: "配對問句與正確回答。" },
-    { id: "substitution", title: "Substitution", description: "抽字替換句型中的關鍵字。" },
-    { id: "picture-sentence", title: "Picture Sentence", description: "看圖片，用本課句型造句。" },
-    { id: "dice-qa", title: "Dice Q&A", description: "擲骰子決定問答題。" },
-    { id: "quick-response", title: "Quick Response", description: "看提示快速說出完整句子。" }
+    { id: "sentence-match", title: "Sentence Match" },
+    { id: "substitution", title: "Substitution" },
+    { id: "picture-sentence", title: "Picture Sentence" },
+    { id: "dice-qa", title: "Dice Q&A" },
+    { id: "quick-response", title: "Quick Response" }
   ];
 
   function phaseById(id) {
@@ -830,7 +828,6 @@
     const vocabularyIdeas = activityIdeas.slice(0, ideaSplit);
     const grammarIdeas = activityIdeas.slice(ideaSplit);
     const vocabCheck = vocabularyPracticeSteps(unit, 0);
-    const passport = passportSentenceSteps(unit);
     const phases = [
       makePhase("warm-up", warmUpPages(unit, unitIndex, day)),
       makePhase("vocabulary-teaching", vocabularySteps(unit, 0, "vocabulary", "Vocabulary Teaching"), { vocabulary }),
@@ -850,11 +847,6 @@
       ], { grammar: unit.mainSentences, suggestedGames: GRAMMAR_GAMES, skippable: true }),
       makePhase("topic-conversation", topicPages(unit), { topic: unit.topic }),
       makePhase("show-book", [step("show-book", "showbook", "Show Book", null, "Open the original e-book or teaching slides and complete the assigned pages.", { activity: "book-resource", embedUrl: unit.materials?.bookUrl || "" })]),
-      makePhase("writing-book", [step("writing-book", "writing", "Writing Book", null, "Model the first item, then let students complete the assigned writing practice.", { activity: "book-resource" })]),
-      makePhase("better-reader", [
-        step("better-reader", "reader", "Better Reader", null, "Read once for meaning, read again together, then ask one comprehension question.", { activity: "reader" }),
-        ...passport
-      ]),
       makePhase("quiz", quizSteps(unit, 0)),
       makePhase("homework", [step("homework", "homework", "Homework", null, "Review today’s vocabulary and sentence pattern. Finish the assigned book pages.", { activity: "homework" })])
     ];

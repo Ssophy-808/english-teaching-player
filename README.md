@@ -1,6 +1,6 @@
 # English Teaching Player
 
-A static, projection-friendly lesson player for English teachers. It includes a phase-based 75-minute teaching flow, Book → Unit → Lesson navigation, one-step-at-a-time playback, Previous / Next controls, keyboard navigation, progress, fullscreen, saved local progress, Wordwall, picture quizzes, in-flow review games, and a no-prep classroom toolbox.
+A static, projection-friendly lesson player for English teachers. It includes a phase-based teaching flow, Book → Unit → Lesson navigation, one-step-at-a-time playback, Previous / Next controls, keyboard navigation, progress, fullscreen, saved local progress, Wordwall, picture quizzes, in-flow review games, and a no-prep classroom toolbox.
 
 ## Project structure
 
@@ -73,15 +73,15 @@ The basic data shape is:
 }
 ```
 
-`js/teaching-flow.js` automatically turns curriculum data into Day 1 and Day 2 lessons. Book 1 and Book 2 share the same phase model; new books receive it automatically. The stage durations are stored once and automatically total 75 minutes:
+`js/teaching-flow.js` automatically turns curriculum data into Day 1 and Day 2 lessons. Book 1 and Book 2 share the same phase model; new books receive it automatically. Stage durations are stored once and automatically total 45 minutes:
 
-`Warm Up → Vocabulary Teaching → Vocabulary Games → Vocabulary Check → Grammar Teaching → Grammar Games + Check → Topic Conversation → Show Book → Writing Book → Better Reader → Quiz → Homework`
+`Warm Up → Vocabulary Teaching → Vocabulary Games → Vocabulary Check → Grammar Teaching → Grammar Games + Check → Topic Conversation → Show Book → Quiz → Homework`
 
 Generated lessons expose both `phases` and flattened `steps`. Every page has `phase`, `phaseId`, `activityType`, `title`, `content`, `phaseDuration`, curriculum-specific data, suggested games, and `skippable` where appropriate. Add curriculum data to a book file; do not copy the player or hard-code a new page sequence.
 
 Vocabulary Games and Grammar Games are formal lesson stages. Vocabulary uses Random, Reveal, Matching, and Dice with the current Unit words. Grammar uses sentence matching, substitution, picture sentences, dice Q&A, and quick response with the current Unit patterns. Teachers can replay, mark complete, or skip. The star button still opens the independent classroom toolbox with Random Vocabulary, Picture Reveal, Memory Match, Virtual Dice, Timer, and Team Scoreboard.
 
-The Grammar Teaching and Grammar Check stages use the current Unit's sentence cards and patterns. Topic Conversation follows the check with topic introduction, teacher questions, pair practice, and an integrated speaking challenge. Book 1 Passport Review sentences are preserved in Better Reader as one English sentence, supporting picture, and Chinese translation per page.
+The Grammar Teaching and Grammar Check stages use the current Unit's sentence cards and patterns. Topic Conversation follows the check with topic introduction, teacher questions, pair practice, and an integrated speaking challenge.
 
 Vocabulary is expanded into one player page per word. Each word supports `image`, `sprite`, `meaning`, and `audio`. Book 1 uses dedicated illustrations and reusable picture atlases for people, feelings, stationery, colors, clothing, and animals.
 

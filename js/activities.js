@@ -102,7 +102,7 @@
     const words = (step.vocabulary || []).map((item) => `<span>${escapeHtml(item.word)}</span>`).join("");
     const gameButtons = (step.suggestedGames || []).map((game) => `
       <button class="flow-game-choice ${step.activeGame === game.id ? "is-active" : ""}" type="button" data-flow-game="${escapeHtml(game.id)}">
-        <strong>${escapeHtml(game.title)}</strong><small>${escapeHtml(game.description)}</small>
+        <strong>${escapeHtml(game.title)}</strong>
       </button>`).join("");
     const ideas = (step.activityIdeas || []).slice(0, 4).map((idea) => `
       <article class="activity-idea"><img src="${escapeHtml(idea.image)}" alt=""><span>${escapeHtml(idea.title)}</span></article>`).join("");

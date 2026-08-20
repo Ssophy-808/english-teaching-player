@@ -1504,6 +1504,163 @@
     return [unit4Day1(unit), unit4Day2(unit), unit4Day3(unit), unit4Day4(unit)];
   }
 
+  function u5Asset(unit, word) {
+    return vocabularyItems(unit.vocabulary).find((item) => item.word.toLowerCase() === word.toLowerCase()) || { word };
+  }
+
+  function u5PracticeStep(unit, id, title, prompt, word, options = {}) {
+    return practiceStep(id, title, prompt, { ...u5Asset(unit, word), word, ...options });
+  }
+
+  function makeUnit5Lesson(unit, day, dayGoal, phases) {
+    const steps = phases.flatMap((phase) => phase.steps);
+    const totalDuration = phases.reduce((total, phase) => total + (Number(phase.duration) || 0), 0);
+    return {
+      id: `day-${day}`,
+      title: `${unit.title} · Day ${day}｜${dayGoal}`,
+      day: `Day ${day}`,
+      dayGoal,
+      curriculum: curriculumFor(unit),
+      phases,
+      duration: totalDuration,
+      durationMinutes: totalDuration,
+      steps,
+      source: { document: "B1_教學流程.pdf", page: B1_DAY_PAGES[4]?.[day - 1] }
+    };
+  }
+
+  function unit5Day1(unit) {
+    const vocabulary = vocabularyItems(unit.vocabulary);
+    const passportWords = ["school bag", "ruler", "book", "pencil case", "pencil", "pen", "eraser", "desk"];
+    const phases = [
+      customPhase("u5-d1-stationery", "vocabulary", "Stationery", "Stationery Vocabulary", 10, "teaching", vocabularySteps(unit, 0, "u5-d1-word", "Stationery Vocabulary"), { vocabulary }),
+      customPhase("u5-d1-map", "grammar", "Grammar Map", "Add It → is", 6, "teaching", [
+        practiceStep("u5-d1-map", "Expanded Grammar Map", "I → am  ·  You → are  ·  He → is  ·  She → is  ·  It → is", { modelAnswer: "It = 它／這個東西；物品用 It is..." })
+      ]),
+      customPhase("u5-d1-pattern", "grammar", "What is it?", "It = 它／這個東西", 6, "teaching", [
+        u5PracticeStep(unit, "u5-d1-pen", "Ask and Answer", "What is it?", "pen", { modelAnswer: "It is a pen." }),
+        u5PracticeStep(unit, "u5-d1-book", "Ask and Answer", "What is it?", "book", { modelAnswer: "It is a book." })
+      ]),
+      customPhase("u5-d1-passport", "passport", "Passport", "Eight Passport Questions", 16, "teaching", passportWords.map((word, index) =>
+        u5PracticeStep(unit, `u5-d1-passport-${index + 1}`, `Passport ${index + 1} / ${passportWords.length}`, "What is it?", word, {
+          modelAnswer: `It is ${word === "eraser" ? "an" : "a"} ${word}.`
+        })
+      )),
+      customPhase("u5-d1-check", "check", "Object Check", "What is it?", 7, "check", [
+        u5PracticeStep(unit, "u5-d1-c-pencil", "Choose the answer", "What is it?", "pencil", { choices: ["It is a pencil.", "He is a pencil."], answer: "It is a pencil." }),
+        u5PracticeStep(unit, "u5-d1-c-desk", "Choose the answer", "What is it?", "desk", { choices: ["It are a desk.", "It is a desk."], answer: "It is a desk." }),
+        u5PracticeStep(unit, "u5-d1-c-eraser", "Choose the answer", "What is it?", "eraser", { choices: ["It is an eraser.", "It is a eraser."], answer: "It is an eraser." })
+      ])
+    ];
+    return makeUnit5Lesson(unit, 1, "It is + 物品", phases);
+  }
+
+  function unit5Day2(unit) {
+    const vocabulary = vocabularyItems(unit.vocabulary);
+    const phases = [
+      customPhase("u5-d2-review", "vocabulary", "Stationery", "Quick Stationery Review", 6, "review", vocabularySteps(unit, 0, "u5-d2-word", "Quick Stationery Review"), { vocabulary }),
+      customPhase("u5-d2-look", "practice", "Look and Answer", "What is it?", 10, "check", [
+        u5PracticeStep(unit, "u5-d2-l-bag", "Look and Answer", "What is it?", "school bag", { modelAnswer: "It is a school bag." }),
+        u5PracticeStep(unit, "u5-d2-l-ruler", "Look and Answer", "What is it?", "ruler", { modelAnswer: "It is a ruler." }),
+        u5PracticeStep(unit, "u5-d2-l-case", "Look and Answer", "What is it?", "pencil case", { modelAnswer: "It is a pencil case." }),
+        u5PracticeStep(unit, "u5-d2-l-eraser", "Look and Answer", "What is it?", "eraser", { modelAnswer: "It is an eraser." })
+      ]),
+      customPhase("u5-d2-choose", "practice", "Choose the Word", "Complete It is a / an...", 8, "check", [
+        u5PracticeStep(unit, "u5-d2-c-pen", "Choose the word", "It is a ____.", "pen", { choices: ["pen", "desk", "book"], answer: "pen" }),
+        u5PracticeStep(unit, "u5-d2-c-chair", "Choose the word", "It is a ____.", "chair", { choices: ["ruler", "chair", "pencil"], answer: "chair" }),
+        u5PracticeStep(unit, "u5-d2-c-eraser", "Choose the word", "It is an ____.", "eraser", { choices: ["eraser", "book", "school bag"], answer: "eraser" })
+      ]),
+      customPhase("u5-d2-article", "grammar", "A / An", "A or An?", 7, "check", [
+        u5PracticeStep(unit, "u5-d2-a-pen", "Choose a or an", "___ pen", "pen", { choices: ["a", "an"], answer: "a" }),
+        u5PracticeStep(unit, "u5-d2-a-ruler", "Choose a or an", "___ ruler", "ruler", { choices: ["a", "an"], answer: "a" }),
+        u5PracticeStep(unit, "u5-d2-an-eraser", "Choose a or an", "___ eraser", "eraser", { choices: ["a", "an"], answer: "an" })
+      ]),
+      customPhase("u5-d2-order", "practice", "Sentence Order", "Put the Words in Order", 8, "check", [
+        u5PracticeStep(unit, "u5-d2-o-ruler", "Choose the correct order", "It / is / a / ruler", "ruler", { choices: ["It is a ruler.", "It a ruler is."], answer: "It is a ruler." }),
+        u5PracticeStep(unit, "u5-d2-o-eraser", "Choose the correct order", "an / eraser / is / It", "eraser", { choices: ["It is an eraser.", "It an is eraser."], answer: "It is an eraser." }),
+        practiceStep("u5-d2-o-question", "Choose the correct order", "is / What / it / ?", { choices: ["What is it?", "What it is?"], answer: "What is it?" })
+      ]),
+      customPhase("u5-d2-match", "practice", "Picture Matching", "Match Picture and Word", 4, "check", [
+        u5PracticeStep(unit, "u5-d2-m-book", "Match the picture", "Choose the word.", "book", { choices: ["book", "pen", "desk"], answer: "book" }),
+        u5PracticeStep(unit, "u5-d2-m-desk", "Match the picture", "Choose the word.", "desk", { choices: ["chair", "desk", "ruler"], answer: "desk" })
+      ]),
+      customPhase("u5-d2-check", "check", "Mastery Check", "What is it?", 2, "check", [
+        u5PracticeStep(unit, "u5-d2-final", "Say the full answer", "What is it?", "pencil", { modelAnswer: "It is a pencil." })
+      ])
+    ];
+    return makeUnit5Lesson(unit, 2, "What is it? 練熟", phases);
+  }
+
+  function unit5Day3(unit) {
+    const phases = [
+      customPhase("u5-d3-three", "grammar", "Three Sentence Forms", "It is / It is not / Is it...?", 8, "teaching", [
+        u5PracticeStep(unit, "u5-d3-three-pen", "Three Forms", "It is a pen.", "pen", { modelAnswer: "It is a pen. → It is not a pen. → Is it a pen?" }),
+        u5PracticeStep(unit, "u5-d3-three-book", "Three Forms", "It is a book.", "book", { modelAnswer: "It is a book. → It is not a book. → Is it a book?" })
+      ]),
+      customPhase("u5-d3-positive", "practice", "Affirmative", "It is + Object", 8, "check", [
+        u5PracticeStep(unit, "u5-d3-p-ruler", "Make an affirmative sentence", "ruler", "ruler", { modelAnswer: "It is a ruler." }),
+        u5PracticeStep(unit, "u5-d3-p-eraser", "Make an affirmative sentence", "eraser", "eraser", { modelAnswer: "It is an eraser." })
+      ]),
+      customPhase("u5-d3-negative", "practice", "Negative", "It is not + Object", 8, "check", [
+        u5PracticeStep(unit, "u5-d3-n-pen", "Make it negative", "It is a pen.", "pen", { modelAnswer: "It is not a pen." }),
+        u5PracticeStep(unit, "u5-d3-n-desk", "Make it negative", "It is a desk.", "desk", { modelAnswer: "It is not a desk." })
+      ]),
+      customPhase("u5-d3-question", "practice", "Question", "Is it + Object?", 8, "check", [
+        u5PracticeStep(unit, "u5-d3-q-pen", "Make a question", "It is a pen.", "pen", { modelAnswer: "Is it a pen?" }),
+        u5PracticeStep(unit, "u5-d3-q-eraser", "Make a question", "It is an eraser.", "eraser", { modelAnswer: "Is it an eraser?" })
+      ]),
+      customPhase("u5-d3-answer", "practice", "Yes / No Answers", "Is it...?", 8, "check", [
+        u5PracticeStep(unit, "u5-d3-y-eraser", "Answer Yes", "Is it an eraser?", "eraser", { modelAnswer: "Yes, it is." }),
+        u5PracticeStep(unit, "u5-d3-no-pen", "Answer No", "Is it a pen?", "eraser", { modelAnswer: "No, it is not." }),
+        u5PracticeStep(unit, "u5-d3-no-book", "Answer No", "Is it a book?", "ruler", { modelAnswer: "No, it is not." })
+      ]),
+      customPhase("u5-d3-compare", "grammar", "Same Question Rule", "She is... / It is...", 3, "review", [
+        practiceStep("u5-d3-compare", "Compare the rule", "She is happy. → Is she happy?  ·  It is a pen. → Is it a pen?", { modelAnswer: "Move is before she / it." })
+      ]),
+      customPhase("u5-d3-check", "check", "Form Check", "Affirmative · Negative · Question", 2, "check", [
+        u5PracticeStep(unit, "u5-d3-final", "Choose the question", "It is a pencil.", "pencil", { choices: ["Is it a pencil?", "It is not a pencil."], answer: "Is it a pencil?" })
+      ])
+    ];
+    return makeUnit5Lesson(unit, 3, "it 的肯定、否定、問句", phases);
+  }
+
+  function unit5Day4(unit) {
+    const phases = [
+      customPhase("u5-d4-mix", "grammar", "Two Question Types", "What is it? / Is it...?", 8, "review", [
+        u5PracticeStep(unit, "u5-d4-mix-pencil", "Compare the questions", "What is it?  ·  Is it a pen?", "pencil", { modelAnswer: "It is a pencil.  ·  No, it is not." }),
+        u5PracticeStep(unit, "u5-d4-mix-book", "Compare the questions", "What is it?  ·  Is it a book?", "book", { modelAnswer: "It is a book.  ·  Yes, it is." })
+      ]),
+      customPhase("u5-d4-what", "practice", "What is it?", "Name the Object", 8, "check", [
+        u5PracticeStep(unit, "u5-d4-w-pencil", "Look and Answer", "What is it?", "pencil", { modelAnswer: "It is a pencil." }),
+        u5PracticeStep(unit, "u5-d4-w-case", "Look and Answer", "What is it?", "pencil case", { modelAnswer: "It is a pencil case." }),
+        u5PracticeStep(unit, "u5-d4-w-desk", "Look and Answer", "What is it?", "desk", { modelAnswer: "It is a desk." })
+      ]),
+      customPhase("u5-d4-is-it", "practice", "Is it...?", "Answer Yes or No", 8, "check", [
+        u5PracticeStep(unit, "u5-d4-i-pen", "Answer the question", "Is it a pen?", "pencil", { choices: ["Yes, it is.", "No, it is not."], answer: "No, it is not." }),
+        u5PracticeStep(unit, "u5-d4-i-ruler", "Answer the question", "Is it a ruler?", "ruler", { choices: ["Yes, it is.", "No, it is not."], answer: "Yes, it is." }),
+        u5PracticeStep(unit, "u5-d4-i-book", "Answer the question", "Is it a pen?", "book", { choices: ["Yes, it is.", "No, it is not."], answer: "No, it is not." })
+      ]),
+      customPhase("u5-d4-error", "practice", "Error Correction", "Fix the Sentence", 8, "check", [
+        u5PracticeStep(unit, "u5-d4-e1", "Fix the sentence", "It are a book. ✕", "book", { modelAnswer: "It is a book. ✓" }),
+        u5PracticeStep(unit, "u5-d4-e2", "Fix a / an", "Is it a eraser? ✕", "eraser", { modelAnswer: "Is it an eraser? ✓" }),
+        practiceStep("u5-d4-e3", "Fix the question", "What are it? ✕", { modelAnswer: "What is it? ✓" })
+      ]),
+      customPhase("u5-d4-transform", "practice", "Three-Form Transformation", "Affirmative → Negative → Question", 8, "check", [
+        u5PracticeStep(unit, "u5-d4-t-desk", "Change all three forms", "It is a desk.", "desk", { modelAnswer: "It is a desk. → It is not a desk. → Is it a desk?" }),
+        u5PracticeStep(unit, "u5-d4-t-eraser", "Change all three forms", "It is an eraser.", "eraser", { modelAnswer: "It is an eraser. → It is not an eraser. → Is it an eraser?" })
+      ]),
+      customPhase("u5-d4-check", "check", "Final Check", "It → is", 5, "check", [
+        practiceStep("u5-d4-final-map", "Complete the map", "I → am / You → are / He → is / She → is / It → ___", { choices: ["am", "are", "is"], answer: "is" }),
+        u5PracticeStep(unit, "u5-d4-final-question", "Choose the object question", "eraser", "eraser", { choices: ["What is it?", "What are it?"], answer: "What is it?" })
+      ])
+    ];
+    return makeUnit5Lesson(unit, 4, "What is it?＋Is it...? 混合", phases);
+  }
+
+  function book1Unit5Lessons(unit) {
+    return [unit5Day1(unit), unit5Day2(unit), unit5Day3(unit), unit5Day4(unit)];
+  }
+
   function sharedLessonFromUnit(unit, unitIndex, bookId, day) {
     const vocabulary = vocabularyItems(unit.vocabulary);
     const activityIdeas = vocabularyGameIdeas(bookId, unit, day);
@@ -1563,7 +1720,9 @@
               ? book1Unit3Lessons(unit)
               : book.id === "book-1" && unit.id === "unit-4"
                 ? book1Unit4Lessons(unit)
-                : [1, 2].map((day) => sharedLessonFromUnit(unit, unitIndex, book.id, day))
+                : book.id === "book-1" && unit.id === "unit-5"
+                  ? book1Unit5Lessons(unit)
+                  : [1, 2].map((day) => sharedLessonFromUnit(unit, unitIndex, book.id, day))
       }))
     }));
   }

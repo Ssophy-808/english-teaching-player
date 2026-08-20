@@ -87,6 +87,8 @@ Book 1 Unit 4 uses four days to introduce yes/no questions with adjectives: Day 
 
 Book 1 Unit 5 uses four days to establish `It → is`: Day 1 introduces stationery and eight Passport object questions; Day 2 drills `What is it?` with a small `a / an` focus; Day 3 applies affirmative, negative, and yes/no question forms to `it`; Day 4 mixes `What is it?` and `Is it...?` in picture-based practice.
 
+Book 1 Unit 6 uses four days to build color questions: Day 1 introduces ten colors and reviews `It → is`; Day 2 drills color blocks, colored objects, sentence order, and listening-style choices; Day 3 adds `my / your` and color negatives; Day 4 combines object, color, and yes/no questions in three-question picture challenges.
+
 Generated lessons expose both `phases` and flattened `steps`. Every page has `phase`, `phaseId`, `activityType`, `title`, `content`, `phaseDuration`, curriculum-specific data, suggested games, and `skippable` where appropriate. Add curriculum data to a book file; do not copy the player or hard-code a new page sequence.
 
 Vocabulary Games and Grammar Games are formal lesson stages. Vocabulary uses Random, Reveal, Matching, and Dice with the current Unit words. Grammar uses sentence matching, substitution, picture sentences, dice Q&A, and quick response with the current Unit patterns. Teachers can replay, mark complete, or skip. The star button still opens the independent classroom toolbox with Random Vocabulary, Picture Reveal, Memory Match, Virtual Dice, Timer, and Team Scoreboard.

@@ -1661,6 +1661,161 @@
     return [unit5Day1(unit), unit5Day2(unit), unit5Day3(unit), unit5Day4(unit)];
   }
 
+  function u6Asset(unit, word) {
+    return vocabularyItems(unit.vocabulary).find((item) => item.word.toLowerCase() === word.toLowerCase()) || { word };
+  }
+
+  function u6PracticeStep(unit, id, title, prompt, word, options = {}) {
+    return practiceStep(id, title, prompt, { ...u6Asset(unit, word), word, ...options });
+  }
+
+  function makeUnit6Lesson(unit, day, dayGoal, phases) {
+    const steps = phases.flatMap((phase) => phase.steps);
+    const totalDuration = phases.reduce((total, phase) => total + (Number(phase.duration) || 0), 0);
+    return {
+      id: `day-${day}`,
+      title: `${unit.title} · Day ${day}｜${dayGoal}`,
+      day: `Day ${day}`,
+      dayGoal,
+      curriculum: curriculumFor(unit),
+      phases,
+      duration: totalDuration,
+      durationMinutes: totalDuration,
+      steps,
+      source: { document: "B1_教學流程.pdf", page: B1_DAY_PAGES[5]?.[day - 1] }
+    };
+  }
+
+  function unit6Day1(unit) {
+    const vocabulary = vocabularyItems(unit.vocabulary);
+    const phases = [
+      customPhase("u6-d1-colors", "vocabulary", "Colors", "Ten Colors", 10, "teaching", vocabularySteps(unit, 0, "u6-d1-color", "Ten Colors"), { vocabulary }),
+      customPhase("u6-d1-meaning", "grammar", "What color?", "What color = 什麼顏色", 5, "teaching", [
+        practiceStep("u6-d1-meaning", "What color = 什麼顏色", "What color is it?", { visual: "🎨", modelAnswer: "它是什麼顏色？" })
+      ]),
+      customPhase("u6-d1-it", "grammar", "It → is", "Review It → is", 5, "review", [
+        practiceStep("u6-d1-it", "Grammar Map Review", "It → is", { modelAnswer: "It is red. / It is blue." })
+      ]),
+      customPhase("u6-d1-pattern", "grammar", "Color Pattern", "What color is it?", 6, "teaching", [
+        u6PracticeStep(unit, "u6-d1-red", "Ask and Answer", "What color is it?", "red", { modelAnswer: "It is red." }),
+        u6PracticeStep(unit, "u6-d1-blue", "Ask and Answer", "What color is it?", "blue", { modelAnswer: "It is blue." })
+      ]),
+      customPhase("u6-d1-passport", "passport", "Passport", "Color Passport Practice", 14, "teaching", vocabulary.map((color, index) =>
+        u6PracticeStep(unit, `u6-d1-passport-${index + 1}`, `Passport ${index + 1} / ${vocabulary.length}`, "What color is it?", color.word, {
+          modelAnswer: `It is ${color.word}.`
+        })
+      )),
+      customPhase("u6-d1-check", "check", "Color Check", "What color is it?", 5, "check", [
+        u6PracticeStep(unit, "u6-d1-c-green", "Choose the answer", "What color is it?", "green", { choices: ["It is green.", "It are green."], answer: "It is green." }),
+        u6PracticeStep(unit, "u6-d1-c-purple", "Choose the answer", "What color is it?", "purple", { choices: ["It is pink.", "It is purple."], answer: "It is purple." })
+      ])
+    ];
+    return makeUnit6Lesson(unit, 1, "Colors + What color is it?", phases);
+  }
+
+  function unit6Day2(unit) {
+    const vocabulary = vocabularyItems(unit.vocabulary);
+    const phases = [
+      customPhase("u6-d2-review", "vocabulary", "Colors", "Quick Color Review", 6, "review", vocabularySteps(unit, 0, "u6-d2-color", "Quick Color Review"), { vocabulary }),
+      customPhase("u6-d2-block", "practice", "Color Blocks", "Look and Answer", 10, "check", [
+        u6PracticeStep(unit, "u6-d2-b-red", "Look and Answer", "What color is it?", "red", { modelAnswer: "It is red." }),
+        u6PracticeStep(unit, "u6-d2-b-yellow", "Look and Answer", "What color is it?", "yellow", { modelAnswer: "It is yellow." }),
+        u6PracticeStep(unit, "u6-d2-b-black", "Look and Answer", "What color is it?", "black", { modelAnswer: "It is black." }),
+        u6PracticeStep(unit, "u6-d2-b-orange", "Look and Answer", "What color is it?", "orange", { modelAnswer: "It is orange." })
+      ]),
+      customPhase("u6-d2-object", "practice", "Colored Objects", "Look at the Object Color", 8, "check", [
+        practiceStep("u6-d2-o-pencil", "Look and Answer", "What color is the pencil?", { visual: "🔵 ✏️", modelAnswer: "It is blue." }),
+        practiceStep("u6-d2-o-book", "Look and Answer", "What color is the book?", { visual: "🔴 📕", modelAnswer: "It is red." }),
+        practiceStep("u6-d2-o-bag", "Look and Answer", "What color is the school bag?", { visual: "🟣 🎒", modelAnswer: "It is purple." })
+      ]),
+      customPhase("u6-d2-choose", "practice", "Choose the Color", "See the Color · Choose the Word", 7, "check", [
+        u6PracticeStep(unit, "u6-d2-c-pink", "Choose the color", "Which color?", "pink", { choices: ["pink", "brown", "white"], answer: "pink" }),
+        u6PracticeStep(unit, "u6-d2-c-brown", "Choose the color", "Which color?", "brown", { choices: ["orange", "brown", "black"], answer: "brown" }),
+        u6PracticeStep(unit, "u6-d2-c-white", "Choose the color", "Which color?", "white", { choices: ["white", "yellow", "green"], answer: "white" })
+      ]),
+      customPhase("u6-d2-order", "practice", "Sentence Order", "Put the Words in Order", 7, "check", [
+        practiceStep("u6-d2-o-question", "Choose the correct order", "color / What / is / it / ?", { choices: ["What color is it?", "What is color it?"], answer: "What color is it?" }),
+        u6PracticeStep(unit, "u6-d2-o-answer", "Choose the correct order", "is / It / green", "green", { choices: ["It is green.", "It green is."], answer: "It is green." })
+      ]),
+      customPhase("u6-d2-listen", "practice", "Listen and Point", "Teacher Says a Color", 5, "check", [
+        u6PracticeStep(unit, "u6-d2-l-blue", "Listen: blue", "Tap blue.", "blue", { choices: ["red", "blue", "yellow"], answer: "blue" }),
+        u6PracticeStep(unit, "u6-d2-l-orange", "Listen: orange", "Tap orange.", "orange", { choices: ["purple", "brown", "orange"], answer: "orange" })
+      ]),
+      customPhase("u6-d2-check", "check", "Mastery Check", "What color is it?", 2, "check", [
+        u6PracticeStep(unit, "u6-d2-final", "Say the full answer", "What color is it?", "purple", { modelAnswer: "It is purple." })
+      ])
+    ];
+    return makeUnit6Lesson(unit, 2, "顏色問答練熟", phases);
+  }
+
+  function unit6Day3(unit) {
+    const phases = [
+      customPhase("u6-d3-my-your", "grammar", "My / Your", "my = 我的 · your = 你的", 6, "teaching", [
+        practiceStep("u6-d3-my", "my = 我的", "my book", { visual: "🙋 📘", modelAnswer: "我的書" }),
+        practiceStep("u6-d3-your", "your = 你的", "your book", { visual: "👉 📘", modelAnswer: "你的書" })
+      ]),
+      customPhase("u6-d3-compare", "grammar", "Possessive Comparison", "My Book / Your Book", 8, "teaching", [
+        u6PracticeStep(unit, "u6-d3-my-red", "My book", "My book is red.", "red", { visual: "🙋 📕", modelAnswer: "my = 我的" }),
+        u6PracticeStep(unit, "u6-d3-your-blue", "Your book", "Your book is blue.", "blue", { visual: "👉 📘", modelAnswer: "your = 你的" })
+      ]),
+      customPhase("u6-d3-choose", "practice", "Choose My or Your", "Who Owns It?", 7, "check", [
+        practiceStep("u6-d3-c-my", "Choose my or your", "This is my book. ___ book is red.", { visual: "🙋 📕", choices: ["My", "Your"], answer: "My" }),
+        practiceStep("u6-d3-c-your", "Choose my or your", "This is your pen. ___ pen is blue.", { visual: "👉 🖊️", choices: ["My", "Your"], answer: "Your" })
+      ]),
+      customPhase("u6-d3-negative", "grammar", "Color Negative", "Your Book is Not...", 8, "teaching", [
+        u6PracticeStep(unit, "u6-d3-n-red", "Make it negative", "Your book is red.", "red", { modelAnswer: "Your book is not red." }),
+        u6PracticeStep(unit, "u6-d3-n-blue", "Make it negative", "My book is blue.", "blue", { modelAnswer: "My book is not blue." })
+      ]),
+      customPhase("u6-d3-not", "practice", "Not Review", "Put Not after Is", 6, "check", [
+        u6PracticeStep(unit, "u6-d3-not1", "Choose the negative sentence", "your book + not red", "red", { choices: ["Your book is not red.", "Your book not is red."], answer: "Your book is not red." }),
+        u6PracticeStep(unit, "u6-d3-not2", "Choose the negative sentence", "my pen + not green", "green", { choices: ["My pen is not green.", "My pen is green not."], answer: "My pen is not green." })
+      ]),
+      customPhase("u6-d3-picture", "practice", "My / Your Color Practice", "Look and Say", 8, "check", [
+        practiceStep("u6-d3-p-my", "Make a sentence", "my book + red", { visual: "🙋 📕", modelAnswer: "My book is red." }),
+        practiceStep("u6-d3-p-your", "Make a sentence", "your pen + blue", { visual: "👉 🔵 🖊️", modelAnswer: "Your pen is blue." }),
+        practiceStep("u6-d3-p-not", "Make a negative sentence", "your book + not yellow", { visual: "👉 📘", modelAnswer: "Your book is not yellow." })
+      ]),
+      customPhase("u6-d3-check", "check", "Possessive Check", "my / your + color", 2, "check", [
+        practiceStep("u6-d3-final", "Choose the correct sentence", "your book + blue", { visual: "👉 📘", choices: ["Your book is blue.", "My book are blue."], answer: "Your book is blue." })
+      ])
+    ];
+    return makeUnit6Lesson(unit, 3, "my / your + color", phases);
+  }
+
+  function unit6Day4(unit) {
+    const phases = [
+      customPhase("u6-d4-questions", "grammar", "Three Question Types", "Object · Color · Yes/No", 6, "review", [
+        practiceStep("u6-d4-map", "Question Map", "What is it?  ·  What color is it?  ·  Is it...?", { visual: "🔵 ✏️", modelAnswer: "object / color / yes-no" })
+      ]),
+      customPhase("u6-d4-triple", "speaking", "Three-Question Challenge", "Ask Three Questions", 12, "check", [
+        practiceStep("u6-d4-t-pencil", "Blue Pencil", "What is it?\nWhat color is it?\nIs it red?", { visual: "🔵 ✏️", modelAnswer: "It is a pencil.\nIt is blue.\nNo, it is not." }),
+        practiceStep("u6-d4-t-book", "Red Book", "What is it?\nWhat color is it?\nIs it red?", { visual: "🔴 📕", modelAnswer: "It is a book.\nIt is red.\nYes, it is." }),
+        practiceStep("u6-d4-t-bag", "Purple School Bag", "What is it?\nWhat color is it?\nIs it blue?", { visual: "🟣 🎒", modelAnswer: "It is a school bag.\nIt is purple.\nNo, it is not." })
+      ]),
+      customPhase("u6-d4-what", "practice", "What / What Color", "Choose the Question", 8, "check", [
+        practiceStep("u6-d4-w-object", "Ask about the object", "Answer: It is a pen.", { visual: "🖊️", choices: ["What is it?", "What color is it?"], answer: "What is it?" }),
+        practiceStep("u6-d4-w-color", "Ask about the color", "Answer: It is blue.", { visual: "🔵", choices: ["What is it?", "What color is it?"], answer: "What color is it?" })
+      ]),
+      customPhase("u6-d4-is-it", "practice", "Is it...?", "Answer Yes or No", 8, "check", [
+        u6PracticeStep(unit, "u6-d4-i-blue", "Answer the question", "Is it blue?", "blue", { choices: ["Yes, it is.", "No, it is not."], answer: "Yes, it is." }),
+        u6PracticeStep(unit, "u6-d4-i-red", "Answer the question", "Is it red?", "blue", { choices: ["Yes, it is.", "No, it is not."], answer: "No, it is not." })
+      ]),
+      customPhase("u6-d4-error", "practice", "Error Correction", "Fix the Sentence", 7, "check", [
+        u6PracticeStep(unit, "u6-d4-e1", "Fix the question", "What color are it? ✕", "red", { modelAnswer: "What color is it? ✓" }),
+        u6PracticeStep(unit, "u6-d4-e2", "Fix the answer", "It are red. ✕", "red", { modelAnswer: "It is red. ✓" }),
+        practiceStep("u6-d4-e3", "Fix the sentence", "My book are blue. ✕", { visual: "📘", modelAnswer: "My book is blue. ✓" })
+      ]),
+      customPhase("u6-d4-check", "check", "Final Check", "U5 + U6", 4, "check", [
+        practiceStep("u6-d4-final", "Match each question", "What is it? → object  ·  What color is it? → color  ·  Is it...? → yes/no", { visual: "🎒 🎨 ✅", modelAnswer: "Object / Color / Yes-No" })
+      ])
+    ];
+    return makeUnit6Lesson(unit, 4, "What color / Is it...? 混合", phases);
+  }
+
+  function book1Unit6Lessons(unit) {
+    return [unit6Day1(unit), unit6Day2(unit), unit6Day3(unit), unit6Day4(unit)];
+  }
+
   function sharedLessonFromUnit(unit, unitIndex, bookId, day) {
     const vocabulary = vocabularyItems(unit.vocabulary);
     const activityIdeas = vocabularyGameIdeas(bookId, unit, day);
@@ -1722,7 +1877,9 @@
                 ? book1Unit4Lessons(unit)
                 : book.id === "book-1" && unit.id === "unit-5"
                   ? book1Unit5Lessons(unit)
-                  : [1, 2].map((day) => sharedLessonFromUnit(unit, unitIndex, book.id, day))
+                  : book.id === "book-1" && unit.id === "unit-6"
+                    ? book1Unit6Lessons(unit)
+                    : [1, 2].map((day) => sharedLessonFromUnit(unit, unitIndex, book.id, day))
       }))
     }));
   }

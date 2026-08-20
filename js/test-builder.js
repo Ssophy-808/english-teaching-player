@@ -172,6 +172,37 @@
       : answerPages.map((items, index) => answerPage(items, index + 1, index * 24, answerPages.length)).join("");
   }
 
+  async function exportWord() {
+    if (!questions.length) { empty.hidden = false; empty.textContent = "請先產生考卷，再下載 Word。"; return; }
+    const button = document.getElementById("test-word");
+    const original = button.textContent;
+    button.disabled = true;
+    button.textContent = "正在建立 Word...";
+    try {
+      const blob = await window.WordExamExporter.createBlob({
+        mode,
+        title: config().title,
+        bookTitle: selectedBook().title,
+        unitNames: selectedUnits().map((unit) => unit.title).join(" · "),
+        questions
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${config().title.replace(/[\\/:*?"<>|]/g, "-")}-${mode === "answer" ? "Answer-Key" : "Student"}.docx`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1500);
+    } catch (error) {
+      console.error(error);
+      window.alert("Word 檔建立失敗，請重新整理後再試一次。");
+    } finally {
+      button.disabled = false;
+      button.textContent = original;
+    }
+  }
+
   function renderUnits(saved = []) {
     const book = selectedBook();
     unitList.innerHTML = book.units.map((unit, index) => `<label><input type="checkbox" value="${esc(unit.id)}" ${saved.includes(unit.id) || (!saved.length && index === 0) ? "checked" : ""}> Unit ${index + 1} · ${esc(unit.topic)}</label>`).join("");
@@ -197,6 +228,7 @@
   document.getElementById("test-shuffle").addEventListener("click", () => { questions = shuffle(questions); render(); });
   document.getElementById("test-student-mode").addEventListener("click", () => { mode = "student"; render(); });
   document.getElementById("test-answer-mode").addEventListener("click", () => { mode = "answer"; render(); });
+  document.getElementById("test-word").addEventListener("click", exportWord);
   document.getElementById("test-print").addEventListener("click", () => { document.body.classList.add("printing-exam"); window.print(); });
   window.addEventListener("afterprint", () => document.body.classList.remove("printing-exam"));
   preview.addEventListener("click", (event) => {

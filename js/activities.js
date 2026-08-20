@@ -215,6 +215,30 @@
       </article>`;
   }
 
+  function writeClock(step) {
+    const total = Math.max(1, Number(step.writeMinutes) || 10) * 60;
+    const remaining = Number.isFinite(step.writeRemaining) ? step.writeRemaining : total;
+    const minutes = Math.floor(Math.max(remaining, 0) / 60);
+    const seconds = Math.max(remaining, 0) % 60;
+    return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+  }
+
+  function renderWriteTime(step, duration) {
+    return `
+      <article class="step-card write-time-card" data-step-type="writing">
+        <div class="step-meta"><span class="phase-badge">${escapeHtml(step.phaseTitle || "Write Time")}</span>${duration}</div>
+        <p class="step-kicker">PLAY → WRITE → CHECK</p>
+        <h2>✏ Write Time · Part ${escapeHtml(step.worksheetPart)}</h2>
+        <p class="write-time-instruction">${escapeHtml(step.instruction)}</p>
+        <div class="write-clock" data-write-clock>${writeClock(step)}</div>
+        <div class="write-time-actions">
+          <button class="button button-primary" type="button" data-write-toggle>${step.writeRunning ? "Pause" : "Start timer"}</button>
+          <button class="button button-secondary" type="button" data-write-reset>↻ Reset</button>
+          <button class="button button-secondary" type="button" data-open-worksheet>📝 Open worksheet</button>
+        </div>
+      </article>`;
+  }
+
   function renderSentenceTransformer(step, duration) {
     const transformer = step.transformer || {};
     const modes = [["affirmative", "Affirmative"], ["negative", "Negative"], ["question", "Question"]];
@@ -445,6 +469,7 @@
     if (step.activity === "topic-conversation") return renderTopicConversation(step, duration);
     if (step.activity === "sentence-transformer") return renderSentenceTransformer(step, duration);
     if (step.activity === "practice-loop") return renderPracticeLoop(step, duration);
+    if (step.activity === "write-time") return renderWriteTime(step, duration);
     if (step.activity === "guided-practice") return renderGuidedPractice(step, duration);
 
     if (step.type === "vocabulary" && step.word) {
@@ -596,6 +621,53 @@
         container.innerHTML = renderStep(step);
         activateStep(container, step);
       };
+      return;
+    }
+
+    if (step.activity === "write-time") {
+      const totalSeconds = Math.max(1, Number(step.writeMinutes) || 10) * 60;
+      if (!Number.isFinite(step.writeRemaining)) step.writeRemaining = totalSeconds;
+
+      const startClock = () => {
+        if (!step.writeRunning) return;
+        const clock = container.querySelector("[data-write-clock]");
+        const interval = window.setInterval(() => {
+          if (!container.isConnected || !step.writeRunning) {
+            window.clearInterval(interval);
+            return;
+          }
+          const next = Math.max(0, Math.ceil((step.writeEndsAt - Date.now()) / 1000));
+          step.writeRemaining = next;
+          if (clock) clock.textContent = writeClock(step);
+          if (next === 0) {
+            step.writeRunning = false;
+            window.clearInterval(interval);
+            container.innerHTML = renderStep(step);
+            activateStep(container, step);
+          }
+        }, 250);
+      };
+
+      container.onclick = (event) => {
+        if (event.target.closest("[data-write-toggle]")) {
+          if (step.writeRunning) {
+            step.writeRemaining = Math.max(0, Math.ceil((step.writeEndsAt - Date.now()) / 1000));
+            step.writeRunning = false;
+          } else {
+            step.writeRunning = true;
+            step.writeEndsAt = Date.now() + step.writeRemaining * 1000;
+          }
+        } else if (event.target.closest("[data-write-reset]")) {
+          step.writeRunning = false;
+          step.writeRemaining = totalSeconds;
+        } else if (event.target.closest("[data-open-worksheet]")) {
+          window.WorksheetBuilder?.open(step.worksheetPart);
+          return;
+        } else return;
+        container.innerHTML = renderStep(step);
+        activateStep(container, step);
+      };
+      startClock();
       return;
     }
 

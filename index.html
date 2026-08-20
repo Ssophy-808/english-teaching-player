@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#2b59c3">
     <meta name="description" content="A simple, projection-friendly lesson player for English teachers.">
     <title>English Teaching Player</title>
-    <link rel="stylesheet" href="css/style.css?v=11">
+    <link rel="stylesheet" href="css/style.css?v=12">
   </head>
   <body>
     <noscript>請啟用 JavaScript 才能使用教材播放器。</noscript>
@@ -45,6 +45,7 @@
           <p id="phase-trail" class="phase-trail" aria-live="polite"></p>
         </div>
         <div class="player-tools">
+          <button id="worksheet-button" class="flow-button worksheet-button" type="button" hidden>📝 講義</button>
           <button id="practice-jump-button" class="flow-button practice-jump-button" type="button" hidden>▶ 連續訓練</button>
           <button id="flow-button" class="flow-button" type="button" aria-haspopup="dialog">課程流程</button>
           <button id="toolbox-button" class="icon-button toolbox-button" type="button" aria-label="Open classroom toolbox" title="Classroom toolbox">★</button>
@@ -87,6 +88,23 @@
       </div>
     </section>
 
+    <section id="worksheet-modal" class="worksheet-modal" hidden aria-label="Worksheet builder" aria-modal="true" role="dialog">
+      <div class="worksheet-shell">
+        <header class="worksheet-header no-print">
+          <div><p class="eyebrow">PLAYER + WORKSHEET</p><h2 id="worksheet-title">講義產生器</h2></div>
+          <button id="worksheet-close" class="icon-button" type="button" data-worksheet-close aria-label="Close worksheet">×</button>
+        </header>
+        <nav class="worksheet-toolbar no-print" aria-label="Worksheet controls">
+          <button id="worksheet-student-mode" class="is-active" type="button">學生版 · 2 pages</button>
+          <button id="worksheet-answer-mode" type="button">教師答案版</button>
+          <button id="worksheet-shuffle" type="button">🔀 調整順序</button>
+          <button id="worksheet-reset" type="button">↻ 題目重設</button>
+          <button id="worksheet-print" class="worksheet-print" type="button">🖨 Print / Save PDF</button>
+        </nav>
+        <div id="worksheet-preview" class="worksheet-preview"></div>
+      </div>
+    </section>
+
     <section id="toolbox-modal" class="toolbox-modal" hidden aria-label="Classroom toolbox" aria-modal="true" role="dialog">
       <div class="toolbox-shell">
         <header class="toolbox-header">
@@ -113,10 +131,12 @@
     <script src="data/book1-passport.js?v=1" defer></script>
     <script src="data/book2.js?v=3" defer></script>
     <script src="data/book3.js?v=1" defer></script>
-    <script src="js/teaching-flow.js?v=29" defer></script>
-    <script src="js/activities.js?v=16" defer></script>
+    <script src="data/book3-review.js?v=1" defer></script>
+    <script src="js/teaching-flow.js?v=30" defer></script>
+    <script src="js/activities.js?v=17" defer></script>
+    <script src="js/worksheet.js?v=1" defer></script>
     <script src="js/classroom-tools.js?v=1" defer></script>
-    <script src="js/player.js?v=4" defer></script>
+    <script src="js/player.js?v=5" defer></script>
     <script src="js/app.js?v=2" defer></script>
   </body>
 </html>

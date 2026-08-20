@@ -14,11 +14,14 @@ A static, projection-friendly lesson player for English teachers. It includes a 
 │  ├─ player.js       # Lesson playback and controls
 │  ├─ teaching-flow.js # Fixed curriculum-to-lesson template
 │  ├─ activities.js   # Lesson activity renderers
+│  ├─ worksheet.js    # Printable student sheets and teacher answer key
 │  └─ classroom-tools.js # Random cards, reveal, matching, dice, timer, scores
 ├─ data/
 │  ├─ book1.js        # Book 1 curriculum, Units 1–9
 │  ├─ book1-passport.js # Book 1 passport review sentences
-│  └─ book2.js        # Book 2 curriculum, Units 1–9
+│  ├─ book2.js        # Book 2 curriculum, Units 1–9
+│  ├─ book3.js        # Book 3 curriculum
+│  └─ book3-review.js # Shared Player + worksheet question bank
 └─ assets/
    ├─ images/
    └─ audio/
@@ -98,6 +101,10 @@ Book 1 Unit 9 completes the Book 1 be-verb system in four days: Day 1 adds `They
 Book 2 Unit 1 uses four days to establish singular `there is`: Day 1 introduces `There is... / Is there...?` and ten classroom-object Passport questions; Day 2 drills `Yes, there is / No, there isn't`; Day 3 adds negative statements; Day 4 mixes all three sentence forms with the reusable Sentence Transformer activity.
 
 Book 3 Unit 1 uses four days to move from be verbs into the action verb `like`: Day 1 keeps `like` unchanged with `I / You / We / They`; Day 2 introduces `What do you / they like?`; Day 3 adds `Do you / they...?` with Yes/No answers and clearly contrasts be-verb questions; Day 4 combines `like / don't like / What do...? / Do...?` with transformations, error correction, and a short dialogue.
+
+The Book 3 Unit 1 Day 3/4 pilot is designed for an 85-minute spiral-review class. Each day contains two blocks and two separate writing periods: Day 3 moves from affirmative to negative forms; Day 4 moves from questions to a mixed review of be verbs, `there be`, and action verbs. Player questions and printable questions come from the same bank in `data/book3-review.js`.
+
+Open Book 3 → Unit 1 → Day 3 or Day 4 and choose **📝 講義**. Student mode produces two A4 pages (Part A and Part B); teacher mode produces an answer page. Questions can be removed, shuffled, reset, printed, or saved as PDF from the browser print dialog.
 
 Each Book 3 Unit 1 day includes a continuous Practice Loop. It shows one question at a time and supports immediate choice feedback, answer reveal for speaking questions, next question, random question, and restart controls.
 

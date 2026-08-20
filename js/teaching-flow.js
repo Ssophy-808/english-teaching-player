@@ -866,6 +866,14 @@
     });
   }
 
+  function writeTimeStep(id, part, minutes, instruction) {
+    return step(id, "writing", `Write Time · Part ${part}`, null, instruction, {
+      activity: "write-time",
+      worksheetPart: part,
+      writeMinutes: minutes
+    });
+  }
+
   function u1Image(unit, word) {
     return vocabularyItems(unit.vocabulary).find((item) => item.word === word)?.image || "";
   }
@@ -2532,6 +2540,7 @@
   function makeBook3Unit1Lesson(unit, day, dayGoal, phases) {
     const steps = phases.flatMap((phase) => phase.steps);
     const totalDuration = phases.reduce((total, phase) => total + (Number(phase.duration) || 0), 0);
+    const reviewDay = window.BOOK3_REVIEW_BANK?.[unit.id]?.[`day${day}`] || null;
     return {
       id: `day-${day}`,
       title: `${unit.title} · Day ${day}｜${dayGoal}`,
@@ -2541,8 +2550,25 @@
       phases,
       duration: totalDuration,
       durationMinutes: totalDuration,
+      worksheet: reviewDay ? { unitTitle: unit.title, day, ...reviewDay } : null,
       steps
     };
+  }
+
+  function reviewLoopQuestion(item) {
+    return {
+      prompt: item.playerPrompt,
+      choices: item.choices || [],
+      answer: item.answer,
+      modelAnswer: item.answer,
+      visual: item.visual || "",
+      skill: item.skill,
+      difficulty: item.difficulty
+    };
+  }
+
+  function reviewQuestions(unitId, day, part) {
+    return (window.BOOK3_REVIEW_BANK?.[unitId]?.[`day${day}`]?.blocks?.[part]?.questions || []).map(reviewLoopQuestion);
   }
 
   function book3Unit1Day1(unit) {
@@ -2623,89 +2649,84 @@
   }
 
   function book3Unit1Day3(unit) {
+    const partA = reviewQuestions(unit.id, 3, "A");
+    const partB = reviewQuestions(unit.id, 3, "B");
     const phases = [
-      customPhase("b3u1-d3-review", "review", "Quick Review", "What do...?", 5, "review", [
-        b3u1PracticeStep(unit, "b3u1-d3-review", "Answer the question", "What do you like?", "hamsters", { modelAnswer: "I like hamsters." })
+      customPhase("b3u1-d3-a-retrieval", "block-a", "Block A｜肯定句", "Quick Retrieval", 7, "review", [
+        practiceStep("b3u1-d3-a-map", "Subject Map", "I like  ·  You like  ·  We like  ·  They like", { modelAnswer: "The subject changes. The verb like stays the same." }),
+        b3u1PracticeStep(unit, "b3u1-d3-a-fish", "Special Word", "They like fish.", "fish", { modelAnswer: "Use fish, not fishes, in this sentence." })
       ]),
-      customPhase("b3u1-d3-do", "grammar", "Grammar Focus", "Do + Subject + like...?", 8, "teaching", [
-        b3u1PracticeStep(unit, "b3u1-d3-you", "Statement → Yes/No Question", "You like hamsters.  →  Do you like hamsters?", "hamsters", { modelAnswer: "Yes, I do." }),
-        b3u1PracticeStep(unit, "b3u1-d3-they", "Statement → Yes/No Question", "They like spiders.  →  Do they like spiders?", "spiders", { modelAnswer: "Yes, they do." })
+      customPhase("b3u1-d3-a-grammar", "block-a", "Block A｜肯定句", "Grammar Box · Affirmative", 8, "teaching", [
+        practiceStep("b3u1-d3-a-formula", "Grammar Box", "I / You / We / They + like + plural animal", { modelAnswer: "I like birds.  ·  We like puppies.  ·  They like fish." })
       ]),
-      customPhase("b3u1-d3-answer", "grammar", "Answer Map", "Yes / No", 7, "teaching", [
-        practiceStep("b3u1-d3-answer-you", "You Question", "Do you like...?", { modelAnswer: "Yes, I do.  /  No, I don't." }),
-        practiceStep("b3u1-d3-answer-they", "They Question", "Do they like...?", { modelAnswer: "Yes, they do.  /  No, they don't." })
+      customPhase("b3u1-d3-a-loop", "block-a", "Block A｜肯定句", "Affirmative Practice Loop", 10, "check", [
+        practiceLoopStep("b3u1-d3-a-practice", "Part A · Affirmative Practice", partA)
       ]),
-      customPhase("b3u1-d3-contrast", "grammar", "Important Comparison", "Be Verb vs Action Verb", 8, "teaching", [
-        practiceStep("b3u1-d3-be", "Be Verb Sentence", "You are happy.  →  Are you happy?", { modelAnswer: "Move the be verb to the front." }),
-        b3u1PracticeStep(unit, "b3u1-d3-action", "Action Verb Sentence", "You like hamsters.  →  Do you like hamsters?", "hamsters", { modelAnswer: "An action verb needs do to make a question." })
+      customPhase("b3u1-d3-a-wordwall", "block-a", "Block A｜肯定句", "Game / Wordwall", 5, "game", [
+        { ...wordwallStep(unit, "book-3", "day-3-part-a", 0), title: "Part A Wordwall" }
       ]),
-      customPhase("b3u1-d3-extension", "practice", "Practice Loop", "Do...? Yes / No 連續訓練", 8, "check", [
-        practiceLoopStep("b3u1-d3-loop", "Do...? Yes / No Practice Loop", [
-          b3u1LoopQuestion(unit, "Do you like hamsters?", "hamsters", { choices: ["Yes, I do.", "Yes, I am."], answer: "Yes, I do." }),
-          b3u1LoopQuestion(unit, "Do they like spiders?", "spiders", { choices: ["Yes, they do.", "Yes, they are."], answer: "Yes, they do." }),
-          b3u1LoopQuestion(unit, "Do you like spiders?", "spiders", { choices: ["No, I don't.", "No, I am not."], answer: "No, I don't." }),
-          b3u1LoopQuestion(unit, "Do they like spiders?", "spiders", { choices: ["No, they don't.", "No, they aren't."], answer: "No, they don't." }),
-          b3u1LoopQuestion(unit, "You are happy. → ___ you happy?", "", { visual: "😊", choices: ["Are", "Do"], answer: "Are" }),
-          b3u1LoopQuestion(unit, "You like frogs. → ___ you like frogs?", "frogs", { choices: ["Do", "Are"], answer: "Do" }),
-          b3u1LoopQuestion(unit, "Fix it: Like you hamsters?", "hamsters", { modelAnswer: "Do you like hamsters?" }),
-          b3u1LoopQuestion(unit, "Fix it: Are you like hamsters?", "hamsters", { modelAnswer: "Do you like hamsters?" })
-        ])
+      customPhase("b3u1-d3-a-write", "block-a", "Block A｜肯定句", "Write Time · Part A", 12, "writing", [
+        writeTimeStep("b3u1-d3-write-a", "A", 12, "Complete Part A on the Day 3 worksheet. Then check the affirmative sentences together.")
       ]),
-      customPhase("b3u1-d3-errors", "practice", "Question Check", "Do Helps the Action Verb", 7, "check", [
-        b3u1PracticeStep(unit, "b3u1-d3-e1", "Fix the question", "Like you hamsters? ✕", "hamsters", { modelAnswer: "Do you like hamsters? ✓" }),
-        b3u1PracticeStep(unit, "b3u1-d3-e2", "Fix the question", "Are you like hamsters? ✕", "hamsters", { modelAnswer: "Do you like hamsters? ✓" })
+      customPhase("b3u1-d3-b-grammar", "block-b", "Block B｜否定句", "Grammar Box · Negative", 8, "teaching", [
+        practiceStep("b3u1-d3-b-formula", "Grammar Box", "I / You / We / They + don't like + animal", { modelAnswer: "They don't like spiders.  ·  We don't like frogs." }),
+        practiceStep("b3u1-d3-b-contrast", "Do not mix the patterns", "You don't like spiders.  ✓\nYou aren't like spiders.  ✕", { modelAnswer: "Use don't with the action verb like." })
       ]),
-      customPhase("b3u1-d3-check", "check", "Mastery Check", "Do you / they...?", 2, "check", [
-        b3u1PracticeStep(unit, "b3u1-d3-final", "Choose the answer", "Do they like spiders?", "spiders", { choices: ["Yes, they do.", "Yes, they are.", "Yes, there is."], answer: "Yes, they do." })
+      customPhase("b3u1-d3-b-transform", "block-b", "Block B｜否定句", "Sentence Transformer", 8, "game", [
+        b3u1TransformerStep(unit, "b3u1-d3-b-t1", "They", "spiders"),
+        b3u1TransformerStep(unit, "b3u1-d3-b-t2", "We", "puppies")
+      ]),
+      customPhase("b3u1-d3-b-loop", "block-b", "Block B｜否定句", "Negative Practice Loop", 10, "check", [
+        practiceLoopStep("b3u1-d3-b-practice", "Part B · Negative Practice", partB)
+      ]),
+      customPhase("b3u1-d3-b-write", "block-b", "Block B｜否定句", "Write Time · Part B", 12, "writing", [
+        writeTimeStep("b3u1-d3-write-b", "B", 12, "Complete Part B on the Day 3 worksheet. Use don't like in every negative sentence.")
+      ]),
+      customPhase("b3u1-d3-b-exit", "block-b", "Block B｜否定句", "Correction & Exit Ticket", 5, "check", [
+        practiceLoopStep("b3u1-d3-exit", "Day 3 Exit Ticket", partB.slice(4, 8))
       ])
     ];
-    return makeBook3Unit1Lesson(unit, 3, "Do you / Do they...? + Yes / No", phases);
+    return makeBook3Unit1Lesson(unit, 3, "肯定句 → 否定句｜雙區塊複習", phases);
   }
 
   function book3Unit1Day4(unit) {
+    const partA = reviewQuestions(unit.id, 4, "A");
+    const partB = reviewQuestions(unit.id, 4, "B");
     const phases = [
-      customPhase("b3u1-d4-review", "review", "System Review", "Four Sentence Forms", 5, "review", [
-        practiceStep("b3u1-d4-map", "Complete System", "They like turtles.\nThey don't like turtles.\nWhat do they like?\nDo they like turtles?", { modelAnswer: "Yes, they do. / No, they don't." })
+      customPhase("b3u1-d4-a-retrieval", "block-a", "Block A｜疑問句", "Quick Retrieval", 6, "review", [
+        practiceStep("b3u1-d4-a-map", "Question Map", "What do you / they like?\nDo you / they like...?", { modelAnswer: "Wh question → information answer  |  Do question → Yes / No answer" })
       ]),
-      customPhase("b3u1-d4-negative", "grammar", "Negative", "don't like", 7, "teaching", [
-        b3u1PracticeStep(unit, "b3u1-d4-n-i", "Make it negative", "I like birds.", "birds", { modelAnswer: "I don't like birds." }),
-        b3u1PracticeStep(unit, "b3u1-d4-n-we", "Make it negative", "We like frogs.", "frogs", { modelAnswer: "We don't like frogs." }),
-        b3u1PracticeStep(unit, "b3u1-d4-n-they", "Make it negative", "They like spiders.", "spiders", { modelAnswer: "They don't like spiders." })
+      customPhase("b3u1-d4-a-grammar", "block-a", "Block A｜疑問句", "Grammar Box · Questions", 10, "teaching", [
+        practiceStep("b3u1-d4-a-wh", "Wh Question", "What + do + you / they + like?", { modelAnswer: "What do they like?  →  They like turtles." }),
+        practiceStep("b3u1-d4-a-yesno", "Yes / No Question", "Do + you / they + like + animal?", { modelAnswer: "Do you like spiders?  →  No, I don't." })
       ]),
-      customPhase("b3u1-d4-choice", "practice", "Practice Loop", "Book 3 U1 綜合訓練", 7, "check", [
-        practiceLoopStep("b3u1-d4-loop", "Book 3 U1 Mixed Practice Loop", [
-          b3u1LoopQuestion(unit, "What ___ they like?", "turtles", { choices: ["do", "are", "is"], answer: "do" }),
-          b3u1LoopQuestion(unit, "Do you ___ frogs?", "frogs", { choices: ["like", "likes", "liking"], answer: "like" }),
-          b3u1LoopQuestion(unit, "They ___ like spiders.", "spiders", { choices: ["don't", "aren't", "isn't"], answer: "don't" }),
-          b3u1LoopQuestion(unit, "Do they like turtles?", "turtles", { choices: ["Yes, they do.", "Yes, they are."], answer: "Yes, they do." }),
-          b3u1LoopQuestion(unit, "Change to negative:\nI like birds.", "birds", { modelAnswer: "I don't like birds." }),
-          b3u1LoopQuestion(unit, "Change to a question:\nYou like hamsters.", "hamsters", { modelAnswer: "Do you like hamsters?" }),
-          b3u1LoopQuestion(unit, "Change to a Wh question:\nThey like turtles.", "turtles", { modelAnswer: "What do they like?" }),
-          b3u1LoopQuestion(unit, "Fix it: What do they likes?", "turtles", { modelAnswer: "What do they like?" }),
-          b3u1LoopQuestion(unit, "Fix it: Yes, I am.", "frogs", { modelAnswer: "Yes, I do." }),
-          b3u1LoopQuestion(unit, "Fix it: They doesn't like spiders.", "spiders", { modelAnswer: "They don't like spiders." })
-        ])
+      customPhase("b3u1-d4-a-loop", "block-a", "Block A｜疑問句", "Question Practice Loop", 10, "check", [
+        practiceLoopStep("b3u1-d4-a-practice", "Part A · Questions and Answers", partA)
       ]),
-      customPhase("b3u1-d4-error", "practice", "Error Detective", "Find and Fix", 7, "check", [
-        b3u1PracticeStep(unit, "b3u1-d4-e1", "Fix the question", "What do they likes? ✕", "turtles", { modelAnswer: "What do they like? ✓" }),
-        b3u1PracticeStep(unit, "b3u1-d4-e2", "Fix the answer", "Do you like frogs?  Yes, I am. ✕", "frogs", { modelAnswer: "Yes, I do. ✓" }),
-        b3u1PracticeStep(unit, "b3u1-d4-e3", "Fix the sentence", "They doesn't like spiders. ✕", "spiders", { modelAnswer: "They don't like spiders. ✓" })
+      customPhase("b3u1-d4-a-wordwall", "block-a", "Block A｜疑問句", "Game / Wordwall", 4, "game", [
+        { ...wordwallStep(unit, "book-3", "day-4-part-a", 0), title: "Part A Wordwall" }
       ]),
-      customPhase("b3u1-d4-transform", "practice", "Sentence Transformer", "Affirmative · Negative · Question", 6, "check", [
-        b3u1TransformerStep(unit, "b3u1-d4-t-they", "They", "turtles"),
-        b3u1TransformerStep(unit, "b3u1-d4-t-you", "You", "hamsters")
+      customPhase("b3u1-d4-a-write", "block-a", "Block A｜疑問句", "Write Time · Part A", 12, "writing", [
+        writeTimeStep("b3u1-d4-write-a", "A", 12, "Complete Part A on the Day 4 worksheet. Build the questions before choosing an answer.")
       ]),
-      customPhase("b3u1-d4-wh", "practice", "Wh Transformation", "Statement → What do...?", 4, "check", [
-        b3u1PracticeStep(unit, "b3u1-d4-wh-they", "Change to a Wh question", "They like turtles.", "turtles", { modelAnswer: "What do they like?" })
+      customPhase("b3u1-d4-b-map", "block-b", "Block B｜綜合螺旋", "Spiral Grammar Map", 8, "teaching", [
+        practiceStep("b3u1-d4-b-map", "Choose the Question Helper", "be verb → Am / Are / Is\nthere be → Is there\naction verb → Do", { modelAnswer: "Are you happy?  ·  Is there a fan?  ·  Do they like turtles?" })
       ]),
-      customPhase("b3u1-d4-dialogue", "speaking", "Mini Dialogue", "Ask · Answer · Follow Up", 7, "check", [
-        b3u1PracticeStep(unit, "b3u1-d4-dialogue", "Complete the dialogue", "A: What do you like?\nB: I like puppies.\nA: Do you like spiders?\nB: ______", "puppies", { modelAnswer: "No, I don't." })
+      customPhase("b3u1-d4-b-loop", "block-b", "Block B｜綜合螺旋", "Mixed Spiral Practice", 12, "check", [
+        practiceLoopStep("b3u1-d4-b-practice", "Part B · Mixed Spiral Review", partB)
       ]),
-      customPhase("b3u1-d4-check", "check", "Final Check", "Book 3 Unit 1", 2, "check", [
-        practiceStep("b3u1-d4-final", "Complete the map", "like / don't like / What do...? / Do...?", { modelAnswer: "Use do with I, you, we, and they to ask questions or make negatives." })
+      customPhase("b3u1-d4-b-challenge", "block-b", "Block B｜綜合螺旋", "Error Detective & Transformer", 8, "game", [
+        b3u1TransformerStep(unit, "b3u1-d4-b-t1", "They", "turtles"),
+        b3u1PracticeStep(unit, "b3u1-d4-b-error", "Fix the question", "Are you like hamsters? ✕", "hamsters", { modelAnswer: "Do you like hamsters? ✓" })
+      ]),
+      customPhase("b3u1-d4-b-write", "block-b", "Block B｜綜合螺旋", "Write Time · Part B", 12, "writing", [
+        writeTimeStep("b3u1-d4-write-b", "B", 12, "Complete Part B on the Day 4 worksheet. Decide whether each sentence needs a be verb, there be, or do.")
+      ]),
+      customPhase("b3u1-d4-b-exit", "block-b", "Block B｜綜合螺旋", "Exit Ticket", 3, "check", [
+        practiceLoopStep("b3u1-d4-exit", "Day 4 Exit Ticket", partB.slice(5, 10))
       ])
     ];
-    return makeBook3Unit1Lesson(unit, 4, "like / don't like / What do...? / Do...?", phases);
+    return makeBook3Unit1Lesson(unit, 4, "疑問句 → 全題型｜雙區塊螺旋複習", phases);
   }
 
   function book3Unit1Lessons(unit) {

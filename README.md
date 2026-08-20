@@ -89,6 +89,8 @@ Book 1 Unit 5 uses four days to establish `It → is`: Day 1 introduces statione
 
 Book 1 Unit 6 uses four days to build color questions: Day 1 introduces ten colors and reviews `It → is`; Day 2 drills color blocks, colored objects, sentence order, and listening-style choices; Day 3 adds `my / your` and color negatives; Day 4 combines object, color, and yes/no questions in three-question picture challenges.
 
+Book 1 Unit 7 uses four days to establish distance and ownership with clothing: Day 1 introduces `this / that` and eight Passport pairs; Day 2 drills near/far choices and sentence order; Day 3 extends `my / your` with `his / her`; Day 4 combines object, color, and ownership questions before Unit 8.
+
 Book 1 Unit 8 uses four days to apply `this / that` to farm animals: Day 1 introduces the animal question pattern and eight Passport pairs; Day 2 drills `Yes, it is / No, it isn't`; Day 3 transforms statements into questions and compares three sentence forms; Day 4 mixes name questions, yes/no questions, corrections, and sentence order.
 
 Book 1 Unit 9 completes the Book 1 be-verb system in four days: Day 1 adds `They → are` and eight adjective Passport questions; Day 2 drills `Are they...?`; Day 3 contrasts singular and plural subjects; Day 4 mixes all six subjects in a final grammar challenge.

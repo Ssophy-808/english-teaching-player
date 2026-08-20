@@ -1816,6 +1816,168 @@
     return [unit6Day1(unit), unit6Day2(unit), unit6Day3(unit), unit6Day4(unit)];
   }
 
+  function u7Asset(unit, word) {
+    return vocabularyItems(unit.vocabulary).find((item) => item.word.toLowerCase() === word.toLowerCase()) || { word };
+  }
+
+  function u7PracticeStep(unit, id, title, prompt, word, options = {}) {
+    return practiceStep(id, title, prompt, { ...u7Asset(unit, word), word, ...options });
+  }
+
+  function makeUnit7Lesson(unit, day, dayGoal, phases) {
+    const steps = phases.flatMap((phase) => phase.steps);
+    const totalDuration = phases.reduce((total, phase) => total + (Number(phase.duration) || 0), 0);
+    return {
+      id: `day-${day}`,
+      title: `${unit.title} · Day ${day}｜${dayGoal}`,
+      day: `Day ${day}`,
+      dayGoal,
+      curriculum: curriculumFor(unit),
+      phases,
+      duration: totalDuration,
+      durationMinutes: totalDuration,
+      steps,
+      source: { document: "B1_教學流程.pdf", page: B1_DAY_PAGES[6]?.[day - 1] }
+    };
+  }
+
+  function unit7Day1(unit) {
+    const vocabulary = vocabularyItems(unit.vocabulary);
+    const passportPairs = [
+      ["this", "coat"], ["this", "dress"], ["this", "jacket"], ["this", "T-shirt"],
+      ["that", "shirt"], ["that", "cap"], ["that", "hat"], ["that", "skirt"]
+    ];
+    const phases = [
+      customPhase("u7-d1-clothing", "vocabulary", "Clothing", "Clothing Vocabulary", 10, "teaching", vocabularySteps(unit, 0, "u7-d1-word", "Clothing Vocabulary"), { vocabulary }),
+      customPhase("u7-d1-this-that", "grammar", "This / That", "this = 近 · that = 遠", 5, "teaching", [
+        practiceStep("u7-d1-this", "this = 這個，近", "this", { visual: "🧥 👈", modelAnswer: "this = nearby" }),
+        practiceStep("u7-d1-that", "that = 那個，遠", "that", { visual: "👉       👕", modelAnswer: "that = far away" })
+      ]),
+      customPhase("u7-d1-pattern", "grammar", "What is this / that?", "Near and Far Questions", 6, "teaching", [
+        u7PracticeStep(unit, "u7-d1-this-coat", "Near Object", "What is this?", "coat", { modelAnswer: "This is a coat." }),
+        u7PracticeStep(unit, "u7-d1-that-shirt", "Far Object", "What is that?", "shirt", { modelAnswer: "That is a shirt." })
+      ]),
+      customPhase("u7-d1-passport", "passport", "Passport", "Eight Passport Questions", 16, "teaching", passportPairs.map(([distance, clothing], index) => {
+        const subject = distance === "this" ? "This" : "That";
+        return u7PracticeStep(unit, `u7-d1-passport-${index + 1}`, `Passport ${index + 1} / ${passportPairs.length}`, `What is ${distance}?`, clothing, {
+          modelAnswer: `${subject} is a ${clothing}.`
+        });
+      })),
+      customPhase("u7-d1-distance", "practice", "Distance Check", "This or That?", 6, "check", [
+        u7PracticeStep(unit, "u7-d1-near", "Near object", "___ is a coat.", "coat", { choices: ["This", "That"], answer: "This" }),
+        u7PracticeStep(unit, "u7-d1-far", "Far object", "___ is a hat.", "hat", { choices: ["This", "That"], answer: "That" })
+      ]),
+      customPhase("u7-d1-check", "check", "Question Check", "What is this / that?", 2, "check", [
+        u7PracticeStep(unit, "u7-d1-final", "Choose the far-object pair", "hat (far)", "hat", { choices: ["What is this? This is a hat.", "What is that? That is a hat."], answer: "What is that? That is a hat." })
+      ])
+    ];
+    return makeUnit7Lesson(unit, 1, "this / that + clothing", phases);
+  }
+
+  function unit7Day2(unit) {
+    const phases = [
+      customPhase("u7-d2-review", "review", "This / That", "Near / Far Review", 5, "review", [
+        practiceStep("u7-d2-map", "Distance Map", "this → near  ·  that → far", { visual: "🧢 👈        👉 👗", modelAnswer: "this = 近 / that = 遠" })
+      ]),
+      customPhase("u7-d2-near-far", "practice", "Near or Far?", "Choose This / That", 8, "check", [
+        u7PracticeStep(unit, "u7-d2-n-coat", "Near clothing", "___ is a coat.", "coat", { choices: ["This", "That"], answer: "This" }),
+        u7PracticeStep(unit, "u7-d2-f-dress", "Far clothing", "___ is a dress.", "dress", { choices: ["This", "That"], answer: "That" }),
+        u7PracticeStep(unit, "u7-d2-n-cap", "Near clothing", "___ is a cap.", "cap", { choices: ["This", "That"], answer: "This" })
+      ]),
+      customPhase("u7-d2-question", "practice", "Choose the Question", "What is this / that?", 8, "check", [
+        u7PracticeStep(unit, "u7-d2-q-near", "Near object", "Ask about this jacket.", "jacket", { choices: ["What is this?", "What is that?"], answer: "What is this?" }),
+        u7PracticeStep(unit, "u7-d2-q-far", "Far object", "Ask about that shirt.", "shirt", { choices: ["What is this?", "What is that?"], answer: "What is that?" })
+      ]),
+      customPhase("u7-d2-match", "practice", "Picture Matching", "Match Distance and Sentence", 6, "check", [
+        u7PracticeStep(unit, "u7-d2-m-hat", "Match the picture", "hat (far)", "hat", { choices: ["This is a hat.", "That is a hat."], answer: "That is a hat." }),
+        u7PracticeStep(unit, "u7-d2-m-skirt", "Match the picture", "skirt (near)", "skirt", { choices: ["This is a skirt.", "That is a skirt."], answer: "This is a skirt." })
+      ]),
+      customPhase("u7-d2-order", "practice", "Sentence Order", "Put the Words in Order", 8, "check", [
+        practiceStep("u7-d2-o-question", "Choose the correct order", "is / this / What / ?", { choices: ["What is this?", "What this is?"], answer: "What is this?" }),
+        u7PracticeStep(unit, "u7-d2-o-hat", "Choose the correct order", "a / hat / That / is", "hat", { choices: ["That is a hat.", "That a hat is."], answer: "That is a hat." }),
+        u7PracticeStep(unit, "u7-d2-o-shirt", "Choose the correct order", "shirt / a / is / This", "shirt", { choices: ["This is a shirt.", "This shirt a is."], answer: "This is a shirt." })
+      ]),
+      customPhase("u7-d2-scene", "practice", "Near / Far Scene", "Two Objects · Two Distances", 8, "check", [
+        practiceStep("u7-d2-scene1", "Choose the near sentence", "Near: cap  ·  Far: dress", { visual: "🧢 👈          👉 👗", choices: ["This is a cap.", "That is a cap."], answer: "This is a cap." }),
+        practiceStep("u7-d2-scene2", "Choose the far sentence", "Near: jacket  ·  Far: hat", { visual: "🧥 👈          👉 🎩", choices: ["This is a hat.", "That is a hat."], answer: "That is a hat." })
+      ]),
+      customPhase("u7-d2-check", "check", "Mastery Check", "this = near · that = far", 2, "check", [
+        u7PracticeStep(unit, "u7-d2-final", "Choose this or that", "___ is a skirt. (far)", "skirt", { choices: ["This", "That"], answer: "That" })
+      ])
+    ];
+    return makeUnit7Lesson(unit, 2, "this / that 練熟", phases);
+  }
+
+  function unit7Day3(unit) {
+    const phases = [
+      customPhase("u7-d3-review", "grammar", "My / Your Review", "my = 我的 · your = 你的", 6, "review", [
+        practiceStep("u7-d3-my", "my = 我的", "my coat", { visual: "🙋 🧥", modelAnswer: "我的外套" }),
+        practiceStep("u7-d3-your", "your = 你的", "your hat", { visual: "👉 🎩", modelAnswer: "你的帽子" })
+      ]),
+      customPhase("u7-d3-his-her", "grammar", "His / Her", "his = 他的 · her = 她的", 6, "teaching", [
+        practiceStep("u7-d3-his", "his = 他的", "his hat", { visual: "👦 🎩", modelAnswer: "他的帽子" }),
+        practiceStep("u7-d3-her", "her = 她的", "her dress", { visual: "👧 👗", modelAnswer: "她的洋裝" })
+      ]),
+      customPhase("u7-d3-map", "grammar", "Possessive Map", "Whose Clothing?", 7, "teaching", [
+        practiceStep("u7-d3-map", "Possessive Map", "my → 我的  ·  your → 你的  ·  his → 他的  ·  her → 她的", { visual: "🙋 👉 👦 👧", modelAnswer: "The owner changes the possessive word." })
+      ]),
+      customPhase("u7-d3-pattern", "practice", "Possessive Clothing", "This / That + Owner + Clothing", 10, "check", [
+        u7PracticeStep(unit, "u7-d3-this-my-hat", "Near clothing", "This is my hat.", "hat", { visual: "🙋 🎩", modelAnswer: "my = mine" }),
+        u7PracticeStep(unit, "u7-d3-that-his-hat", "Far clothing", "That is his hat.", "hat", { visual: "👦 🎩", modelAnswer: "his = the boy's" }),
+        u7PracticeStep(unit, "u7-d3-this-my-coat", "Near clothing", "This is my coat.", "coat", { visual: "🙋 🧥", modelAnswer: "my = mine" }),
+        u7PracticeStep(unit, "u7-d3-that-her-dress", "Far clothing", "That is her dress.", "dress", { visual: "👧 👗", modelAnswer: "her = the girl's" })
+      ]),
+      customPhase("u7-d3-choose", "practice", "Choose the Owner", "my / your / his / her", 8, "check", [
+        practiceStep("u7-d3-c-my", "Choose the possessive", "I own the coat. This is ___ coat.", { visual: "🙋 🧥", choices: ["my", "your", "his", "her"], answer: "my" }),
+        practiceStep("u7-d3-c-his", "Choose the possessive", "The boy owns the hat. That is ___ hat.", { visual: "👦 🎩", choices: ["my", "your", "his", "her"], answer: "his" }),
+        practiceStep("u7-d3-c-her", "Choose the possessive", "The girl owns the dress. That is ___ dress.", { visual: "👧 👗", choices: ["my", "your", "his", "her"], answer: "her" })
+      ]),
+      customPhase("u7-d3-compare", "practice", "Owner Comparison", "Change the Owner", 6, "check", [
+        u7PracticeStep(unit, "u7-d3-change1", "Change the owner", "This is my cap. → the boy", "cap", { modelAnswer: "This is his cap." }),
+        u7PracticeStep(unit, "u7-d3-change2", "Change the owner", "That is your skirt. → the girl", "skirt", { modelAnswer: "That is her skirt." })
+      ]),
+      customPhase("u7-d3-check", "check", "Possessive Check", "Who Owns It?", 2, "check", [
+        practiceStep("u7-d3-final", "Choose the correct sentence", "the girl + dress", { visual: "👧 👗", choices: ["That is his dress.", "That is her dress."], answer: "That is her dress." })
+      ])
+    ];
+    return makeUnit7Lesson(unit, 3, "my / your / his / her", phases);
+  }
+
+  function unit7Day4(unit) {
+    const phases = [
+      customPhase("u7-d4-map", "grammar", "U5–U7 Question Map", "Object · Color · Owner", 5, "review", [
+        practiceStep("u7-d4-map", "Question Map", "What is this?  ·  What color is it?  ·  Is this your...?", { visual: "🔵 👕", modelAnswer: "object / color / owner" })
+      ]),
+      customPhase("u7-d4-triple", "speaking", "Three-Question Clothing Challenge", "Ask Three Questions", 12, "check", [
+        u7PracticeStep(unit, "u7-d4-t-shirt", "Blue T-shirt", "What is this?\nWhat color is it?\nIs this your T-shirt?", "T-shirt", { visual: "🔵 👕", modelAnswer: "This is a T-shirt.\nIt is blue.\nYes, it is." }),
+        u7PracticeStep(unit, "u7-d4-t-hat", "Red Hat", "What is that?\nWhat color is it?\nIs that his hat?", "hat", { visual: "🔴 🎩", modelAnswer: "That is a hat.\nIt is red.\nYes, it is." })
+      ]),
+      customPhase("u7-d4-owner", "practice", "Ownership Practice", "Choose the Possessive", 8, "check", [
+        u7PracticeStep(unit, "u7-d4-o-my", "Choose the owner", "This is ___ cap. (mine)", "cap", { choices: ["my", "your", "his", "her"], answer: "my" }),
+        u7PracticeStep(unit, "u7-d4-o-his", "Choose the owner", "That is ___ shirt. (the boy's)", "shirt", { choices: ["my", "your", "his", "her"], answer: "his" }),
+        u7PracticeStep(unit, "u7-d4-o-her", "Choose the owner", "That is ___ dress. (the girl's)", "dress", { choices: ["my", "your", "his", "her"], answer: "her" })
+      ]),
+      customPhase("u7-d4-error", "practice", "Error Correction", "Fix the Sentence", 8, "check", [
+        u7PracticeStep(unit, "u7-d4-e1", "Fix the question", "What is these? ✕", "coat", { modelAnswer: "What is this? ✓" }),
+        u7PracticeStep(unit, "u7-d4-e2", "Fix the sentence", "This are a hat. ✕", "hat", { modelAnswer: "This is a hat. ✓" }),
+        u7PracticeStep(unit, "u7-d4-e3", "Fix the possessive", "That is she hat. ✕", "hat", { visual: "👧 🎩", modelAnswer: "That is her hat. ✓" })
+      ]),
+      customPhase("u7-d4-order", "practice", "Sentence Order", "Put the Words in Order", 7, "check", [
+        u7PracticeStep(unit, "u7-d4-r-cap", "Choose the correct order", "this / my / is / cap", "cap", { choices: ["This is my cap.", "This my cap is."], answer: "This is my cap." }),
+        u7PracticeStep(unit, "u7-d4-r-dress", "Choose the correct order", "her / That / dress / is", "dress", { choices: ["That her is dress.", "That is her dress."], answer: "That is her dress." })
+      ]),
+      customPhase("u7-d4-check", "check", "Final Check", "This / That + Possessive", 5, "check", [
+        practiceStep("u7-d4-final", "Complete the map", "this = ___ / that = ___ / my-your-his-her = ___", { choices: ["near / far / owner", "far / near / color"], answer: "near / far / owner" }),
+        u7PracticeStep(unit, "u7-d4-final-sentence", "Choose the correct sentence", "girl + far dress", "dress", { choices: ["That is her dress.", "This is his dress."], answer: "That is her dress." })
+      ])
+    ];
+    return makeUnit7Lesson(unit, 4, "this / that + 所有格進階", phases);
+  }
+
+  function book1Unit7Lessons(unit) {
+    return [unit7Day1(unit), unit7Day2(unit), unit7Day3(unit), unit7Day4(unit)];
+  }
+
   function u8Asset(unit, word) {
     return vocabularyItems(unit.vocabulary).find((item) => item.word.toLowerCase() === word.toLowerCase()) || { word };
   }
@@ -2201,11 +2363,13 @@
                   ? book1Unit5Lessons(unit)
                   : book.id === "book-1" && unit.id === "unit-6"
                     ? book1Unit6Lessons(unit)
-                    : book.id === "book-1" && unit.id === "unit-8"
-                      ? book1Unit8Lessons(unit)
-                      : book.id === "book-1" && unit.id === "unit-9"
-                        ? book1Unit9Lessons(unit)
-                        : [1, 2].map((day) => sharedLessonFromUnit(unit, unitIndex, book.id, day))
+                    : book.id === "book-1" && unit.id === "unit-7"
+                      ? book1Unit7Lessons(unit)
+                      : book.id === "book-1" && unit.id === "unit-8"
+                        ? book1Unit8Lessons(unit)
+                        : book.id === "book-1" && unit.id === "unit-9"
+                          ? book1Unit9Lessons(unit)
+                          : [1, 2].map((day) => sharedLessonFromUnit(unit, unitIndex, book.id, day))
       }))
     }));
   }

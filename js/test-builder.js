@@ -91,6 +91,9 @@
   function imageSentenceCue(sentence) {
     const clean = sentence.trim();
     const colors = "red|yellow|green|blue|pink|black|white|brown|orange|purple";
+    const feelings = "happy|sad|hungry|thirsty|angry|sleepy|tired";
+    const descriptions = "chubby|thin|young|old|short|tall|cute|lazy|noisy|quiet";
+    const locationStart = "in|on|under|behind|beside|near|inside|outside|next to|in front of";
     let match;
 
     if (/^Is there\b/i.test(clean)) return { question: "What question can you ask about the picture?", starter: "Is there..." };
@@ -107,7 +110,10 @@
     if (/^That is\b/i.test(clean)) return { question: "What is that?", starter: /^That is not/i.test(clean) ? "That is not..." : "That is..." };
     if (/^These are\b/i.test(clean)) return { question: "What are these?", starter: "These are..." };
     if (/^Those are\b/i.test(clean)) return { question: "What are those?", starter: "Those are..." };
-    if (/^They are\b/i.test(clean)) return { question: "How do they feel?", starter: /^They are not/i.test(clean) ? "They are not..." : "They are..." };
+    if (new RegExp(`^They are (?:not )?(?:${feelings})\\.`, "i").test(clean)) return { question: "How do they feel?", starter: /^They are not/i.test(clean) ? "They are not..." : "They are..." };
+    if (new RegExp(`^They are (?:not )?(?:${descriptions})\\.`, "i").test(clean)) return { question: "What are they like?", starter: /^They are not/i.test(clean) ? "They are not..." : "They are..." };
+    if (new RegExp(`^They are (?:${locationStart})\\b`, "i").test(clean)) return { question: "Where are they?", starter: "They are..." };
+    if (/^They are\b/i.test(clean)) return { question: "What are they?", starter: /^They are not/i.test(clean) ? "They are not..." : "They are..." };
     if (/^I like\b/i.test(clean)) return { question: "What do you like?", starter: "I like..." };
     if (/^You like\b/i.test(clean)) return { question: "What do you like?", starter: "You like..." };
     if (/^We like\b/i.test(clean)) return { question: "What do you and your classmates like?", starter: "We like..." };

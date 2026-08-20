@@ -91,6 +91,8 @@ Book 1 Unit 6 uses four days to build color questions: Day 1 introduces ten colo
 
 Book 1 Unit 8 uses four days to apply `this / that` to farm animals: Day 1 introduces the animal question pattern and eight Passport pairs; Day 2 drills `Yes, it is / No, it isn't`; Day 3 transforms statements into questions and compares three sentence forms; Day 4 mixes name questions, yes/no questions, corrections, and sentence order.
 
+Book 1 Unit 9 completes the Book 1 be-verb system in four days: Day 1 adds `They → are` and eight adjective Passport questions; Day 2 drills `Are they...?`; Day 3 contrasts singular and plural subjects; Day 4 mixes all six subjects in a final grammar challenge.
+
 Generated lessons expose both `phases` and flattened `steps`. Every page has `phase`, `phaseId`, `activityType`, `title`, `content`, `phaseDuration`, curriculum-specific data, suggested games, and `skippable` where appropriate. Add curriculum data to a book file; do not copy the player or hard-code a new page sequence.
 
 Vocabulary Games and Grammar Games are formal lesson stages. Vocabulary uses Random, Reveal, Matching, and Dice with the current Unit words. Grammar uses sentence matching, substitution, picture sentences, dice Q&A, and quick response with the current Unit patterns. Teachers can replay, mark complete, or skip. The star button still opens the independent classroom toolbox with Random Vocabulary, Picture Reveal, Memory Match, Virtual Dice, Timer, and Team Scoreboard.

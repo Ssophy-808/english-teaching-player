@@ -1980,6 +1980,164 @@
     return [unit8Day1(unit), unit8Day2(unit), unit8Day3(unit), unit8Day4(unit)];
   }
 
+  function u9Asset(unit, word) {
+    return vocabularyItems(unit.vocabulary).find((item) => item.word.toLowerCase() === word.toLowerCase()) || { word };
+  }
+
+  function u9PracticeStep(unit, id, title, prompt, word, options = {}) {
+    return practiceStep(id, title, prompt, { ...u9Asset(unit, word), word, ...options });
+  }
+
+  function makeUnit9Lesson(unit, day, dayGoal, phases) {
+    const steps = phases.flatMap((phase) => phase.steps);
+    const totalDuration = phases.reduce((total, phase) => total + (Number(phase.duration) || 0), 0);
+    return {
+      id: `day-${day}`,
+      title: `${unit.title} · Day ${day}｜${dayGoal}`,
+      day: `Day ${day}`,
+      dayGoal,
+      curriculum: curriculumFor(unit),
+      phases,
+      duration: totalDuration,
+      durationMinutes: totalDuration,
+      steps,
+      source: { document: "B1_教學流程.pdf", page: B1_DAY_PAGES[8]?.[day - 1] }
+    };
+  }
+
+  function unit9Day1(unit) {
+    const vocabulary = vocabularyItems(unit.vocabulary);
+    const phases = [
+      customPhase("u9-d1-adjectives", "vocabulary", "Feelings", "Unit 9 Adjectives", 10, "teaching", vocabularySteps(unit, 0, "u9-d1-word", "Unit 9 Adjectives"), { vocabulary }),
+      customPhase("u9-d1-they", "grammar", "They", "they = 他們／她們／它們", 5, "teaching", [
+        practiceStep("u9-d1-they", "they = 他們／她們／它們", "They → are", { visual: "👧 👦 🐶", modelAnswer: "More than one person or thing → they" })
+      ]),
+      customPhase("u9-d1-map", "grammar", "Complete Be Verb Map", "Book 1 Be Verb Map", 6, "teaching", [
+        practiceStep("u9-d1-map", "Complete Be Verb Map", "I → am  ·  You → are  ·  He → is  ·  She → is  ·  It → is  ·  They → are", { modelAnswer: "am / are / is / is / is / are" })
+      ]),
+      customPhase("u9-d1-pattern", "grammar", "Are they...?", "Plural Question + Answer", 6, "teaching", [
+        u9PracticeStep(unit, "u9-d1-hungry", "Ask and Answer", "Are they hungry?", "hungry", { visual: "👧 👦 😋", modelAnswer: "Yes, they are." }),
+        u9PracticeStep(unit, "u9-d1-thirsty", "Ask and Answer", "Are they thirsty?", "thirsty", { visual: "👧 👦 🥤", modelAnswer: "Yes, they are." })
+      ]),
+      customPhase("u9-d1-passport", "passport", "Passport", "Eight Passport Questions", 16, "teaching", vocabulary.map((item, index) =>
+        u9PracticeStep(unit, `u9-d1-passport-${index + 1}`, `Passport ${index + 1} / ${vocabulary.length}`, `Are they ${item.word}?`, item.word, {
+          visual: `👧 👦 ${item.visual || ""}`,
+          modelAnswer: "Yes, they are."
+        })
+      )),
+      customPhase("u9-d1-check", "check", "They Check", "They → are", 2, "check", [
+        u9PracticeStep(unit, "u9-d1-final", "Choose the answer", "Are they hungry?", "hungry", { visual: "👧 👦 😋", choices: ["Yes, they are.", "Yes, they is."], answer: "Yes, they are." })
+      ])
+    ];
+    return makeUnit9Lesson(unit, 1, "They + are", phases);
+  }
+
+  function unit9Day2(unit) {
+    const phases = [
+      customPhase("u9-d2-map", "grammar", "They Answer Map", "Yes, they are / No, they aren't", 5, "review", [
+        practiceStep("u9-d2-map", "Answer Map", "Yes → they are  ·  No → they aren't", { visual: "👧 👦", modelAnswer: "Yes, they are. / No, they aren't." })
+      ]),
+      customPhase("u9-d2-yes", "practice", "Yes Answers", "Look and Decide", 8, "check", [
+        u9PracticeStep(unit, "u9-d2-y-thirsty", "Answer the question", "Are they thirsty?", "thirsty", { visual: "👧 👦 🥤", choices: ["Yes, they are.", "No, they aren't."], answer: "Yes, they are." }),
+        u9PracticeStep(unit, "u9-d2-y-sleepy", "Answer the question", "Are they sleepy?", "sleepy", { visual: "👧 👦 😴", choices: ["Yes, they are.", "No, they aren't."], answer: "Yes, they are." })
+      ]),
+      customPhase("u9-d2-no", "practice", "No Answers", "Look and Decide", 8, "check", [
+        u9PracticeStep(unit, "u9-d2-n-noisy", "Answer the question", "Are they noisy?", "quiet", { visual: "👧 👦 🤫", choices: ["Yes, they are.", "No, they aren't."], answer: "No, they aren't." }),
+        u9PracticeStep(unit, "u9-d2-n-angry", "Answer the question", "Are they angry?", "happy", { visual: "👧 👦 😄", choices: ["Yes, they are.", "No, they aren't."], answer: "No, they aren't." })
+      ]),
+      customPhase("u9-d2-picture", "practice", "Picture Decisions", "Are they...?", 8, "check", [
+        u9PracticeStep(unit, "u9-d2-p-hungry", "Look and Answer", "Are they hungry?", "hungry", { visual: "👧 👦 😋", modelAnswer: "Yes, they are." }),
+        u9PracticeStep(unit, "u9-d2-p-tired", "Look and Answer", "Are they tired?", "tired", { visual: "👧 👦 🥱", modelAnswer: "Yes, they are." }),
+        u9PracticeStep(unit, "u9-d2-p-lazy", "Look and Answer", "Are they lazy?", "lazy", { visual: "👧 👦 🛋️", modelAnswer: "Yes, they are." })
+      ]),
+      customPhase("u9-d2-fill", "practice", "They / Are Fill-in", "Complete the Sentence", 6, "check", [
+        practiceStep("u9-d2-f-they", "Choose the subject", "Are ___ hungry?", { visual: "👧 👦 😋", choices: ["he", "she", "they"], answer: "they" }),
+        practiceStep("u9-d2-f-are", "Choose the be verb", "___ they thirsty?", { visual: "👧 👦 🥤", choices: ["Am", "Is", "Are"], answer: "Are" })
+      ]),
+      customPhase("u9-d2-compare", "grammar", "One or Many?", "Is he...? / Are they...?", 8, "check", [
+        practiceStep("u9-d2-c-map", "One vs Many", "Is he hungry?  ·  Are they hungry?", { visual: "👦  /  👧 👦", modelAnswer: "one person → is  ·  many people → are" }),
+        u9PracticeStep(unit, "u9-d2-c-one", "One person", "___ he hungry?", "hungry", { visual: "👦 😋", choices: ["Is", "Are"], answer: "Is" }),
+        u9PracticeStep(unit, "u9-d2-c-many", "Many people", "___ they hungry?", "hungry", { visual: "👧 👦 😋", choices: ["Is", "Are"], answer: "Are" }),
+        practiceStep("u9-d2-c-rule", "Complete the rule", "one person → ___  ·  many people → ___", { choices: ["is / are", "are / is"], answer: "is / are" })
+      ]),
+      customPhase("u9-d2-check", "check", "Mastery Check", "Are they...?", 2, "check", [
+        u9PracticeStep(unit, "u9-d2-final", "Choose the correct pair", "Are they noisy?", "noisy", { visual: "👧 👦 📣", choices: ["Yes, they are.", "Yes, it is.", "Yes, she is."], answer: "Yes, they are." })
+      ])
+    ];
+    return makeUnit9Lesson(unit, 2, "Are they...? 熟練", phases);
+  }
+
+  function unit9Day3(unit) {
+    const phases = [
+      customPhase("u9-d3-map", "grammar", "Singular / Plural Map", "Subject + Be Verb", 7, "teaching", [
+        practiceStep("u9-d3-map", "Be Verb Groups", "he / she / it → is  ·  you / they → are  ·  I → am", { modelAnswer: "one → is  ·  many → are" })
+      ]),
+      customPhase("u9-d3-compare", "grammar", "Singular vs Plural", "One Person / Many People", 8, "teaching", [
+        u9PracticeStep(unit, "u9-d3-he", "One person", "He is hungry.", "hungry", { visual: "👦 😋", modelAnswer: "he → is" }),
+        u9PracticeStep(unit, "u9-d3-they", "Many people", "They are hungry.", "hungry", { visual: "👧 👦 😋", modelAnswer: "they → are" }),
+        u9PracticeStep(unit, "u9-d3-she-q", "One person question", "Is she sleepy?", "sleepy", { visual: "👧 😴", modelAnswer: "she → is" }),
+        u9PracticeStep(unit, "u9-d3-they-q", "Many people question", "Are they sleepy?", "sleepy", { visual: "👧 👦 😴", modelAnswer: "they → are" })
+      ]),
+      customPhase("u9-d3-statement", "practice", "Subject Replacement", "He / She → They", 8, "check", [
+        u9PracticeStep(unit, "u9-d3-s-tired", "Change the subject", "He is tired. → They...", "tired", { modelAnswer: "They are tired." }),
+        u9PracticeStep(unit, "u9-d3-s-hungry", "Change the subject", "She is hungry. → They...", "hungry", { modelAnswer: "They are hungry." })
+      ]),
+      customPhase("u9-d3-question", "practice", "Question Replacement", "Is he / she...? → Are they...?", 8, "check", [
+        u9PracticeStep(unit, "u9-d3-q-noisy", "Change the subject", "Is he noisy? → They", "noisy", { modelAnswer: "Are they noisy?" }),
+        u9PracticeStep(unit, "u9-d3-q-sleepy", "Change the subject", "Is she sleepy? → They", "sleepy", { modelAnswer: "Are they sleepy?" })
+      ]),
+      customPhase("u9-d3-choose", "practice", "Choose Is or Are", "One or Many?", 9, "check", [
+        u9PracticeStep(unit, "u9-d3-c-he", "Choose the be verb", "He ___ hungry.", "hungry", { visual: "👦 😋", choices: ["is", "are"], answer: "is" }),
+        u9PracticeStep(unit, "u9-d3-c-they", "Choose the be verb", "They ___ hungry.", "hungry", { visual: "👧 👦 😋", choices: ["is", "are"], answer: "are" }),
+        u9PracticeStep(unit, "u9-d3-c-she", "Choose the question verb", "___ she sleepy?", "sleepy", { visual: "👧 😴", choices: ["Is", "Are"], answer: "Is" }),
+        u9PracticeStep(unit, "u9-d3-c-many", "Choose the question verb", "___ they sleepy?", "sleepy", { visual: "👧 👦 😴", choices: ["Is", "Are"], answer: "Are" })
+      ]),
+      customPhase("u9-d3-check", "check", "Singular / Plural Check", "is / are", 5, "check", [
+        practiceStep("u9-d3-final", "Complete the map", "he / she / it → ___  ·  you / they → ___  ·  I → ___", { choices: ["is / are / am", "are / is / am"], answer: "is / are / am" })
+      ])
+    ];
+    return makeUnit9Lesson(unit, 3, "單數 vs 複數", phases);
+  }
+
+  function unit9Day4(unit) {
+    const phases = [
+      customPhase("u9-d4-map", "grammar", "Final Be Verb Map", "Book 1 Complete Map", 6, "review", [
+        practiceStep("u9-d4-map", "Be Verb Map Final Review", "I am  ·  You are  ·  He is  ·  She is  ·  It is  ·  They are", { modelAnswer: "am / are / is / is / is / are" })
+      ]),
+      customPhase("u9-d4-be", "practice", "Choose the Be Verb", "Book 1 Mixed Subjects", 12, "check", [
+        practiceStep("u9-d4-b-i", "Choose am / are / is", "I ___ a student.", { choices: ["am", "are", "is"], answer: "am" }),
+        practiceStep("u9-d4-b-you", "Choose am / are / is", "You ___ happy.", { choices: ["am", "are", "is"], answer: "are" }),
+        practiceStep("u9-d4-b-he", "Choose am / are / is", "He ___ my brother.", { choices: ["am", "are", "is"], answer: "is" }),
+        practiceStep("u9-d4-b-she", "Choose am / are / is", "She ___ six years old.", { choices: ["am", "are", "is"], answer: "is" }),
+        practiceStep("u9-d4-b-it", "Choose am / are / is", "It ___ red.", { choices: ["am", "are", "is"], answer: "is" }),
+        practiceStep("u9-d4-b-they", "Choose am / are / is", "They ___ hungry.", { choices: ["am", "are", "is"], answer: "are" })
+      ]),
+      customPhase("u9-d4-judge", "practice", "Correct or Incorrect?", "Sentence Judgment", 8, "check", [
+        practiceStep("u9-d4-j1", "Fix the question", "Are she tired? ✕", { modelAnswer: "Is she tired? ✓" }),
+        practiceStep("u9-d4-j2", "Fix the question", "Is they noisy? ✕", { modelAnswer: "Are they noisy? ✓" }),
+        practiceStep("u9-d4-j3", "Fix the sentence", "They is hungry. ✕", { modelAnswer: "They are hungry. ✓" }),
+        practiceStep("u9-d4-j4", "Check the question", "Are they sleepy? ✓", { modelAnswer: "Correct!" })
+      ]),
+      customPhase("u9-d4-error", "practice", "Book 1 Error Challenge", "Find and Fix", 7, "check", [
+        practiceStep("u9-d4-e1", "Fix the sentence", "I is a student. ✕", { modelAnswer: "I am a student. ✓" }),
+        practiceStep("u9-d4-e2", "Fix the sentence", "It are blue. ✕", { modelAnswer: "It is blue. ✓" }),
+        practiceStep("u9-d4-e3", "Fix the question", "Are he hungry? ✕", { modelAnswer: "Is he hungry? ✓" })
+      ]),
+      customPhase("u9-d4-transform", "practice", "Three-Form Transformation", "Affirmative → Negative → Question", 8, "check", [
+        u9PracticeStep(unit, "u9-d4-t-noisy", "Change all three forms", "They are noisy.", "noisy", { visual: "👧 👦 📣", modelAnswer: "They are noisy. → They are not noisy. → Are they noisy?" }),
+        u9PracticeStep(unit, "u9-d4-t-tired", "Change all three forms", "They are tired.", "tired", { visual: "👧 👦 🥱", modelAnswer: "They are tired. → They are not tired. → Are they tired?" })
+      ]),
+      customPhase("u9-d4-check", "check", "Final Grammar Challenge", "Book 1 Complete", 4, "check", [
+        practiceStep("u9-d4-final", "Complete all six", "I ___ / You ___ / He ___ / She ___ / It ___ / They ___", { choices: ["am / are / is / is / is / are", "are / am / is / are / is / is"], answer: "am / are / is / is / is / are" })
+      ])
+    ];
+    return makeUnit9Lesson(unit, 4, "Book 1 Final Grammar Challenge", phases);
+  }
+
+  function book1Unit9Lessons(unit) {
+    return [unit9Day1(unit), unit9Day2(unit), unit9Day3(unit), unit9Day4(unit)];
+  }
+
   function sharedLessonFromUnit(unit, unitIndex, bookId, day) {
     const vocabulary = vocabularyItems(unit.vocabulary);
     const activityIdeas = vocabularyGameIdeas(bookId, unit, day);
@@ -2045,7 +2203,9 @@
                     ? book1Unit6Lessons(unit)
                     : book.id === "book-1" && unit.id === "unit-8"
                       ? book1Unit8Lessons(unit)
-                      : [1, 2].map((day) => sharedLessonFromUnit(unit, unitIndex, book.id, day))
+                      : book.id === "book-1" && unit.id === "unit-9"
+                        ? book1Unit9Lessons(unit)
+                        : [1, 2].map((day) => sharedLessonFromUnit(unit, unitIndex, book.id, day))
       }))
     }));
   }

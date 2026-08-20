@@ -50,6 +50,23 @@
 
   function grammarChoice(sentence) {
     const clean = sentence.trim();
+    const modalMatch = clean.match(/\b(can't|can)\b/i);
+    if (modalMatch) {
+      const startsSentence = modalMatch.index === 0;
+      const answer = modalMatch[0].toLowerCase();
+      let choices;
+      if (answer === "can't") choices = ["can't", "aren't", "don't"];
+      else if (/^Yes,/i.test(clean)) choices = ["can", "am", "do"];
+      else if (startsSentence) choices = ["can", "are", "is"];
+      else choices = ["can", "am", "is"];
+      const format = (word) => startsSentence ? word.charAt(0).toUpperCase() + word.slice(1) : word;
+      return {
+        prompt: `Choose the correct modal verb.\n${clean.slice(0, modalMatch.index)}___${clean.slice(modalMatch.index + modalMatch[0].length)}`,
+        answer: format(answer),
+        choices: shuffle(choices.map(format)),
+        difficulty: 1
+      };
+    }
     const groups = [
       { pattern: /\b(am|are|is)\b/i, choices: ["am", "are", "is"], difficulty: 1 },
       { pattern: /\b(do|does)\b/i, choices: ["do", "does", "are"], difficulty: 2 },

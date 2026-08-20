@@ -61,8 +61,9 @@
   }
 
   function wrongSentence(sentence) {
-    if (/^No, there is not\.$/i.test(sentence.trim())) return "No, there not.";
-    if (/^Yes, there is\.$/i.test(sentence.trim())) return "Yes, there.";
+    if (/^No, there (?:is|are) not\.$/i.test(sentence.trim())) return "No, there not.";
+    if (/^No, there (?:isn't|aren't)\.$/i.test(sentence.trim())) return "No, there not.";
+    if (/^Yes, there (?:is|are)\.$/i.test(sentence.trim())) return "Yes, there.";
     const rules = [[" am ", " are "], [" are ", " is "], [" is ", " are "], [" like ", " likes "], ["There is ", "There are "]];
     const rule = rules.find(([from]) => sentence.includes(from));
     return rule ? sentence.replace(rule[0], rule[1]) : "";

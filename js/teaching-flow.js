@@ -1345,6 +1345,165 @@
     return [unit3Day1(unit), unit3Day2(unit), unit3Day3(unit), unit3Day4(unit)];
   }
 
+  function u4Asset(unit, word) {
+    return vocabularyItems(unit.vocabulary).find((item) => item.word.toLowerCase() === word.toLowerCase()) || { word };
+  }
+
+  function u4PracticeStep(unit, id, title, prompt, word, options = {}) {
+    return practiceStep(id, title, prompt, { ...u4Asset(unit, word), word, ...options });
+  }
+
+  function makeUnit4Lesson(unit, day, dayGoal, phases) {
+    const steps = phases.flatMap((phase) => phase.steps);
+    const totalDuration = phases.reduce((total, phase) => total + (Number(phase.duration) || 0), 0);
+    return {
+      id: `day-${day}`,
+      title: `${unit.title} · Day ${day}｜${dayGoal}`,
+      day: `Day ${day}`,
+      dayGoal,
+      curriculum: curriculumFor(unit),
+      phases,
+      duration: totalDuration,
+      durationMinutes: totalDuration,
+      steps,
+      source: { document: "B1_教學流程.pdf", page: B1_DAY_PAGES[3]?.[day - 1] }
+    };
+  }
+
+  function unit4Day1(unit) {
+    const vocabulary = vocabularyItems(unit.vocabulary);
+    const phases = [
+      customPhase("u4-d1-adjectives", "vocabulary", "Adjectives", "Adjective Vocabulary", 10, "teaching", vocabularySteps(unit, 0, "u4-d1-word", "Adjective Vocabulary"), { vocabulary }),
+      customPhase("u4-d1-question-rule", "grammar", "Question Rule", "Move the Be Verb to the Front", 7, "teaching", [
+        u4PracticeStep(unit, "u4-d1-rule-you", "Statement → Question", "You are happy.  →  Are you happy?", "happy", { modelAnswer: "are moves before you" }),
+        u4PracticeStep(unit, "u4-d1-rule-he", "Statement → Question", "He is chubby.  →  Is he chubby?", "chubby", { modelAnswer: "is moves before he" })
+      ]),
+      customPhase("u4-d1-you", "grammar", "Are you...?", "You are → Are you...?", 6, "teaching", [
+        u4PracticeStep(unit, "u4-d1-you-happy", "Make a question", "You are happy.", "happy", { modelAnswer: "Are you happy?" }),
+        u4PracticeStep(unit, "u4-d1-you-tall", "Make a question", "You are tall.", "tall", { modelAnswer: "Are you tall?" })
+      ]),
+      customPhase("u4-d1-he", "grammar", "Is he...?", "He is → Is he...?", 6, "teaching", [
+        u4PracticeStep(unit, "u4-d1-he-chubby", "Make a question", "He is chubby.", "chubby", { modelAnswer: "Is he chubby?" }),
+        u4PracticeStep(unit, "u4-d1-he-short", "Make a question", "He is short.", "short", { modelAnswer: "Is he short?" })
+      ]),
+      customPhase("u4-d1-passport", "passport", "Passport", "Positive Passport Sentences", 10, "teaching", [
+        u4PracticeStep(unit, "u4-d1-p-happy", "Passport 1 / 5", "I am happy.", "happy", { modelAnswer: "Are you happy?  Yes, I am." }),
+        u4PracticeStep(unit, "u4-d1-p-chubby", "Passport 2 / 5", "He is chubby.", "chubby", { modelAnswer: "Is he chubby?  Yes, he is." }),
+        u4PracticeStep(unit, "u4-d1-p-young", "Passport 3 / 5", "I am young.", "young", { modelAnswer: "Are you young?  Yes, I am." }),
+        u4PracticeStep(unit, "u4-d1-p-short", "Passport 4 / 5", "He is short.", "short", { modelAnswer: "Is he short?  Yes, he is." }),
+        u4PracticeStep(unit, "u4-d1-p-cute", "Passport 5 / 5", "I am cute.", "cute", { modelAnswer: "Are you cute?  Yes, I am." })
+      ]),
+      customPhase("u4-d1-check", "check", "Question Check", "Statement or Question?", 6, "check", [
+        u4PracticeStep(unit, "u4-d1-c1", "Choose the question", "You are happy.", "happy", { choices: ["Are you happy?", "Is you happy?"], answer: "Are you happy?" }),
+        u4PracticeStep(unit, "u4-d1-c2", "Choose the question", "He is chubby.", "chubby", { choices: ["Are he chubby?", "Is he chubby?"], answer: "Is he chubby?" })
+      ])
+    ];
+    return makeUnit4Lesson(unit, 1, "形容詞＋Yes/No 問句", phases);
+  }
+
+  function unit4Day2(unit) {
+    const vocabulary = vocabularyItems(unit.vocabulary);
+    const phases = [
+      customPhase("u4-d2-review", "vocabulary", "Adjectives", "Quick Adjective Review", 6, "review", vocabularySteps(unit, 0, "u4-d2-word", "Quick Adjective Review"), { vocabulary }),
+      customPhase("u4-d2-map", "grammar", "Subject + Be Verb", "you → are · he / she → is", 5, "review", [
+        practiceStep("u4-d2-map", "Question Map", "you → are  ·  he → is  ·  she → is", { modelAnswer: "Are you...?  ·  Is he...?  ·  Is she...?" })
+      ]),
+      customPhase("u4-d2-you", "practice", "Are you...?", "Question + Positive Answer", 8, "check", [
+        u4PracticeStep(unit, "u4-d2-y-happy", "Ask and Answer", "Are you happy?", "happy", { modelAnswer: "Yes, I am." }),
+        u4PracticeStep(unit, "u4-d2-y-tall", "Ask and Answer", "Are you tall?", "tall", { modelAnswer: "Yes, I am." }),
+        u4PracticeStep(unit, "u4-d2-y-young", "Ask and Answer", "Are you young?", "young", { modelAnswer: "Yes, I am." })
+      ]),
+      customPhase("u4-d2-he", "practice", "Is he...?", "Question + Positive Answer", 8, "check", [
+        u4PracticeStep(unit, "u4-d2-h-short", "Ask and Answer", "Is he short?", "short", { modelAnswer: "Yes, he is." }),
+        u4PracticeStep(unit, "u4-d2-h-chubby", "Ask and Answer", "Is he chubby?", "chubby", { modelAnswer: "Yes, he is." })
+      ]),
+      customPhase("u4-d2-she", "practice", "Is she...?", "Question + Positive Answer", 8, "check", [
+        u4PracticeStep(unit, "u4-d2-s-cute", "Ask and Answer", "Is she cute?", "cute", { modelAnswer: "Yes, she is." }),
+        u4PracticeStep(unit, "u4-d2-s-thin", "Ask and Answer", "Is she thin?", "thin", { modelAnswer: "Yes, she is." })
+      ]),
+      customPhase("u4-d2-mixed", "practice", "Mixed Questions", "Choose the Correct Question", 8, "check", [
+        u4PracticeStep(unit, "u4-d2-m-you", "Choose the question", "you + happy", "happy", { choices: ["Are you happy?", "Is you happy?"], answer: "Are you happy?" }),
+        u4PracticeStep(unit, "u4-d2-m-he", "Choose the question", "he + short", "short", { choices: ["Are he short?", "Is he short?"], answer: "Is he short?" }),
+        u4PracticeStep(unit, "u4-d2-m-she", "Choose the question", "she + cute", "cute", { choices: ["Is she cute?", "Are she cute?"], answer: "Is she cute?" })
+      ]),
+      customPhase("u4-d2-check", "check", "Mastery Check", "Question + Answer", 2, "check", [
+        u4PracticeStep(unit, "u4-d2-final", "Choose the correct pair", "Is she cute?", "cute", { choices: ["Yes, she is.", "Yes, she are."], answer: "Yes, she is." })
+      ])
+    ];
+    return makeUnit4Lesson(unit, 2, "問句＋肯定回答練熟", phases);
+  }
+
+  function unit4Day3(unit) {
+    const phases = [
+      customPhase("u4-d3-map", "grammar", "Answer Map", "Yes / No Answer Map", 8, "teaching", [
+        practiceStep("u4-d3-map-i", "I Answer Map", "Yes, I am.  /  No, I am not.", { visual: "🙂", modelAnswer: "Are you...? → I am / I am not" }),
+        practiceStep("u4-d3-map-he", "He Answer Map", "Yes, he is.  /  No, he is not.", { visual: "👦", modelAnswer: "Is he...? → he is / he is not" }),
+        practiceStep("u4-d3-map-she", "She Answer Map", "Yes, she is.  /  No, she is not.", { visual: "👧", modelAnswer: "Is she...? → she is / she is not" })
+      ]),
+      customPhase("u4-d3-you", "practice", "Are you...?", "Negative Answers", 7, "check", [
+        u4PracticeStep(unit, "u4-d3-y-tall", "Answer No", "Are you tall?", "tall", { modelAnswer: "No, I am not." }),
+        u4PracticeStep(unit, "u4-d3-y-sad", "Answer No", "Are you sad?", "sad", { modelAnswer: "No, I am not." })
+      ]),
+      customPhase("u4-d3-he", "practice", "Is he...?", "Negative Answers", 7, "check", [
+        u4PracticeStep(unit, "u4-d3-h-old", "Answer No", "Is he old?", "old", { modelAnswer: "No, he is not." }),
+        u4PracticeStep(unit, "u4-d3-h-thin", "Answer No", "Is he thin?", "thin", { modelAnswer: "No, he is not." })
+      ]),
+      customPhase("u4-d3-she", "practice", "Is she...?", "Negative Answers", 7, "check", [
+        u4PracticeStep(unit, "u4-d3-s-sad", "Answer No", "Is she sad?", "sad", { modelAnswer: "No, she is not." }),
+        u4PracticeStep(unit, "u4-d3-s-short", "Answer No", "Is she short?", "short", { modelAnswer: "No, she is not." })
+      ]),
+      customPhase("u4-d3-choice", "practice", "Choose the No Answer", "Match the Subject", 8, "check", [
+        u4PracticeStep(unit, "u4-d3-c-you", "Choose the answer", "Are you old?", "old", { choices: ["No, I am not.", "No, you are not."], answer: "No, I am not." }),
+        u4PracticeStep(unit, "u4-d3-c-he", "Choose the answer", "Is he sad?", "sad", { choices: ["No, he is not.", "No, he are not."], answer: "No, he is not." }),
+        u4PracticeStep(unit, "u4-d3-c-she", "Choose the answer", "Is she tall?", "tall", { choices: ["No, she is not.", "No, she am not."], answer: "No, she is not." })
+      ]),
+      customPhase("u4-d3-not", "practice", "Not Review", "Fix the Negative Answer", 6, "check", [
+        practiceStep("u4-d3-n1", "Fix the answer", "No, I not am. ✕", { modelAnswer: "No, I am not. ✓" }),
+        practiceStep("u4-d3-n2", "Fix the answer", "No, he not is. ✕", { modelAnswer: "No, he is not. ✓" }),
+        practiceStep("u4-d3-n3", "Fix the answer", "No, she are not. ✕", { modelAnswer: "No, she is not. ✓" })
+      ]),
+      customPhase("u4-d3-check", "check", "Answer Check", "Yes or No", 2, "check", [
+        u4PracticeStep(unit, "u4-d3-final", "Choose the correct answer", "Is she sad?", "sad", { choices: ["No, she is not.", "No, she not is."], answer: "No, she is not." })
+      ])
+    ];
+    return makeUnit4Lesson(unit, 3, "加入否定回答", phases);
+  }
+
+  function unit4Day4(unit) {
+    const phases = [
+      customPhase("u4-d4-map", "grammar", "Three Sentence Forms", "Affirmative · Negative · Question", 6, "review", [
+        practiceStep("u4-d4-map", "Three Forms", "主詞 + be  ·  主詞 + be + not  ·  be + 主詞 ...?", { modelAnswer: "affirmative / negative / question" })
+      ]),
+      customPhase("u4-d4-three", "practice", "Three Forms", "Statement → Negative → Question", 10, "check", [
+        u4PracticeStep(unit, "u4-d4-t-she", "Change all three forms", "She is tall.", "tall", { modelAnswer: "She is tall. → She is not tall. → Is she tall?" }),
+        u4PracticeStep(unit, "u4-d4-t-he", "Change all three forms", "He is short.", "short", { modelAnswer: "He is short. → He is not short. → Is he short?" })
+      ]),
+      customPhase("u4-d4-question", "practice", "Make a Question", "Move Be to the Front", 8, "check", [
+        u4PracticeStep(unit, "u4-d4-q-you", "Statement → Question", "You are happy.", "happy", { choices: ["Are you happy?", "Is you happy?"], answer: "Are you happy?" }),
+        u4PracticeStep(unit, "u4-d4-q-she", "Statement → Question", "She is cute.", "cute", { choices: ["Is she cute?", "Are she cute?"], answer: "Is she cute?" })
+      ]),
+      customPhase("u4-d4-error", "practice", "Error Correction", "Fix the Question or Answer", 8, "check", [
+        u4PracticeStep(unit, "u4-d4-e1", "Fix the question", "Are he happy? ✕", "happy", { modelAnswer: "Is he happy? ✓" }),
+        u4PracticeStep(unit, "u4-d4-e2", "Fix the question", "Is you young? ✕", "young", { modelAnswer: "Are you young? ✓" }),
+        u4PracticeStep(unit, "u4-d4-e3", "Fix the answer", "Yes, she are. ✕", "cute", { modelAnswer: "Yes, she is. ✓" })
+      ]),
+      customPhase("u4-d4-transform", "practice", "Sentence Transformation", "Affirmative / Negative / Question", 8, "check", [
+        u4PracticeStep(unit, "u4-d4-x1", "Make it negative", "You are happy.", "happy", { modelAnswer: "You are not happy." }),
+        u4PracticeStep(unit, "u4-d4-x2", "Make it a question", "You are happy.", "happy", { modelAnswer: "Are you happy?" }),
+        u4PracticeStep(unit, "u4-d4-x3", "Answer the question", "Is he short?", "short", { modelAnswer: "Yes, he is." })
+      ]),
+      customPhase("u4-d4-check", "check", "Final Check", "Choose the Sentence Form", 5, "check", [
+        u4PracticeStep(unit, "u4-d4-final1", "Choose the question", "she + tall", "tall", { choices: ["She is tall.", "She is not tall.", "Is she tall?"], answer: "Is she tall?" }),
+        practiceStep("u4-d4-final2", "Complete the rules", "肯定句 / 否定句 / 問句", { modelAnswer: "subject + be / subject + be + not / be + subject...?" })
+      ])
+    ];
+    return makeUnit4Lesson(unit, 4, "肯定、否定、問句混合", phases);
+  }
+
+  function book1Unit4Lessons(unit) {
+    return [unit4Day1(unit), unit4Day2(unit), unit4Day3(unit), unit4Day4(unit)];
+  }
+
   function sharedLessonFromUnit(unit, unitIndex, bookId, day) {
     const vocabulary = vocabularyItems(unit.vocabulary);
     const activityIdeas = vocabularyGameIdeas(bookId, unit, day);
@@ -1402,7 +1561,9 @@
             ? book1Unit2Lessons(unit)
             : book.id === "book-1" && unit.id === "unit-3"
               ? book1Unit3Lessons(unit)
-              : [1, 2].map((day) => sharedLessonFromUnit(unit, unitIndex, book.id, day))
+              : book.id === "book-1" && unit.id === "unit-4"
+                ? book1Unit4Lessons(unit)
+                : [1, 2].map((day) => sharedLessonFromUnit(unit, unitIndex, book.id, day))
       }))
     }));
   }

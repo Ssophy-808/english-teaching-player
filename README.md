@@ -83,6 +83,8 @@ Book 1 Unit 2 also uses a dedicated four-day progression: Day 1 introduces famil
 
 Book 1 Unit 3 uses four days to build the age-question pattern: Day 1 introduces numbers and the one/two-year-old Passport answers; Day 2 drills `How old are you?`; Day 3 reconnects `he / she` and compares `are you` with `is he / she`; Day 4 applies the reusable formula `How old + be verb + subject?` in mixed practice.
 
+Book 1 Unit 4 uses four days to introduce yes/no questions with adjectives: Day 1 moves the be verb to the front; Day 2 drills positive answers and subject–be matching; Day 3 restores `not` through negative answers; Day 4 mixes affirmative, negative, and question forms.
+
 Generated lessons expose both `phases` and flattened `steps`. Every page has `phase`, `phaseId`, `activityType`, `title`, `content`, `phaseDuration`, curriculum-specific data, suggested games, and `skippable` where appropriate. Add curriculum data to a book file; do not copy the player or hard-code a new page sequence.
 
 Vocabulary Games and Grammar Games are formal lesson stages. Vocabulary uses Random, Reveal, Matching, and Dice with the current Unit words. Grammar uses sentence matching, substitution, picture sentences, dice Q&A, and quick response with the current Unit patterns. Teachers can replay, mark complete, or skip. The star button still opens the independent classroom toolbox with Random Vocabulary, Picture Reveal, Memory Match, Virtual Dice, Timer, and Team Scoreboard.

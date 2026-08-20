@@ -50,7 +50,7 @@
     return `
       <section class="worksheet-page" data-part="${part}">
         <header class="worksheet-page-header">
-          <div><span>BOOK 3 · UNIT 1 · DAY ${escapeHtml(lesson.worksheet.day)}</span><h1>${escapeHtml(lesson.worksheet.unitTitle)}</h1></div>
+          <div><span>${escapeHtml(lesson.bookTitle)} · ${escapeHtml(lesson.unitTitle)} · DAY ${escapeHtml(lesson.worksheet.day)}</span><h1>${escapeHtml(lesson.unitTopic || lesson.worksheet.unitTitle)}</h1></div>
           <strong>PART ${part}</strong>
         </header>
         <div class="worksheet-name-row"><span>Name 姓名：________________</span><span>Class 班級：____________</span><span>Date 日期：____________</span></div>
@@ -66,7 +66,7 @@
     return `
       <section class="worksheet-page worksheet-answer-page">
         <header class="worksheet-page-header teacher-key">
-          <div><span>TEACHER ANSWER KEY</span><h1>Book 3 Unit 1 · Day ${escapeHtml(lesson.worksheet.day)}</h1></div>
+          <div><span>TEACHER ANSWER KEY</span><h1>${escapeHtml(lesson.bookTitle)} ${escapeHtml(lesson.unitTitle)} · Day ${escapeHtml(lesson.worksheet.day)}</h1></div>
           <strong>KEY</strong>
         </header>
         <div class="worksheet-answer-columns">
@@ -81,7 +81,7 @@
 
   function render() {
     if (!lesson?.worksheet) return;
-    title.textContent = `Book 3 Unit 1 · Day ${lesson.worksheet.day} 講義`;
+    title.textContent = `${lesson.bookTitle} ${lesson.unitTitle} · Day ${lesson.worksheet.day} 講義`;
     studentButton.classList.toggle("is-active", mode === "student");
     answerButton.classList.toggle("is-active", mode === "answer");
     preview.innerHTML = mode === "student" ? studentPage("A") + studentPage("B") : answerPage();

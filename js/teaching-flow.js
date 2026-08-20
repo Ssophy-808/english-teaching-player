@@ -2777,18 +2777,152 @@
     };
   }
 
-  function buildCatalog(books) {
-    return books.map((book) => ({
-      ...book,
-      units: book.units.map((unit, unitIndex) => ({
-        id: unit.id,
-        title: `Unit ${unitIndex + 1}`,
-        topic: unit.title,
-        lessons: book.id === "book-3" && unit.id === "unit-1"
-          ? book3Unit1Lessons(unit)
-          : book.id === "book-2" && unit.id === "unit-1"
-            ? book2Unit1Lessons(unit)
-          : book.id === "book-1" && unit.id === "unit-1"
+  function spiralWorksheetQuestion(step, id, fallbackSkill) {
+    const practice = step.practice || {};
+    const prompt = practice.prompt || step.prompt || step.instruction || step.title || "";
+    const answer = practice.answer || practice.modelAnswer || step.answer || step.modelAnswer || "";
+    if (!prompt || !answer) return null;
+    return {
+      id,
+      skill: step.phaseTitle || fallbackSkill,
+      type: practice.choices?.length ? "choice" : "rewrite",
+      playerPrompt: prompt,
+      worksheetPrompt: prompt,
+      answer,
+      choices: practice.choices || [],
+      visual: practice.visual || practice.word || step.visual || "",
+      difficulty: 1
+    };
+  }
+
+  function spiralWorksheetQuestions(phases, unit, bookId, day, part) {
+    const questions = phases.flatMap((phase, phaseIndex) => phase.steps.map((step, stepIndex) =>
+      spiralWorksheetQuestion(step, `${bookId}-${unit.id}-d${day}${part.toLowerCase()}-${phaseIndex}-${stepIndex}`, phase.title)
+    )).filter(Boolean);
+    const sentences = (unit.mainSentences || []).filter(Boolean);
+    let supplementIndex = 0;
+    while (questions.length < 8 && sentences.length) {
+      const sentence = sentences[supplementIndex % sentences.length];
+      const words = sentence.replace(/([?.!,])/g, " $1").split(/\s+/).filter(Boolean);
+      questions.push({
+        id: `${bookId}-${unit.id}-d${day}${part.toLowerCase()}-sentence-${supplementIndex}`,
+        skill: "sentence-order",
+        type: "reorder",
+        playerPrompt: words.slice().reverse().join(" / "),
+        worksheetPrompt: `Put in order: ${words.slice().reverse().join(" / ")}`,
+        answer: sentence,
+        choices: [],
+        visual: "",
+        difficulty: supplementIndex > 2 ? 2 : 1
+      });
+      supplementIndex += 1;
+    }
+    const vocabulary = vocabularyItems(unit.vocabulary || []);
+    while (questions.length < 8 && vocabulary.length) {
+      const item = vocabulary[questions.length % vocabulary.length];
+      questions.push({
+        id: `${bookId}-${unit.id}-d${day}${part.toLowerCase()}-word-${questions.length}`,
+        skill: "vocabulary-recall",
+        type: "rewrite",
+        playerPrompt: `Write the word: ${item.visual || item.meaning || item.word}`,
+        worksheetPrompt: `Write the English word: ${item.visual || item.meaning || "picture"}`,
+        answer: item.word,
+        choices: [],
+        visual: item.visual || "",
+        difficulty: 1
+      });
+    }
+    return questions.slice(0, 10);
+  }
+
+  function scalePhaseDurations(phases, targetMinutes) {
+    const weights = phases.map((phase) => Math.max(1, Number(phase.duration) || 1));
+    const totalWeight = weights.reduce((sum, value) => sum + value, 0);
+    const durations = weights.map((weight) => Math.max(1, Math.floor((weight / totalWeight) * targetMinutes)));
+    let difference = targetMinutes - durations.reduce((sum, value) => sum + value, 0);
+    let cursor = 0;
+    while (difference !== 0) {
+      const index = cursor % durations.length;
+      if (difference > 0) {
+        durations[index] += 1;
+        difference -= 1;
+      } else if (durations[index] > 1) {
+        durations[index] -= 1;
+        difference += 1;
+      }
+      cursor += 1;
+    }
+    phases.forEach((phase, index) => { phase.duration = durations[index]; });
+  }
+
+  function addSpiralLoop(phase, questions, id, title) {
+    const step = practiceLoopStep(id, title, questions.map(reviewLoopQuestion));
+    Object.assign(step, {
+      phase: phase.title,
+      phaseId: phase.id,
+      phaseTitle: phase.title,
+      phaseGroup: phase.groupId,
+      phaseGroupTitle: phase.groupTitle,
+      activityType: "check",
+      phaseDuration: phase.duration
+    });
+    phase.steps.push(step);
+  }
+
+  function upgradeToSpiralReview(lesson, book, unit, unitIndex, day) {
+    const supported = (book.id === "book-1" || (book.id === "book-2" && unit.id === "unit-1")) && day >= 3;
+    if (!supported || lesson.worksheet) return lesson;
+    const phases = lesson.phases.map((phase) => ({ ...phase, steps: [...phase.steps] }));
+    const splitIndex = Math.max(1, Math.ceil(phases.length / 2));
+    const partAPhases = phases.slice(0, splitIndex);
+    const partBPhases = phases.slice(splitIndex);
+    const partAQuestions = spiralWorksheetQuestions(partAPhases, unit, book.id, day, "A");
+    const partBQuestions = spiralWorksheetQuestions(partBPhases.length ? partBPhases : partAPhases, unit, book.id, day, "B");
+    scalePhaseDurations(phases, 61);
+    const decorate = (phase, part, title) => {
+      phase.groupId = `block-${part.toLowerCase()}`;
+      phase.groupTitle = title;
+      phase.steps.forEach((step) => Object.assign(step, {
+        phaseGroup: phase.groupId,
+        phaseGroupTitle: title,
+        phaseDuration: phase.duration
+      }));
+    };
+    partAPhases.forEach((phase) => decorate(phase, "A", day === 3 ? "Block A｜課本文法" : "Block A｜疑問與應用"));
+    partBPhases.forEach((phase) => decorate(phase, "B", day === 3 ? "Block B｜加深練習" : "Block B｜綜合螺旋"));
+    addSpiralLoop(partAPhases[partAPhases.length - 1], partAQuestions, `${book.id}-${unit.id}-d${day}-loop-a`, "Part A · Continuous Practice");
+    addSpiralLoop((partBPhases[partBPhases.length - 1] || partAPhases[partAPhases.length - 1]), partBQuestions, `${book.id}-${unit.id}-d${day}-loop-b`, "Part B · Continuous Practice");
+    const writeA = customPhase(`${book.id}-${unit.id}-d${day}-write-a`, "block-a", partAPhases[0].groupTitle, "Write Time · Part A", 12, "writing", [
+      writeTimeStep(`${book.id}-${unit.id}-d${day}-write-a-step`, "A", 12, "Complete Part A independently. Then check the answers together.")
+    ]);
+    const writeB = customPhase(`${book.id}-${unit.id}-d${day}-write-b`, "block-b", (partBPhases[0] || partAPhases[0]).groupTitle, "Write Time · Part B", 12, "writing", [
+      writeTimeStep(`${book.id}-${unit.id}-d${day}-write-b-step`, "B", 12, "Complete Part B independently. Use the grammar map before checking.")
+    ]);
+    const upgradedPhases = [...partAPhases, writeA, ...partBPhases, writeB];
+    return {
+      ...lesson,
+      phases: upgradedPhases,
+      steps: upgradedPhases.flatMap((phase) => phase.steps),
+      duration: 85,
+      durationMinutes: 85,
+      worksheet: {
+        title: lesson.title,
+        day,
+        unitTitle: unit.title,
+        blocks: {
+          A: { title: partAPhases[0].groupTitle, subtitle: partAPhases.map((phase) => phase.title).slice(0, 3).join(" → "), questions: partAQuestions },
+          B: { title: (partBPhases[0] || partAPhases[0]).groupTitle, subtitle: (partBPhases.length ? partBPhases : partAPhases).map((phase) => phase.title).slice(0, 3).join(" → "), questions: partBQuestions }
+        }
+      }
+    };
+  }
+
+  function lessonsForUnit(book, unit, unitIndex) {
+    const lessons = book.id === "book-3" && unit.id === "unit-1"
+      ? book3Unit1Lessons(unit)
+      : book.id === "book-2" && unit.id === "unit-1"
+        ? book2Unit1Lessons(unit)
+        : book.id === "book-1" && unit.id === "unit-1"
           ? book1Unit1Lessons(unit)
           : book.id === "book-1" && unit.id === "unit-2"
             ? book1Unit2Lessons(unit)
@@ -2806,7 +2940,18 @@
                         ? book1Unit8Lessons(unit)
                         : book.id === "book-1" && unit.id === "unit-9"
                           ? book1Unit9Lessons(unit)
-                          : [1, 2].map((day) => sharedLessonFromUnit(unit, unitIndex, book.id, day))
+                          : [1, 2].map((day) => sharedLessonFromUnit(unit, unitIndex, book.id, day));
+    return lessons.map((lesson, index) => upgradeToSpiralReview(lesson, book, unit, unitIndex, index + 1));
+  }
+
+  function buildCatalog(books) {
+    return books.map((book) => ({
+      ...book,
+      units: book.units.map((unit, unitIndex) => ({
+        id: unit.id,
+        title: `Unit ${unitIndex + 1}`,
+        topic: unit.title,
+        lessons: lessonsForUnit(book, unit, unitIndex)
       }))
     }));
   }

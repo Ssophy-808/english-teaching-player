@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#2b59c3">
     <meta name="description" content="A simple, projection-friendly lesson player for English teachers.">
     <title>English Teaching Player</title>
-    <link rel="stylesheet" href="css/style.css?v=12">
+    <link rel="stylesheet" href="css/style.css?v=13">
   </head>
   <body>
     <noscript>請啟用 JavaScript 才能使用教材播放器。</noscript>
@@ -97,8 +97,8 @@
         <nav class="worksheet-toolbar no-print" aria-label="Worksheet controls">
           <button id="worksheet-student-mode" class="is-active" type="button">學生版 · 2 pages</button>
           <button id="worksheet-answer-mode" type="button">教師答案版</button>
-          <button id="worksheet-shuffle" type="button">🔀 調整順序</button>
-          <button id="worksheet-reset" type="button">↻ 題目重設</button>
+          <button id="worksheet-shuffle" type="button" title="保留目前題目，只重新排列順序">🔀 只調整順序</button>
+          <button id="worksheet-reset" type="button" title="恢復被刪除的全部題目，並回到原始順序">↻ 恢復全部題目</button>
           <button id="worksheet-print" class="worksheet-print" type="button">🖨 Print / Save PDF</button>
         </nav>
         <div id="worksheet-preview" class="worksheet-preview"></div>
@@ -134,7 +134,7 @@
     <script src="data/book3-review.js?v=1" defer></script>
     <script src="js/teaching-flow.js?v=30" defer></script>
     <script src="js/activities.js?v=17" defer></script>
-    <script src="js/worksheet.js?v=1" defer></script>
+    <script src="js/worksheet.js?v=2" defer></script>
     <script src="js/classroom-tools.js?v=1" defer></script>
     <script src="js/player.js?v=5" defer></script>
     <script src="js/app.js?v=2" defer></script>

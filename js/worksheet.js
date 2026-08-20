@@ -40,7 +40,7 @@
       <li class="worksheet-question" data-question-id="${escapeHtml(question.id)}">
         <button class="worksheet-remove no-print" type="button" data-remove-question="${escapeHtml(question.id)}" title="Remove this question">×</button>
         <span class="worksheet-question-visual">${escapeHtml(question.visual || "")}</span>
-        <div><p>${escapeHtml(question.worksheetPrompt)}</p>${choices}${writingLines ? `<span class="worksheet-answer-line ${writingLines > 1 ? "is-double" : ""}"></span>` : ""}</div>
+        <div><p>${escapeHtml(question.worksheetPrompt)}</p>${choices}${Array.from({ length: writingLines }, () => `<span class="worksheet-answer-line" aria-hidden="true"></span>`).join("")}</div>
       </li>`;
   }
 

@@ -317,8 +317,19 @@ body.toolbox-open { overflow: hidden; }
 .worksheet-question p { margin: 0 0 5px; font-weight: 750; line-height: 1.35; white-space: pre-line; }
 .worksheet-question-visual { float: right; margin: -2px 0 3px 12px; font-size: 1.65rem; line-height: 1; }
 .worksheet-choices { display: block; color: #354963; font-size: 0.88rem; font-weight: 650; line-height: 1.45; }
-.worksheet-answer-line { display: block; height: 20px; margin-top: 3px; border-bottom: 1px solid #52647b; }
-.worksheet-answer-line.is-double { height: 35px; border-top: 1px solid #52647b; }
+.worksheet-answer-line {
+  display: block;
+  height: 34px;
+  margin-top: 5px;
+  border-top: 1.5px solid #6f9fd0;
+  border-bottom: 1.5px solid #6f9fd0;
+  background-image:
+    repeating-linear-gradient(to right, #a9c5e1 0 7px, transparent 7px 12px),
+    repeating-linear-gradient(to right, #a9c5e1 0 7px, transparent 7px 12px);
+  background-position: 0 33.333%, 0 66.666%;
+  background-repeat: no-repeat;
+  background-size: 100% 1px, 100% 1px;
+}
 .worksheet-remove { position: absolute; top: 7px; right: 0; width: 25px; height: 25px; border: 0; border-radius: 50%; color: #ad3b3b; background: #ffe8e8; cursor: pointer; font-weight: 900; }
 .worksheet-page footer { display: flex; justify-content: space-between; gap: 16px; margin-top: auto; padding-top: 10px; border-top: 2px solid #dce6f2; color: #66758b; font-size: 0.72rem; font-weight: 700; }
 .worksheet-answer-page { min-height: 297mm; }

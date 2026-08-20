@@ -13,6 +13,10 @@
     return new docx.TextRun({ text: String(value ?? ""), font: "Arial", size: options.size || 21, bold: options.bold, color: options.color || "17233A", break: options.break });
   }
 
+  function multilineText(value, options = {}) {
+    return String(value ?? "").split("\n").map((line, index) => text(line, { ...options, break: index ? 1 : undefined }));
+  }
+
   function paragraph(children, options = {}) {
     return new docx.Paragraph({
       children: Array.isArray(children) ? children : [text(children, options)],
@@ -79,7 +83,7 @@
     } else if (question.asset?.visual) {
       children.push(paragraph([text(question.asset.visual, { size: 42 })], { alignment: docx.AlignmentType.CENTER, after: 35, keepNext: true }));
     }
-    children.push(paragraph([text(question.prompt, { size: 21, bold: true })], { after: 40, keepNext: true }));
+    children.push(paragraph(multilineText(question.prompt, { size: 21, bold: true }), { after: 40, keepNext: true }));
     if (question.choices?.length) children.push(paragraph([text(question.choices.map((choice, index) => `(${String.fromCharCode(65 + index)}) ${choice}`).join("     "), { size: 19 })], { after: 45 }));
     children.push(...handwriting(question.lines || 0));
     return children;

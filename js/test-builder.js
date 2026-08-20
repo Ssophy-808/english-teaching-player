@@ -66,6 +66,51 @@
     return rule ? sentence.replace(rule[0], rule[1]) : "";
   }
 
+  function imageSentenceCue(sentence) {
+    const clean = sentence.trim();
+    const colors = "red|yellow|green|blue|pink|black|white|brown|orange|purple";
+    let match;
+
+    if (/^Is there\b/i.test(clean)) return { question: "What question can you ask about the picture?", starter: "Is there..." };
+    if (/^There (?:is|isn't|is not)\b/i.test(clean)) return { question: "What is in the classroom?", starter: /^There isn't/i.test(clean) ? "There isn't..." : /^There is not/i.test(clean) ? "There is not..." : "There is..." };
+    if (/^There (?:are|aren't|are not)\b/i.test(clean)) return { question: "What can you see?", starter: /^There aren't/i.test(clean) ? "There aren't..." : /^There are not/i.test(clean) ? "There are not..." : "There are..." };
+
+    match = clean.match(/^(I am|He is|She is) (?:not )?\w+ years? old\./i);
+    if (match) return { question: /^I am/i.test(clean) ? "How old are you?" : /^He is/i.test(clean) ? "How old is he?" : "How old is she?", starter: `${match[1]}...` };
+    if (/^He is my\b/i.test(clean)) return { question: "Who is he?", starter: "He is my..." };
+    if (/^She is my\b/i.test(clean)) return { question: "Who is she?", starter: "She is my..." };
+    if (new RegExp(`^It is (?:not )?(?:${colors})\\.$`, "i").test(clean)) return { question: "What color is it?", starter: /^It is not/i.test(clean) ? "It is not..." : "It is..." };
+    if (/^It is (?:not )?(?:an? )/i.test(clean)) return { question: "What is it?", starter: /^It is not/i.test(clean) ? "It is not..." : "It is..." };
+    if (/^This is\b/i.test(clean)) return { question: "What is this?", starter: /^This is not/i.test(clean) ? "This is not..." : "This is..." };
+    if (/^That is\b/i.test(clean)) return { question: "What is that?", starter: /^That is not/i.test(clean) ? "That is not..." : "That is..." };
+    if (/^These are\b/i.test(clean)) return { question: "What are these?", starter: "These are..." };
+    if (/^Those are\b/i.test(clean)) return { question: "What are those?", starter: "Those are..." };
+    if (/^They are\b/i.test(clean)) return { question: "How do they feel?", starter: /^They are not/i.test(clean) ? "They are not..." : "They are..." };
+    if (/^I like\b/i.test(clean)) return { question: "What do you like?", starter: "I like..." };
+    if (/^You like\b/i.test(clean)) return { question: "What do you like?", starter: "You like..." };
+    if (/^We like\b/i.test(clean)) return { question: "What do you and your classmates like?", starter: "We like..." };
+    if (/^They like\b/i.test(clean)) return { question: "What do they like?", starter: "They like..." };
+    if (/^What do you like\?/i.test(clean)) return { question: "What question asks a person what they like?", starter: "What do you..." };
+    if (/^What do they like\?/i.test(clean)) return { question: "What question asks what they like?", starter: "What do they..." };
+    if (/^Do you like\b/i.test(clean)) return { question: "Write a Yes/No question about the picture.", starter: "Do you like..." };
+    if (/^Do they like\b/i.test(clean)) return { question: "Write a Yes/No question about the picture.", starter: "Do they like..." };
+
+    match = clean.match(/^(I am|You are|He is|She is|It is) (not )?/i);
+    if (match) {
+      const subject = match[1].split(" ")[0].toLowerCase();
+      const question = subject === "i" || subject === "you" ? "What can you say about the person?" : `What can you say about ${subject}?`;
+      return { question, starter: match[2] ? `${match[1]} ${match[2].trim()}...` : `${match[1]}...` };
+    }
+    if (clean.endsWith("?")) return { question: "What question can you ask about the picture?", starter: `${clean.split(/\s+/).slice(0, 3).join(" ").replace(/[?]$/, "")}...` };
+    return { question: "What do you see in the picture?", starter: `${clean.split(/\s+/).slice(0, 2).join(" ")}...` };
+  }
+
+  function imageSentencePrompt(sentence) {
+    const cue = imageSentenceCue(sentence);
+    const instruction = sentence.trim().endsWith("?") ? "Write the complete question." : "Answer in a complete sentence.";
+    return `Question: ${cue.question}\n${instruction}\nStart with: ${cue.starter}`;
+  }
+
   function buildPools(units) {
     const allWords = units.flatMap((unit) => curriculum(unit).vocabulary || []).map((item) => item.word);
     const result = Object.fromEntries(TYPES.map(([id]) => [id, []]));
@@ -81,7 +126,7 @@
       });
       sentences.forEach((sentence, sentenceIndex) => {
         const word = words.find((item) => sentence.toLowerCase().includes(item.word.toLowerCase().replace("(s)", "")));
-        if (word) result["image-sentence"].push(tagged(unit, unitIndex, { type: "image-sentence", label: "看圖寫句子", prompt: "Look at the picture. Write a complete sentence.", answer: sentence, asset: word, lines: 2, difficulty: 2 }));
+        if (word) result["image-sentence"].push(tagged(unit, unitIndex, { type: "image-sentence", label: "看圖寫句子", prompt: imageSentencePrompt(sentence), answer: sentence, asset: word, lines: 2, difficulty: 2 }));
         const tokens = sentence.replace(/[?.!,]/g, "").split(/\s+/).filter((token) => token.length > 1);
         const target = (word?.word || tokens[Math.max(0, tokens.length - 1)] || "").replace("(s)", "");
         if (target && sentence.toLowerCase().includes(target.toLowerCase())) result.fill.push(tagged(unit, unitIndex, { type: "fill", label: "填空題", prompt: sentence.replace(new RegExp(target.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i"), "________"), answer: target, lines: 1, difficulty: 1 }));

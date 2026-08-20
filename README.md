@@ -2,6 +2,8 @@
 
 A static, projection-friendly lesson player for English teachers. It includes a phase-based teaching flow, Book → Unit → Lesson navigation, one-step-at-a-time playback, Previous / Next controls, keyboard navigation, progress, fullscreen, saved local progress, Wordwall, picture quizzes, in-flow review games, and a no-prep classroom toolbox.
 
+The home screen also includes a Test Bank / Exam Builder. Teachers can select a Book, one or more Units, difficulty, spiral review, and counts for picture vocabulary, picture sentences, multiple choice, fill-in, error correction, sentence order, transformation, and dialogue questions. The generated exam supports per-question replacement, deletion, shuffling, scoring, four-line handwriting guides, a teacher answer key, and A4 PDF printing. Builder settings are saved locally on the device.
+
 ## Project structure
 
 ```text

@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#2b59c3">
     <meta name="description" content="A simple, projection-friendly lesson player for English teachers.">
     <title>English Teaching Player</title>
-    <link rel="stylesheet" href="css/style.css?v=13">
+    <link rel="stylesheet" href="css/style.css?v=14">
   </head>
   <body>
     <noscript>請啟用 JavaScript 才能使用教材播放器。</noscript>
@@ -18,10 +18,13 @@
           <h1 id="home-title">English Teaching Player</h1>
           <p class="hero-copy">Choose a lesson, then teach one clear step at a time.</p>
         </div>
-        <button id="continue-button" class="button button-primary continue-button" type="button" hidden>
-          <span>Continue Lesson</span>
-          <small id="continue-label"></small>
-        </button>
+        <div class="home-actions">
+          <button id="test-builder-button" class="button test-builder-button" type="button">🗂 題庫／組考卷</button>
+          <button id="continue-button" class="button button-primary continue-button" type="button" hidden>
+            <span>Continue Lesson</span>
+            <small id="continue-label"></small>
+          </button>
+        </div>
       </header>
 
       <section class="library" aria-labelledby="library-title">
@@ -126,6 +129,37 @@
       </div>
     </section>
 
+    <section id="test-builder-modal" class="test-builder-modal" hidden aria-label="題庫與考卷產生器" aria-modal="true" role="dialog">
+      <div class="test-builder-shell">
+        <header class="test-builder-header no-print">
+          <div><p class="eyebrow">TEST BANK</p><h2>題庫／考卷產生器</h2><p>選課程、題型與題數，自動組成學生考卷及答案。</p></div>
+          <button id="test-builder-close" class="icon-button" type="button" aria-label="關閉題庫">×</button>
+        </header>
+        <div class="test-builder-body">
+          <aside class="test-builder-setup no-print">
+            <label>考卷名稱<input id="test-title" type="text" value="English Review Test"></label>
+            <label>Book<select id="test-book"></select></label>
+            <fieldset><legend>Units（可複選）</legend><div id="test-units" class="test-unit-list"></div></fieldset>
+            <label>難度<select id="test-difficulty"><option value="mixed">混合</option><option value="easy">基礎</option><option value="challenge">進階</option></select></label>
+            <fieldset><legend>題型與題數</legend><div id="test-types" class="test-type-list"></div></fieldset>
+            <label class="test-check"><input id="test-spiral" type="checkbox" checked> 混入所選 Unit 以前的內容</label>
+            <button id="test-generate" class="button button-primary" type="button">產生考卷</button>
+          </aside>
+          <main class="test-builder-workspace">
+            <nav class="test-builder-toolbar no-print">
+              <button id="test-student-mode" class="is-active" type="button">學生考卷 · 2 pages</button>
+              <button id="test-answer-mode" type="button">教師答案</button>
+              <button id="test-shuffle" type="button">🔀 洗牌</button>
+              <button id="test-regenerate" type="button">↻ 全部重出</button>
+              <button id="test-print" class="test-print" type="button">🖨 Print / PDF</button>
+            </nav>
+            <p id="test-builder-empty" class="test-builder-empty">先選擇左側設定，再按「產生考卷」。</p>
+            <div id="test-preview" class="test-preview"></div>
+          </main>
+        </div>
+      </div>
+    </section>
+
     <script src="data/book1.js?v=7" defer></script>
     <script src="data/book1-activities.js" defer></script>
     <script src="data/book1-passport.js?v=1" defer></script>
@@ -136,6 +170,7 @@
     <script src="js/activities.js?v=17" defer></script>
     <script src="js/worksheet.js?v=3" defer></script>
     <script src="js/classroom-tools.js?v=1" defer></script>
+    <script src="js/test-builder.js?v=3" defer></script>
     <script src="js/player.js?v=5" defer></script>
     <script src="js/app.js?v=2" defer></script>
   </body>

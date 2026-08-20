@@ -156,7 +156,7 @@
 
   function renderGuidedPractice(step, duration) {
     const practice = step.practice || {};
-    const picture = practice.image
+    const picture = practice.image || practice.sprite || practice.visual
       ? `<div class="guided-picture">${renderPictureAsset(practice, "guided-image", "guided-visual")}</div>`
       : "";
     const choices = (practice.choices || []).map((choice) => `

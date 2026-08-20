@@ -838,6 +838,8 @@
         answer: options.answer || "",
         modelAnswer: options.modelAnswer || options.answer || "",
         image: options.image || "",
+        sprite: options.sprite || null,
+        visual: options.visual || "",
         word: options.word || ""
       }
     });
@@ -1007,6 +1009,183 @@
     return [unit1Day1(unit), unit1Day2(unit), unit1Day3(unit), unit1Day4(unit)];
   }
 
+  function u2Asset(unit, word) {
+    return vocabularyItems(unit.vocabulary).find((item) => item.word.toLowerCase() === word.toLowerCase()) || { word };
+  }
+
+  function u2PracticeStep(unit, id, title, prompt, word, options = {}) {
+    return practiceStep(id, title, prompt, { ...u2Asset(unit, word), word, ...options });
+  }
+
+  const U2_PASSPORT_PAIRS = [
+    { pronoun: "he", word: "father" },
+    { pronoun: "she", word: "mother" },
+    { pronoun: "he", word: "grandfather" },
+    { pronoun: "she", word: "grandmother" },
+    { pronoun: "he", word: "brother" },
+    { pronoun: "she", word: "sister" },
+    { pronoun: "he", word: "uncle" },
+    { pronoun: "she", word: "aunt" }
+  ];
+
+  function u2PassportSteps(unit, order = U2_PASSPORT_PAIRS, prefix = "u2-passport") {
+    return order.map(({ pronoun, word }, index) => {
+      const subject = pronoun === "he" ? "He" : "She";
+      return u2PracticeStep(unit, `${prefix}-${index + 1}`, `Passport ${index + 1} / ${order.length}`, `Who is ${pronoun}?`, word, {
+        modelAnswer: `${subject} is my ${word}.`
+      });
+    });
+  }
+
+  function makeUnit2Lesson(unit, day, dayGoal, phases) {
+    const steps = phases.flatMap((phase) => phase.steps);
+    const totalDuration = phases.reduce((total, phase) => total + (Number(phase.duration) || 0), 0);
+    return {
+      id: `day-${day}`,
+      title: `${unit.title} · Day ${day}｜${dayGoal}`,
+      day: `Day ${day}`,
+      dayGoal,
+      curriculum: curriculumFor(unit),
+      phases,
+      duration: totalDuration,
+      durationMinutes: totalDuration,
+      steps,
+      source: { document: "B1_教學流程.pdf", page: B1_DAY_PAGES[1]?.[day - 1] }
+    };
+  }
+
+  function unit2Day1(unit) {
+    const vocabulary = vocabularyItems(unit.vocabulary);
+    const phases = [
+      customPhase("u2-d1-vocabulary", "vocabulary", "Family Vocabulary", "Family Vocabulary", 10, "teaching", vocabularySteps(unit, 0, "u2-d1-word", "Family Vocabulary"), { vocabulary }),
+      customPhase("u2-d1-he-she", "grammar", "He / She", "he = 他 / she = 她", 5, "teaching", [
+        u2PracticeStep(unit, "u2-d1-he", "he = 他", "he", "father", { modelAnswer: "he = 他（男生）" }),
+        u2PracticeStep(unit, "u2-d1-she", "she = 她", "she", "mother", { modelAnswer: "she = 她（女生）" })
+      ]),
+      customPhase("u2-d1-pattern", "grammar", "Who is he / she?", "Listen and Recognize", 5, "teaching", [
+        u2PracticeStep(unit, "u2-d1-pattern-he", "Listen and Recognize", "Who is he?", "father", { modelAnswer: "He is my father." }),
+        u2PracticeStep(unit, "u2-d1-pattern-she", "Listen and Recognize", "Who is she?", "mother", { modelAnswer: "She is my mother." })
+      ]),
+      customPhase("u2-d1-passport", "passport", "Passport", "Passport Sentences", 16, "teaching", u2PassportSteps(unit)),
+      customPhase("u2-d1-check", "check", "Listening Check", "Who is he or she?", 9, "check", [
+        u2PracticeStep(unit, "u2-d1-check-father", "Listen and Choose", "Who is he?", "father", { choices: ["He is my father.", "She is my mother."], answer: "He is my father." }),
+        u2PracticeStep(unit, "u2-d1-check-mother", "Listen and Choose", "Who is she?", "mother", { choices: ["He is my grandfather.", "She is my mother."], answer: "She is my mother." }),
+        u2PracticeStep(unit, "u2-d1-check-brother", "Listen and Choose", "Who is he?", "brother", { choices: ["He is my brother.", "She is my sister."], answer: "He is my brother." }),
+        u2PracticeStep(unit, "u2-d1-check-sister", "Listen and Choose", "Who is she?", "sister", { choices: ["He is my uncle.", "She is my sister."], answer: "She is my sister." })
+      ])
+    ];
+    return makeUnit2Lesson(unit, 1, "Family + Who is he / she?", phases);
+  }
+
+  function unit2Day2(unit) {
+    const vocabulary = vocabularyItems(unit.vocabulary);
+    const randomPassportOrder = [
+      U2_PASSPORT_PAIRS[4], U2_PASSPORT_PAIRS[1], U2_PASSPORT_PAIRS[2], U2_PASSPORT_PAIRS[7],
+      U2_PASSPORT_PAIRS[0], U2_PASSPORT_PAIRS[5], U2_PASSPORT_PAIRS[6], U2_PASSPORT_PAIRS[3]
+    ];
+    const phases = [
+      customPhase("u2-d2-vocabulary", "vocabulary", "Vocabulary Review", "Quick Family Review", 6, "review", vocabularySteps(unit, 0, "u2-d2-word", "Quick Family Review"), { vocabulary }),
+      customPhase("u2-d2-he-she", "practice", "He or She?", "Look and Choose", 8, "check", [
+        u2PracticeStep(unit, "u2-d2-he-father", "Choose he or she", "father", "father", { choices: ["he", "she"], answer: "he" }),
+        u2PracticeStep(unit, "u2-d2-she-mother", "Choose he or she", "mother", "mother", { choices: ["he", "she"], answer: "she" }),
+        u2PracticeStep(unit, "u2-d2-he-brother", "Choose he or she", "brother", "brother", { choices: ["he", "she"], answer: "he" }),
+        u2PracticeStep(unit, "u2-d2-she-sister", "Choose he or she", "sister", "sister", { choices: ["he", "she"], answer: "she" })
+      ]),
+      customPhase("u2-d2-question", "practice", "Question Practice", "Who is he / she?", 7, "check", [
+        u2PracticeStep(unit, "u2-d2-q1", "Choose the question", "father", "father", { choices: ["Who is he?", "Who is she?"], answer: "Who is he?" }),
+        u2PracticeStep(unit, "u2-d2-q2", "Choose the question", "mother", "mother", { choices: ["Who is he?", "Who is she?"], answer: "Who is she?" })
+      ]),
+      customPhase("u2-d2-complete", "practice", "Sentence Match", "He / She is my ____.", 7, "check", [
+        u2PracticeStep(unit, "u2-d2-c1", "Complete the answer", "He is my ____.", "grandfather", { choices: ["grandfather", "grandmother", "aunt"], answer: "grandfather" }),
+        u2PracticeStep(unit, "u2-d2-c2", "Complete the answer", "She is my ____.", "aunt", { choices: ["uncle", "brother", "aunt"], answer: "aunt" })
+      ]),
+      customPhase("u2-d2-quick", "practice", "Quick Pictures", "Say the Family Word", 5, "check", [
+        u2PracticeStep(unit, "u2-d2-quick-grandfather", "Quick Picture", "Who is this?", "grandfather", { modelAnswer: "grandfather" }),
+        u2PracticeStep(unit, "u2-d2-quick-mother", "Quick Picture", "Who is this?", "mother", { modelAnswer: "mother" }),
+        u2PracticeStep(unit, "u2-d2-quick-brother", "Quick Picture", "Who is this?", "brother", { modelAnswer: "brother" })
+      ]),
+      customPhase("u2-d2-passport", "passport", "Passport Review", "Random Order", 10, "review", u2PassportSteps(unit, randomPassportOrder, "u2-d2-passport")),
+      customPhase("u2-d2-check", "check", "Mastery Check", "Who is he / she?", 2, "check", [
+        u2PracticeStep(unit, "u2-d2-final", "Choose the answer", "Who is she?", "grandmother", { choices: ["He is my grandfather.", "She is my grandmother."], answer: "She is my grandmother." })
+      ])
+    ];
+    return makeUnit2Lesson(unit, 2, "Who is he / she? 練熟", phases);
+  }
+
+  function unit2Day3(unit) {
+    const phases = [
+      customPhase("u2-d3-u1-review", "review", "U1 Review", "I → am / You → are", 5, "review", [
+        practiceStep("u2-d3-r1", "U1 Review", "I ___", { choices: ["am", "are", "is"], answer: "am" }),
+        practiceStep("u2-d3-r2", "U1 Review", "You ___", { choices: ["am", "are", "is"], answer: "are" })
+      ]),
+      customPhase("u2-d3-map", "grammar", "Grammar Map", "Subject + Be Verb", 8, "teaching", [
+        practiceStep("u2-d3-map", "Grammar Map", "I am  ·  You are  ·  He is  ·  She is", { modelAnswer: "I → am   |   You → are   |   He / She → is" })
+      ]),
+      customPhase("u2-d3-compare", "grammar", "Compare Sentences", "Subject Changes · Be Verb Changes", 8, "teaching", [
+        u2PracticeStep(unit, "u2-d3-i", "Compare", "I am a student.", "student", { modelAnswer: "I → am" }),
+        u2PracticeStep(unit, "u2-d3-you", "Compare", "You are a teacher.", "teacher", { modelAnswer: "You → are" }),
+        u2PracticeStep(unit, "u2-d3-he", "Compare", "He is my father.", "father", { modelAnswer: "He → is" }),
+        u2PracticeStep(unit, "u2-d3-she", "Compare", "She is my mother.", "mother", { modelAnswer: "She → is" })
+      ]),
+      customPhase("u2-d3-choose", "practice", "Choose the Be Verb", "am / are / is", 10, "check", [
+        u2PracticeStep(unit, "u2-d3-c1", "Choose the be verb", "He ___ my father.", "father", { choices: ["am", "are", "is"], answer: "is" }),
+        u2PracticeStep(unit, "u2-d3-c2", "Choose the be verb", "She ___ my mother.", "mother", { choices: ["am", "are", "is"], answer: "is" }),
+        practiceStep("u2-d3-c3", "Choose the be verb", "I ___ a student.", { choices: ["am", "are", "is"], answer: "am" }),
+        practiceStep("u2-d3-c4", "Choose the be verb", "You ___ a teacher.", { choices: ["am", "are", "is"], answer: "are" })
+      ]),
+      customPhase("u2-d3-error", "practice", "Error Correction", "Fix the Be Verb", 8, "check", [
+        u2PracticeStep(unit, "u2-d3-e1", "Fix the sentence", "She are my mother. ✕", "mother", { modelAnswer: "She is my mother. ✓" }),
+        u2PracticeStep(unit, "u2-d3-e2", "Fix the sentence", "He am my father. ✕", "father", { modelAnswer: "He is my father. ✓" })
+      ]),
+      customPhase("u2-d3-check", "check", "Grammar Check", "I / You / He / She", 6, "check", [
+        practiceStep("u2-d3-final1", "Complete the Grammar Map", "I ___ / You ___ / He ___ / She ___", { choices: ["am / are / is / is", "is / are / am / is"], answer: "am / are / is / is" }),
+        u2PracticeStep(unit, "u2-d3-final2", "Choose the correct sentence", "father", "father", { choices: ["He is my father.", "He are my father."], answer: "He is my father." })
+      ])
+    ];
+    return makeUnit2Lesson(unit, 3, "第三人稱 be 動詞", phases);
+  }
+
+  function unit2Day4(unit) {
+    const phases = [
+      customPhase("u2-d4-map", "review", "Grammar Map Review", "I / You / He / She", 5, "review", [
+        practiceStep("u2-d4-map", "Grammar Map", "I am  ·  You are  ·  He is  ·  She is", { modelAnswer: "am / are / is" })
+      ]),
+      customPhase("u2-d4-subject", "practice", "Choose the Subject", "I / You / He / She", 8, "check", [
+        practiceStep("u2-d4-s1", "Choose the subject", "___ am a boy.", { choices: ["I", "You", "He", "She"], answer: "I" }),
+        practiceStep("u2-d4-s2", "Choose the subject", "___ are a girl.", { choices: ["I", "You", "He", "She"], answer: "You" }),
+        u2PracticeStep(unit, "u2-d4-s3", "Choose the subject", "___ is my brother.", "brother", { choices: ["I", "You", "He", "She"], answer: "He" }),
+        u2PracticeStep(unit, "u2-d4-s4", "Choose the subject", "___ is my sister.", "sister", { choices: ["I", "You", "He", "She"], answer: "She" })
+      ]),
+      customPhase("u2-d4-error", "practice", "Error Correction", "Fix the Sentence", 8, "check", [
+        practiceStep("u2-d4-e1", "Fix the sentence", "I is a student. ✕", { modelAnswer: "I am a student. ✓" }),
+        practiceStep("u2-d4-e2", "Fix the sentence", "You am a teacher. ✕", { modelAnswer: "You are a teacher. ✓" }),
+        u2PracticeStep(unit, "u2-d4-e3", "Fix the sentence", "He are my father. ✕", "father", { modelAnswer: "He is my father. ✓" }),
+        u2PracticeStep(unit, "u2-d4-e4", "Check the sentence", "She is my mother. ✓", "mother", { modelAnswer: "Correct! She is my mother." })
+      ]),
+      customPhase("u2-d4-order", "practice", "Sentence Order", "Put the Words in Order", 8, "check", [
+        u2PracticeStep(unit, "u2-d4-o1", "Choose the correct order", "father / my / is / He", "father", { choices: ["He is my father.", "He my father is."], answer: "He is my father." }),
+        u2PracticeStep(unit, "u2-d4-o2", "Choose the correct order", "my / She / sister / is", "sister", { choices: ["She my is sister.", "She is my sister."], answer: "She is my sister." })
+      ]),
+      customPhase("u2-d4-complete", "practice", "Complete the Sentence", "Choose the Be Verb", 6, "check", [
+        u2PracticeStep(unit, "u2-d4-c1", "Choose the be verb", "Who is he? He ___ my uncle.", "uncle", { choices: ["am", "are", "is"], answer: "is" }),
+        u2PracticeStep(unit, "u2-d4-c2", "Choose the be verb", "Who is she? She ___ my aunt.", "aunt", { choices: ["am", "are", "is"], answer: "is" })
+      ]),
+      customPhase("u2-d4-speaking", "speaking", "Picture Speaking", "Say a Complete Sentence", 7, "check", [
+        u2PracticeStep(unit, "u2-d4-p1", "Look and Say", "Who is he?", "grandfather", { modelAnswer: "He is my grandfather." }),
+        u2PracticeStep(unit, "u2-d4-p2", "Look and Say", "Who is she?", "grandmother", { modelAnswer: "She is my grandmother." }),
+        u2PracticeStep(unit, "u2-d4-p3", "Look and Say", "Who is he?", "brother", { modelAnswer: "He is my brother." })
+      ]),
+      customPhase("u2-d4-check", "check", "Final Check", "Mixed Challenge", 3, "check", [
+        practiceStep("u2-d4-final", "Complete all four", "I ___ / You ___ / He ___ / She ___", { choices: ["am / are / is / is", "are / am / is / are"], answer: "am / are / is / is" })
+      ])
+    ];
+    return makeUnit2Lesson(unit, 4, "進階混合", phases);
+  }
+
+  function book1Unit2Lessons(unit) {
+    return [unit2Day1(unit), unit2Day2(unit), unit2Day3(unit), unit2Day4(unit)];
+  }
+
   function sharedLessonFromUnit(unit, unitIndex, bookId, day) {
     const vocabulary = vocabularyItems(unit.vocabulary);
     const activityIdeas = vocabularyGameIdeas(bookId, unit, day);
@@ -1060,7 +1239,9 @@
         topic: unit.title,
         lessons: book.id === "book-1" && unit.id === "unit-1"
           ? book1Unit1Lessons(unit)
-          : [1, 2].map((day) => sharedLessonFromUnit(unit, unitIndex, book.id, day))
+          : book.id === "book-1" && unit.id === "unit-2"
+            ? book1Unit2Lessons(unit)
+            : [1, 2].map((day) => sharedLessonFromUnit(unit, unitIndex, book.id, day))
       }))
     }));
   }

@@ -79,6 +79,8 @@ The basic data shape is:
 
 Book 1 Unit 1 uses a dedicated four-day progression: Day 1 builds first understanding and shows only the six affirmative Passport sentences; Day 2 drills `I → am` and `You → are`; Day 3 labels affirmative/negative forms as course-supplement material; Day 4 mixes `I / You + am / are + not` without introducing `He / She`.
 
+Book 1 Unit 2 also uses a dedicated four-day progression: Day 1 introduces family words and the eight `Who is he / she?` Passport pairs; Day 2 drills recognition without adding new grammar; Day 3 formally maps `I → am`, `You → are`, and `He / She → is`; Day 4 mixes all four subjects through choices, corrections, reordering, and picture speaking.
+
 Generated lessons expose both `phases` and flattened `steps`. Every page has `phase`, `phaseId`, `activityType`, `title`, `content`, `phaseDuration`, curriculum-specific data, suggested games, and `skippable` where appropriate. Add curriculum data to a book file; do not copy the player or hard-code a new page sequence.
 
 Vocabulary Games and Grammar Games are formal lesson stages. Vocabulary uses Random, Reveal, Matching, and Dice with the current Unit words. Grammar uses sentence matching, substitution, picture sentences, dice Q&A, and quick response with the current Unit patterns. Teachers can replay, mark complete, or skip. The star button still opens the independent classroom toolbox with Random Vocabulary, Picture Reveal, Memory Match, Virtual Dice, Timer, and Team Scoreboard.

@@ -4,7 +4,7 @@
   const STORAGE_KEY = "englishTeachingPlayer.testBuilder.v1";
   const TYPES = [
     ["vocab-image", "看圖寫單字", 2], ["image-sentence", "看圖寫句子", 2],
-    ["choice", "選擇題", 3], ["fill", "填空題", 2], ["error", "改錯題", 2],
+    ["choice", "文法選擇題", 3], ["fill", "填空題", 2], ["error", "改錯題", 2],
     ["reorder", "句子重組", 2], ["transform", "句型轉換", 1], ["dialogue", "對話填空", 0]
   ];
   const catalog = window.COURSE_CATALOG || [];
@@ -46,8 +46,27 @@
     return units;
   }
 
-  function distractors(answer, words, count = 2) { return shuffle(words.filter((word) => word !== answer)).slice(0, count); }
   function tagged(unit, unitIndex, data) { return { ...data, id: `q-${++serial}`, unitLabel: `Unit ${unitIndex + 1}`, points: 2 }; }
+
+  function grammarChoice(sentence) {
+    const clean = sentence.trim();
+    const groups = [
+      { pattern: /\b(am|are|is)\b/i, choices: ["am", "are", "is"], difficulty: 1 },
+      { pattern: /\b(do|does)\b/i, choices: ["do", "does", "are"], difficulty: 2 },
+      { pattern: /\b(like|likes)\b/i, choices: ["like", "likes", "liking"], difficulty: 2 }
+    ];
+    const group = groups.find((item) => item.pattern.test(clean));
+    if (!group) return null;
+    const match = clean.match(group.pattern);
+    const startsSentence = match.index === 0;
+    const format = (word) => startsSentence ? word.charAt(0).toUpperCase() + word.slice(1) : word.toLowerCase();
+    return {
+      prompt: `Choose the correct grammar word.\n${clean.slice(0, match.index)}___${clean.slice(match.index + match[0].length)}`,
+      answer: format(match[0].toLowerCase()),
+      choices: shuffle(group.choices.map(format)),
+      difficulty: group.difficulty
+    };
+  }
 
   function negativeOrQuestion(sentence) {
     const clean = sentence.trim();
@@ -115,7 +134,6 @@
   }
 
   function buildPools(units) {
-    const allWords = units.flatMap((unit) => curriculum(unit).vocabulary || []).map((item) => item.word);
     const result = Object.fromEntries(TYPES.map(([id]) => [id, []]));
     units.forEach((unit) => {
       const book = selectedBook();
@@ -125,11 +143,12 @@
       const sentences = (data.mainSentences || []).filter(Boolean);
       words.forEach((word) => {
         result["vocab-image"].push(tagged(unit, unitIndex, { type: "vocab-image", label: "看圖寫單字", prompt: "Look and write the word.", answer: word.word, asset: word, lines: 1, difficulty: 1 }));
-        result.choice.push(tagged(unit, unitIndex, { type: "choice", label: "選擇題", prompt: "Choose the correct word.", answer: word.word, choices: shuffle([word.word, ...distractors(word.word, allWords)]), asset: word, lines: 0, difficulty: 1 }));
       });
       sentences.forEach((sentence, sentenceIndex) => {
         const word = words.find((item) => sentence.toLowerCase().includes(item.word.toLowerCase().replace("(s)", "")));
         if (word) result["image-sentence"].push(tagged(unit, unitIndex, { type: "image-sentence", label: "看圖寫句子", prompt: imageSentencePrompt(sentence), answer: sentence, asset: word, lines: 2, difficulty: 2 }));
+        const grammar = grammarChoice(sentence);
+        if (grammar) result.choice.push(tagged(unit, unitIndex, { type: "choice", label: "文法選擇題", ...grammar, lines: 0 }));
         const tokens = sentence.replace(/[?.!,]/g, "").split(/\s+/).filter((token) => token.length > 1);
         const target = (word?.word || tokens[Math.max(0, tokens.length - 1)] || "").replace("(s)", "");
         if (target && sentence.toLowerCase().includes(target.toLowerCase())) result.fill.push(tagged(unit, unitIndex, { type: "fill", label: "填空題", prompt: sentence.replace(new RegExp(target.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i"), "________"), answer: target, lines: 1, difficulty: 1 }));

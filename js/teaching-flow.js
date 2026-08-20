@@ -1186,6 +1186,165 @@
     return [unit2Day1(unit), unit2Day2(unit), unit2Day3(unit), unit2Day4(unit)];
   }
 
+  function u3Asset(unit, word) {
+    return vocabularyItems(unit.vocabulary).find((item) => item.word.toLowerCase() === word.toLowerCase()) || { word };
+  }
+
+  function u3PracticeStep(unit, id, title, prompt, word, options = {}) {
+    return practiceStep(id, title, prompt, { ...u3Asset(unit, word), word, ...options });
+  }
+
+  function makeUnit3Lesson(unit, day, dayGoal, phases) {
+    const steps = phases.flatMap((phase) => phase.steps);
+    const totalDuration = phases.reduce((total, phase) => total + (Number(phase.duration) || 0), 0);
+    return {
+      id: `day-${day}`,
+      title: `${unit.title} · Day ${day}｜${dayGoal}`,
+      day: `Day ${day}`,
+      dayGoal,
+      curriculum: curriculumFor(unit),
+      phases,
+      duration: totalDuration,
+      durationMinutes: totalDuration,
+      steps,
+      source: { document: "B1_教學流程.pdf", page: B1_DAY_PAGES[2]?.[day - 1] }
+    };
+  }
+
+  function unit3Day1(unit) {
+    const vocabulary = vocabularyItems(unit.vocabulary);
+    const phases = [
+      customPhase("u3-d1-numbers", "vocabulary", "Numbers", "Numbers One to Ten", 10, "teaching", vocabularySteps(unit, 0, "u3-d1-number", "Numbers One to Ten"), { vocabulary }),
+      customPhase("u3-d1-how-old", "grammar", "How old?", "How old = 幾歲", 5, "teaching", [
+        practiceStep("u3-d1-meaning", "How old = 幾歲", "How old are you?", { modelAnswer: "你幾歲？" })
+      ]),
+      customPhase("u3-d1-pattern", "grammar", "Age Pattern", "How old are you?", 6, "teaching", [
+        u3PracticeStep(unit, "u3-d1-pattern-one", "Ask and Answer", "How old are you?", "one", { modelAnswer: "I am one year old." }),
+        u3PracticeStep(unit, "u3-d1-pattern-five", "Ask and Answer", "How old are you?", "five", { modelAnswer: "I am five years old." })
+      ]),
+      customPhase("u3-d1-year-years", "grammar", "Year / Years", "One year · Two or more years", 5, "teaching", [
+        u3PracticeStep(unit, "u3-d1-year", "One = year", "I am one ___ old.", "one", { choices: ["year", "years"], answer: "year" }),
+        u3PracticeStep(unit, "u3-d1-years", "Two or more = years", "I am two ___ old.", "two", { choices: ["year", "years"], answer: "years" })
+      ]),
+      customPhase("u3-d1-passport", "passport", "Passport", "Passport Sentences", 8, "teaching", [
+        u3PracticeStep(unit, "u3-d1-passport-one", "Passport 1 / 2", "How old are you?", "one", { modelAnswer: "I am one year old." }),
+        u3PracticeStep(unit, "u3-d1-passport-two", "Passport 2 / 2", "How old are you?", "two", { modelAnswer: "I am two years old." })
+      ]),
+      customPhase("u3-d1-guided", "practice", "Guided Practice", "Look and Answer", 6, "check", [
+        u3PracticeStep(unit, "u3-d1-g3", "Choose the answer", "How old are you?", "three", { choices: ["I am three years old.", "I are three years old."], answer: "I am three years old." }),
+        u3PracticeStep(unit, "u3-d1-g7", "Choose the answer", "How old are you?", "seven", { choices: ["I am seven year old.", "I am seven years old."], answer: "I am seven years old." })
+      ]),
+      customPhase("u3-d1-check", "check", "Age Check", "How old are you?", 5, "check", [
+        u3PracticeStep(unit, "u3-d1-check-one", "Complete the sentence", "I am one ___ old.", "one", { choices: ["year", "years"], answer: "year" }),
+        u3PracticeStep(unit, "u3-d1-check-nine", "Complete the sentence", "I am nine ___ old.", "nine", { choices: ["year", "years"], answer: "years" })
+      ])
+    ];
+    return makeUnit3Lesson(unit, 1, "Numbers + 年齡基本問答", phases);
+  }
+
+  function unit3Day2(unit) {
+    const vocabulary = vocabularyItems(unit.vocabulary);
+    const phases = [
+      customPhase("u3-d2-review", "vocabulary", "Numbers", "Quick Number Review", 6, "review", vocabularySteps(unit, 0, "u3-d2-number", "Quick Number Review"), { vocabulary }),
+      customPhase("u3-d2-random", "practice", "Age Practice", "Random Number Answers", 10, "check", [
+        u3PracticeStep(unit, "u3-d2-r2", "Look and Answer", "How old are you?", "two", { modelAnswer: "I am two years old." }),
+        u3PracticeStep(unit, "u3-d2-r5", "Look and Answer", "How old are you?", "five", { modelAnswer: "I am five years old." }),
+        u3PracticeStep(unit, "u3-d2-r8", "Look and Answer", "How old are you?", "eight", { modelAnswer: "I am eight years old." }),
+        u3PracticeStep(unit, "u3-d2-r10", "Look and Answer", "How old are you?", "ten", { modelAnswer: "I am ten years old." })
+      ]),
+      customPhase("u3-d2-number-answer", "practice", "Number Response", "See a Number · Say the Sentence", 8, "check", [
+        u3PracticeStep(unit, "u3-d2-n4", "Say the full sentence", "4", "four", { modelAnswer: "I am four years old." }),
+        u3PracticeStep(unit, "u3-d2-n6", "Say the full sentence", "6", "six", { modelAnswer: "I am six years old." }),
+        u3PracticeStep(unit, "u3-d2-n9", "Say the full sentence", "9", "nine", { modelAnswer: "I am nine years old." })
+      ]),
+      customPhase("u3-d2-year-years", "practice", "Year or Years?", "Choose year / years", 6, "check", [
+        u3PracticeStep(unit, "u3-d2-y1", "Choose year or years", "I am one ___ old.", "one", { choices: ["year", "years"], answer: "year" }),
+        u3PracticeStep(unit, "u3-d2-y10", "Choose year or years", "I am ten ___ old.", "ten", { choices: ["year", "years"], answer: "years" })
+      ]),
+      customPhase("u3-d2-order", "practice", "Sentence Order", "Put the Words in Order", 8, "check", [
+        u3PracticeStep(unit, "u3-d2-o5", "Choose the correct order", "five / am / years old / I", "five", { choices: ["I am five years old.", "I five am years old."], answer: "I am five years old." }),
+        practiceStep("u3-d2-oq", "Choose the correct order", "old / are / How / you / ?", { choices: ["How old are you?", "How are old you?"], answer: "How old are you?" })
+      ]),
+      customPhase("u3-d2-mixed", "practice", "Mixed Practice", "Question and Answer", 5, "check", [
+        u3PracticeStep(unit, "u3-d2-m3", "Choose the full answer", "How old are you?", "three", { choices: ["I am three years old.", "I are three year old."], answer: "I am three years old." }),
+        u3PracticeStep(unit, "u3-d2-m7", "Choose the full answer", "How old are you?", "seven", { choices: ["I am seven years old.", "I am seven year old."], answer: "I am seven years old." })
+      ]),
+      customPhase("u3-d2-check", "check", "Mastery Check", "I am ___ years old.", 2, "check", [
+        u3PracticeStep(unit, "u3-d2-final", "Say without help", "How old are you?", "six", { modelAnswer: "I am six years old." })
+      ])
+    ];
+    return makeUnit3Lesson(unit, 2, "年齡句型熟練", phases);
+  }
+
+  function unit3Day3(unit) {
+    const phases = [
+      customPhase("u3-d3-map", "review", "Grammar Map", "Be Verb Review", 6, "review", [
+        practiceStep("u3-d3-map", "Grammar Map", "I am  ·  You are  ·  He is  ·  She is", { modelAnswer: "I → am   |   You → are   |   He / She → is" })
+      ]),
+      customPhase("u3-d3-questions", "grammar", "Age Questions", "Question Changes with the Subject", 8, "teaching", [
+        practiceStep("u3-d3-q-you", "Ask you", "How old are you?", { modelAnswer: "you → are" }),
+        practiceStep("u3-d3-q-he", "Ask about a boy", "How old is he?", { visual: "👦", modelAnswer: "he → is" }),
+        practiceStep("u3-d3-q-she", "Ask about a girl", "How old is she?", { visual: "👧", modelAnswer: "she → is" })
+      ]),
+      customPhase("u3-d3-he", "grammar", "He + is", "How old is he?", 8, "teaching", [
+        u3PracticeStep(unit, "u3-d3-he3", "Ask and Answer", "How old is he?", "three", { modelAnswer: "He is three years old." }),
+        u3PracticeStep(unit, "u3-d3-he8", "Ask and Answer", "How old is he?", "eight", { modelAnswer: "He is eight years old." })
+      ]),
+      customPhase("u3-d3-she", "grammar", "She + is", "How old is she?", 8, "teaching", [
+        u3PracticeStep(unit, "u3-d3-she5", "Ask and Answer", "How old is she?", "five", { modelAnswer: "She is five years old." }),
+        u3PracticeStep(unit, "u3-d3-she6", "Ask and Answer", "How old is she?", "six", { modelAnswer: "She is six years old." })
+      ]),
+      customPhase("u3-d3-be", "practice", "Choose the Be Verb", "are / is", 8, "check", [
+        practiceStep("u3-d3-b-you", "Choose the be verb", "How old ___ you?", { choices: ["are", "is"], answer: "are" }),
+        practiceStep("u3-d3-b-he", "Choose the be verb", "How old ___ he?", { visual: "👦", choices: ["are", "is"], answer: "is" }),
+        practiceStep("u3-d3-b-she", "Choose the be verb", "How old ___ she?", { visual: "👧", choices: ["are", "is"], answer: "is" })
+      ]),
+      customPhase("u3-d3-compare", "practice", "Question Comparison", "you → are · he / she → is", 5, "check", [
+        practiceStep("u3-d3-compare", "Choose the correct map", "How old ___ you? / How old ___ he? / How old ___ she?", { choices: ["are / is / is", "is / are / are"], answer: "are / is / is" })
+      ]),
+      customPhase("u3-d3-check", "check", "Grammar Check", "How old + be verb + subject?", 2, "check", [
+        practiceStep("u3-d3-final", "Complete both questions", "How old ___ you?  ·  How old ___ she?", { choices: ["are / is", "is / are"], answer: "are / is" })
+      ])
+    ];
+    return makeUnit3Lesson(unit, 3, "把 he / she 接回來", phases);
+  }
+
+  function unit3Day4(unit) {
+    const phases = [
+      customPhase("u3-d4-formula", "review", "Question Formula", "How old + Be Verb + Subject?", 5, "review", [
+        practiceStep("u3-d4-formula", "Question Formula", "How old + be verb + subject?", { modelAnswer: "How old are you?  ·  How old is he?  ·  How old is she?" })
+      ]),
+      customPhase("u3-d4-be", "practice", "Choose the Be Verb", "am / are / is", 8, "check", [
+        practiceStep("u3-d4-b1", "Choose the be verb", "How old ___ you?", { choices: ["am", "are", "is"], answer: "are" }),
+        practiceStep("u3-d4-b2", "Choose the be verb", "How old ___ she?", { visual: "👧", choices: ["are", "is"], answer: "is" }),
+        practiceStep("u3-d4-b3", "Choose the be verb", "How old ___ he?", { visual: "👦", choices: ["am", "are", "is"], answer: "is" })
+      ]),
+      customPhase("u3-d4-error", "practice", "Error Correction", "Fix the Sentence", 8, "check", [
+        practiceStep("u3-d4-e1", "Fix the question", "How old are he? ✕", { visual: "👦", modelAnswer: "How old is he? ✓" }),
+        u3PracticeStep(unit, "u3-d4-e2", "Fix the answer", "He are six years old. ✕", "six", { modelAnswer: "He is six years old. ✓" }),
+        u3PracticeStep(unit, "u3-d4-e3", "Fix year / years", "She is five year old. ✕", "five", { modelAnswer: "She is five years old. ✓" })
+      ]),
+      customPhase("u3-d4-order", "practice", "Sentence Order", "Put the Words in Order", 8, "check", [
+        practiceStep("u3-d4-o1", "Choose the correct order", "old / is / How / she / ?", { visual: "👧", choices: ["How old is she?", "How is old she?"], answer: "How old is she?" }),
+        u3PracticeStep(unit, "u3-d4-o2", "Choose the correct order", "years old / is / He / eight", "eight", { choices: ["He is eight years old.", "He eight is years old."], answer: "He is eight years old." })
+      ]),
+      customPhase("u3-d4-picture", "speaking", "Picture Q&A", "Ask and Answer", 10, "check", [
+        practiceStep("u3-d4-p-boy", "Look and Ask", "👦  8", { visual: "👦 8️⃣", modelAnswer: "How old is he?\nHe is eight years old." }),
+        practiceStep("u3-d4-p-girl", "Look and Ask", "👧  5", { visual: "👧 5️⃣", modelAnswer: "How old is she?\nShe is five years old." }),
+        practiceStep("u3-d4-p-you", "Ask your partner", "YOU  7", { visual: "🙂 7️⃣", modelAnswer: "How old are you?\nI am seven years old." })
+      ]),
+      customPhase("u3-d4-check", "check", "Final Check", "U1–U3 Mixed Challenge", 6, "check", [
+        practiceStep("u3-d4-final1", "Complete the questions", "How old ___ you? / How old ___ he? / How old ___ she?", { choices: ["are / is / is", "is / are / is"], answer: "are / is / is" }),
+        u3PracticeStep(unit, "u3-d4-final2", "Choose the full answer", "How old is he?", "eight", { choices: ["He is eight years old.", "He are eight year old."], answer: "He is eight years old." })
+      ])
+    ];
+    return makeUnit3Lesson(unit, 4, "混合進階", phases);
+  }
+
+  function book1Unit3Lessons(unit) {
+    return [unit3Day1(unit), unit3Day2(unit), unit3Day3(unit), unit3Day4(unit)];
+  }
+
   function sharedLessonFromUnit(unit, unitIndex, bookId, day) {
     const vocabulary = vocabularyItems(unit.vocabulary);
     const activityIdeas = vocabularyGameIdeas(bookId, unit, day);
@@ -1241,7 +1400,9 @@
           ? book1Unit1Lessons(unit)
           : book.id === "book-1" && unit.id === "unit-2"
             ? book1Unit2Lessons(unit)
-            : [1, 2].map((day) => sharedLessonFromUnit(unit, unitIndex, book.id, day))
+            : book.id === "book-1" && unit.id === "unit-3"
+              ? book1Unit3Lessons(unit)
+              : [1, 2].map((day) => sharedLessonFromUnit(unit, unitIndex, book.id, day))
       }))
     }));
   }

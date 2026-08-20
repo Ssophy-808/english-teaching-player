@@ -75,6 +75,8 @@ button:focus-visible { outline: 4px solid rgba(43, 89, 195, 0.28); outline-offse
 .player-tools { display: flex; align-items: center; gap: 12px; }
 .flow-button { min-height: 44px; border: 1px solid #c8d8ea; border-radius: 13px; padding: 8px 14px; color: var(--navy); background: white; cursor: pointer; font-weight: 850; }
 .flow-button:hover { border-color: var(--blue); background: var(--sky); }
+.practice-jump-button { color: white; border-color: #20a178; background: #20a178; }
+.practice-jump-button:hover { color: white; border-color: #18815f; background: #18815f; }
 .toolbox-button { color: #8a5700; background: #fff5c9; border-color: #f2d36c; }
 .toolbox-button:hover { background: #ffe99a; border-color: #e8bf31; }
 .step-count { min-width: 88px; color: var(--muted); font-weight: 800; text-align: right; }
@@ -367,6 +369,7 @@ kbd { display: inline-grid; min-width: 28px; height: 26px; place-items: center; 
   .section-heading { align-items: start; flex-direction: column; }
   .player-header { padding: 10px 14px; }
   .flow-button { min-height: 40px; padding-inline: 10px; font-size: 0.82rem; }
+  .practice-jump-button { font-size: 0.78rem; }
   .step-count { min-width: auto; }
   .fullscreen-button { display: none; }
   .step-stage { padding: 24px; }

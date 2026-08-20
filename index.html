@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#2b59c3">
     <meta name="description" content="A simple, projection-friendly lesson player for English teachers.">
     <title>English Teaching Player</title>
-    <link rel="stylesheet" href="css/style.css?v=10">
+    <link rel="stylesheet" href="css/style.css?v=11">
   </head>
   <body>
     <noscript>請啟用 JavaScript 才能使用教材播放器。</noscript>
@@ -45,6 +45,7 @@
           <p id="phase-trail" class="phase-trail" aria-live="polite"></p>
         </div>
         <div class="player-tools">
+          <button id="practice-jump-button" class="flow-button practice-jump-button" type="button" hidden>▶ 連續訓練</button>
           <button id="flow-button" class="flow-button" type="button" aria-haspopup="dialog">課程流程</button>
           <button id="toolbox-button" class="icon-button toolbox-button" type="button" aria-label="Open classroom toolbox" title="Classroom toolbox">★</button>
           <span id="step-count" class="step-count" aria-live="polite"></span>
@@ -112,10 +113,10 @@
     <script src="data/book1-passport.js?v=1" defer></script>
     <script src="data/book2.js?v=3" defer></script>
     <script src="data/book3.js?v=1" defer></script>
-    <script src="js/teaching-flow.js?v=28" defer></script>
+    <script src="js/teaching-flow.js?v=29" defer></script>
     <script src="js/activities.js?v=16" defer></script>
     <script src="js/classroom-tools.js?v=1" defer></script>
-    <script src="js/player.js?v=3" defer></script>
+    <script src="js/player.js?v=4" defer></script>
     <script src="js/app.js?v=2" defer></script>
   </body>
 </html>

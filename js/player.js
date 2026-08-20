@@ -24,6 +24,7 @@
     elements.fullscreen = document.getElementById("fullscreen-button");
     elements.toolbox = document.getElementById("toolbox-button");
     elements.phaseTrail = document.getElementById("phase-trail");
+    elements.practiceJump = document.getElementById("practice-jump-button");
     elements.flowButton = document.getElementById("flow-button");
     elements.flowModal = document.getElementById("flow-modal");
     elements.flowClose = document.getElementById("flow-close");
@@ -146,6 +147,7 @@
     document.body.classList.add("is-playing");
     visitedIndices.clear();
     for (let index = 0; index <= currentIndex; index += 1) visitedIndices.add(index);
+    elements.practiceJump.hidden = !lessonContext.steps.some((step) => step.activity === "practice-loop");
     window.ClassroomTools?.setLesson(lessonContext);
     window.scrollTo({ top: 0, behavior: "instant" });
     render();
@@ -202,6 +204,10 @@
     elements.home.addEventListener("click", close);
     elements.fullscreen.addEventListener("click", toggleFullscreen);
     elements.toolbox.addEventListener("click", () => window.ClassroomTools?.open());
+    elements.practiceJump.addEventListener("click", () => {
+      const index = currentLesson?.steps.findIndex((step) => step.activity === "practice-loop") ?? -1;
+      if (index >= 0) goTo(index);
+    });
     elements.flowButton.addEventListener("click", openFlow);
     elements.flowClose.addEventListener("click", closeFlow);
     elements.flowReturn.addEventListener("click", closeFlow);

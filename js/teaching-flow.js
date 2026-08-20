@@ -2563,7 +2563,7 @@
       customPhase("b3u1-d1-passport", "passport", "Passport", "First Four Sentences", 12, "teaching", passport.map(([subject, animal], index) =>
         b3u1PracticeStep(unit, `b3u1-d1-passport-${index + 1}`, `Passport ${index + 1} / 4`, `${subject} like ______.`, animal, { modelAnswer: `${subject} like ${animal}.` })
       )),
-      customPhase("b3u1-d1-substitution", "practice", "Substitution Drill", "Change the Subject", 8, "check", [
+      customPhase("b3u1-d1-substitution", "practice", "Practice Loop", "主詞 + like 連續訓練", 8, "check", [
         practiceLoopStep("b3u1-d1-loop", "Subject + like Practice Loop", [
           b3u1LoopQuestion(unit, "I ___ birds.", "birds", { choices: ["like", "likes"], answer: "like" }),
           b3u1LoopQuestion(unit, "You ___ frogs.", "frogs", { choices: ["like", "likes"], answer: "like" }),
@@ -2595,7 +2595,7 @@
         b3u1PracticeStep(unit, "b3u1-d2-you", "Statement → Question", "You like bunnies.  →  What do you like?", "bunnies", { modelAnswer: "I like bunnies." }),
         b3u1PracticeStep(unit, "b3u1-d2-they", "Statement → Question", "They like turtles.  →  What do they like?", "turtles", { modelAnswer: "They like turtles." })
       ]),
-      customPhase("b3u1-d2-random", "practice", "Random Animal", "Ask and Answer", 10, "check", [
+      customPhase("b3u1-d2-random", "practice", "Practice Loop", "What do...? 連續訓練", 10, "check", [
         practiceLoopStep("b3u1-d2-loop", "What do...? Practice Loop", [
           b3u1LoopQuestion(unit, "What do you like?", "bunnies", { modelAnswer: "I like bunnies." }),
           b3u1LoopQuestion(unit, "What do they like?", "turtles", { modelAnswer: "They like turtles." }),
@@ -2639,7 +2639,7 @@
         practiceStep("b3u1-d3-be", "Be Verb Sentence", "You are happy.  →  Are you happy?", { modelAnswer: "Move the be verb to the front." }),
         b3u1PracticeStep(unit, "b3u1-d3-action", "Action Verb Sentence", "You like hamsters.  →  Do you like hamsters?", "hamsters", { modelAnswer: "An action verb needs do to make a question." })
       ]),
-      customPhase("b3u1-d3-extension", "grammar", "Grammar Extension", "Negative Answers", 8, "teaching", [
+      customPhase("b3u1-d3-extension", "practice", "Practice Loop", "Do...? Yes / No 連續訓練", 8, "check", [
         practiceLoopStep("b3u1-d3-loop", "Do...? Yes / No Practice Loop", [
           b3u1LoopQuestion(unit, "Do you like hamsters?", "hamsters", { choices: ["Yes, I do.", "Yes, I am."], answer: "Yes, I do." }),
           b3u1LoopQuestion(unit, "Do they like spiders?", "spiders", { choices: ["Yes, they do.", "Yes, they are."], answer: "Yes, they do." }),
@@ -2672,7 +2672,7 @@
         b3u1PracticeStep(unit, "b3u1-d4-n-we", "Make it negative", "We like frogs.", "frogs", { modelAnswer: "We don't like frogs." }),
         b3u1PracticeStep(unit, "b3u1-d4-n-they", "Make it negative", "They like spiders.", "spiders", { modelAnswer: "They don't like spiders." })
       ]),
-      customPhase("b3u1-d4-choice", "practice", "Grammar Challenge", "Choose the Correct Word", 7, "check", [
+      customPhase("b3u1-d4-choice", "practice", "Practice Loop", "Book 3 U1 綜合訓練", 7, "check", [
         practiceLoopStep("b3u1-d4-loop", "Book 3 U1 Mixed Practice Loop", [
           b3u1LoopQuestion(unit, "What ___ they like?", "turtles", { choices: ["do", "are", "is"], answer: "do" }),
           b3u1LoopQuestion(unit, "Do you ___ frogs?", "frogs", { choices: ["like", "likes", "liking"], answer: "like" }),

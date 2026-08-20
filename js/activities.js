@@ -175,6 +175,46 @@
       </article>`;
   }
 
+  function renderPracticeLoop(step, duration) {
+    const loop = step.practiceLoop || {};
+    const questions = loop.questions || [];
+    if (!step.loopOrder || step.loopOrder.length !== questions.length) {
+      step.loopOrder = questions.map((_, index) => index);
+      step.loopIndex = 0;
+    }
+    const position = Math.min(Number(step.loopIndex) || 0, Math.max(questions.length - 1, 0));
+    const questionIndex = step.loopOrder[position] ?? 0;
+    const question = questions[questionIndex] || {};
+    const picture = question.image || question.sprite || question.visual
+      ? `<div class="guided-picture">${renderPictureAsset(question, "guided-image", "guided-visual")}</div>`
+      : "";
+    const choices = (question.choices || []).map((choice) => {
+      const isCorrect = step.loopAnswered && choice === question.answer;
+      return `<button class="quiz-choice ${isCorrect ? "is-correct" : ""}" type="button" data-loop-choice="${escapeHtml(choice)}" ${step.loopAnswered ? "disabled" : ""}>${escapeHtml(choice)}</button>`;
+    }).join("");
+    const feedbackClass = step.loopFeedback === "Correct!" ? "is-correct" : step.loopFeedback ? "is-wrong" : "";
+    return `
+      <article class="step-card practice-loop-card" data-step-type="practice">
+        <div class="step-meta"><span class="phase-badge">${escapeHtml(step.phaseTitle || "Practice Loop")}</span>${duration}</div>
+        <div class="practice-loop-heading">
+          <div><p class="step-kicker">CONTINUOUS PRACTICE</p><h2>${escapeHtml(loop.title || step.title)}</h2></div>
+          <strong>${position + 1} / ${questions.length}</strong>
+        </div>
+        ${picture}
+        <p class="guided-prompt">${escapeHtml(question.prompt || "")}</p>
+        <p class="quiz-feedback ${feedbackClass}" role="status" aria-live="polite">${escapeHtml(step.loopFeedback || "")}</p>
+        ${choices ? `<div class="guided-options quiz-options">${choices}</div>` : `
+          <button class="button button-secondary" type="button" data-loop-answer>${step.loopRevealed ? "Hide answer" : "Show answer"}</button>
+          ${step.loopRevealed ? `<p class="grammar-model-answer">${escapeHtml(question.modelAnswer || question.answer || "")}</p>` : ""}
+        `}
+        <div class="practice-loop-actions">
+          <button class="button button-primary" type="button" data-loop-next>${position === questions.length - 1 ? "Start again" : "Next question"}</button>
+          <button class="button button-secondary" type="button" data-loop-random>🔀 Random question</button>
+          <button class="button button-quiet" type="button" data-loop-restart>↻ Restart</button>
+        </div>
+      </article>`;
+  }
+
   function renderSentenceTransformer(step, duration) {
     const transformer = step.transformer || {};
     const modes = [["affirmative", "Affirmative"], ["negative", "Negative"], ["question", "Question"]];
@@ -404,6 +444,7 @@
     if (step.activity === "grammar-check") return renderGrammarCheck(step, duration);
     if (step.activity === "topic-conversation") return renderTopicConversation(step, duration);
     if (step.activity === "sentence-transformer") return renderSentenceTransformer(step, duration);
+    if (step.activity === "practice-loop") return renderPracticeLoop(step, duration);
     if (step.activity === "guided-practice") return renderGuidedPractice(step, duration);
 
     if (step.type === "vocabulary" && step.word) {
@@ -512,6 +553,46 @@
         }
         if (!event.target.closest("[data-practice-answer]")) return;
         step.practiceRevealed = !step.practiceRevealed;
+        container.innerHTML = renderStep(step);
+        activateStep(container, step);
+      };
+      return;
+    }
+
+    if (step.activity === "practice-loop") {
+      const resetQuestion = () => {
+        step.loopRevealed = false;
+        step.loopAnswered = false;
+        step.loopFeedback = "";
+      };
+      container.onclick = (event) => {
+        const questions = step.practiceLoop?.questions || [];
+        const position = Number(step.loopIndex) || 0;
+        const questionIndex = step.loopOrder?.[position] ?? 0;
+        const question = questions[questionIndex] || {};
+        const choice = event.target.closest("[data-loop-choice]");
+        if (choice) {
+          const isCorrect = choice.dataset.loopChoice === question.answer;
+          step.loopFeedback = isCorrect ? "Correct!" : "Try again!";
+          step.loopAnswered = isCorrect;
+        } else if (event.target.closest("[data-loop-answer]")) {
+          step.loopRevealed = !step.loopRevealed;
+        } else if (event.target.closest("[data-loop-next]")) {
+          step.loopIndex = position >= questions.length - 1 ? 0 : position + 1;
+          resetQuestion();
+        } else if (event.target.closest("[data-loop-random]")) {
+          if (questions.length > 1) {
+            let next = position;
+            while (next === position) next = Math.floor(Math.random() * questions.length);
+            const target = step.loopOrder.indexOf(next);
+            step.loopIndex = target >= 0 ? target : next;
+          }
+          resetQuestion();
+        } else if (event.target.closest("[data-loop-restart]")) {
+          step.loopOrder = questions.map((_, index) => index);
+          step.loopIndex = 0;
+          resetQuestion();
+        } else return;
         container.innerHTML = renderStep(step);
         activateStep(container, step);
       };

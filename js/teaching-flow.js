@@ -1816,6 +1816,170 @@
     return [unit6Day1(unit), unit6Day2(unit), unit6Day3(unit), unit6Day4(unit)];
   }
 
+  function u8Asset(unit, word) {
+    return vocabularyItems(unit.vocabulary).find((item) => item.word.toLowerCase() === word.toLowerCase()) || { word };
+  }
+
+  function u8PracticeStep(unit, id, title, prompt, word, options = {}) {
+    return practiceStep(id, title, prompt, { ...u8Asset(unit, word), word, ...options });
+  }
+
+  function makeUnit8Lesson(unit, day, dayGoal, phases) {
+    const steps = phases.flatMap((phase) => phase.steps);
+    const totalDuration = phases.reduce((total, phase) => total + (Number(phase.duration) || 0), 0);
+    return {
+      id: `day-${day}`,
+      title: `${unit.title} · Day ${day}｜${dayGoal}`,
+      day: `Day ${day}`,
+      dayGoal,
+      curriculum: curriculumFor(unit),
+      phases,
+      duration: totalDuration,
+      durationMinutes: totalDuration,
+      steps,
+      source: { document: "B1_教學流程.pdf", page: B1_DAY_PAGES[7]?.[day - 1] }
+    };
+  }
+
+  function unit8Day1(unit) {
+    const vocabulary = vocabularyItems(unit.vocabulary);
+    const passportPairs = [
+      ["this", "dog"], ["this", "cow"], ["that", "rabbit"], ["that", "cat"],
+      ["this", "sheep"], ["that", "duck"], ["this", "pig"], ["that", "horse"]
+    ];
+    const phases = [
+      customPhase("u8-d1-animals", "vocabulary", "Farm Animals", "Farm Animal Vocabulary", 10, "teaching", vocabularySteps(unit, 0, "u8-d1-animal", "Farm Animal Vocabulary"), { vocabulary }),
+      customPhase("u8-d1-this-that", "grammar", "This / That", "this = 近 · that = 遠", 5, "review", [
+        practiceStep("u8-d1-this", "this = 這個，近", "this", { visual: "🐶 👈", modelAnswer: "this = nearby" }),
+        practiceStep("u8-d1-that", "that = 那個，遠", "that", { visual: "👉       🐰", modelAnswer: "that = far away" })
+      ]),
+      customPhase("u8-d1-pattern", "grammar", "Animal Question", "Is + this / that + a + animal?", 6, "teaching", [
+        practiceStep("u8-d1-formula", "Question Formula", "Is + this / that + a + animal?", { visual: "🐶 🐰", modelAnswer: "Is this a cat? / Is that a rabbit?" }),
+        u8PracticeStep(unit, "u8-d1-this-cat", "Ask and Answer", "Is this a cat?", "cat", { modelAnswer: "Yes, it is." }),
+        u8PracticeStep(unit, "u8-d1-that-rabbit", "Ask and Answer", "Is that a rabbit?", "rabbit", { modelAnswer: "Yes, it is." })
+      ]),
+      customPhase("u8-d1-passport", "passport", "Passport", "Eight Passport Questions", 16, "teaching", passportPairs.map(([distance, animal], index) =>
+        u8PracticeStep(unit, `u8-d1-passport-${index + 1}`, `Passport ${index + 1} / ${passportPairs.length}`, `Is ${distance} a ${animal}?`, animal, {
+          modelAnswer: "Yes, it is."
+        })
+      )),
+      customPhase("u8-d1-guided", "practice", "Guided Practice", "This or That?", 6, "check", [
+        u8PracticeStep(unit, "u8-d1-g-this", "Choose this or that", "Is ___ a dog?  (near)", "dog", { choices: ["this", "that"], answer: "this" }),
+        u8PracticeStep(unit, "u8-d1-g-that", "Choose this or that", "Is ___ a horse?  (far)", "horse", { choices: ["this", "that"], answer: "that" })
+      ]),
+      customPhase("u8-d1-check", "check", "Question Check", "Is this / that a...?", 2, "check", [
+        u8PracticeStep(unit, "u8-d1-final", "Choose the correct question", "rabbit (far)", "rabbit", { choices: ["Is that a rabbit?", "Are that a rabbit?"], answer: "Is that a rabbit?" })
+      ])
+    ];
+    return makeUnit8Lesson(unit, 1, "this / that + 動物", phases);
+  }
+
+  function unit8Day2(unit) {
+    const phases = [
+      customPhase("u8-d2-map", "grammar", "Yes / No Map", "Yes → it is · No → it isn't", 5, "review", [
+        practiceStep("u8-d2-map", "Answer Map", "Yes → it is  ·  No → it isn't", { modelAnswer: "Yes, it is. / No, it isn't." })
+      ]),
+      customPhase("u8-d2-yes", "practice", "Yes Answers", "Look and Decide", 8, "check", [
+        u8PracticeStep(unit, "u8-d2-y-dog", "Answer the question", "Is this a dog?", "dog", { choices: ["Yes, it is.", "No, it isn't."], answer: "Yes, it is." }),
+        u8PracticeStep(unit, "u8-d2-y-horse", "Answer the question", "Is that a horse?", "horse", { choices: ["Yes, it is.", "No, it isn't."], answer: "Yes, it is." }),
+        u8PracticeStep(unit, "u8-d2-y-duck", "Answer the question", "Is this a duck?", "duck", { choices: ["Yes, it is.", "No, it isn't."], answer: "Yes, it is." })
+      ]),
+      customPhase("u8-d2-no", "practice", "No Answers", "Look and Decide", 10, "check", [
+        u8PracticeStep(unit, "u8-d2-n-pig", "Answer the question", "Is this a cow?", "pig", { choices: ["Yes, it is.", "No, it isn't."], answer: "No, it isn't." }),
+        u8PracticeStep(unit, "u8-d2-n-rat", "Answer the question", "Is that a rabbit?", "rat", { choices: ["Yes, it is.", "No, it isn't."], answer: "No, it isn't." }),
+        u8PracticeStep(unit, "u8-d2-n-chicken", "Answer the question", "Is this a sheep?", "chicken", { choices: ["Yes, it is.", "No, it isn't."], answer: "No, it isn't." })
+      ]),
+      customPhase("u8-d2-pronoun", "practice", "Choose the It Answer", "Animal = it", 8, "check", [
+        u8PracticeStep(unit, "u8-d2-p-horse", "Choose the answer", "Is that a horse?", "horse", { choices: ["Yes, it is.", "Yes, she is.", "Yes, they are."], answer: "Yes, it is." }),
+        u8PracticeStep(unit, "u8-d2-p-dog", "Choose the answer", "Is this a dog?", "dog", { choices: ["Yes, he is.", "Yes, it is.", "Yes, they are."], answer: "Yes, it is." })
+      ]),
+      customPhase("u8-d2-random", "practice", "Rapid Decisions", "Yes or No?", 8, "check", [
+        u8PracticeStep(unit, "u8-d2-r-cat", "Quick Answer", "Is this a cat?", "cat", { choices: ["Yes, it is.", "No, it isn't."], answer: "Yes, it is." }),
+        u8PracticeStep(unit, "u8-d2-r-cow", "Quick Answer", "Is this a horse?", "cow", { choices: ["Yes, it is.", "No, it isn't."], answer: "No, it isn't." }),
+        u8PracticeStep(unit, "u8-d2-r-rabbit", "Quick Answer", "Is that a rabbit?", "rabbit", { choices: ["Yes, it is.", "No, it isn't."], answer: "Yes, it is." })
+      ]),
+      customPhase("u8-d2-order", "practice", "Answer Order", "Build the Answer", 4, "check", [
+        practiceStep("u8-d2-o-yes", "Choose the correct order", "it / Yes / is", { choices: ["Yes, it is.", "Yes, is it."], answer: "Yes, it is." }),
+        practiceStep("u8-d2-o-no", "Choose the correct order", "isn't / it / No", { choices: ["No, it isn't.", "No, isn't it."], answer: "No, it isn't." })
+      ]),
+      customPhase("u8-d2-check", "check", "Mastery Check", "Yes → it is · No → it isn't", 2, "check", [
+        u8PracticeStep(unit, "u8-d2-final", "Choose the correct answer", "Is that a pig?", "pig", { choices: ["Yes, it is.", "Yes, she is.", "Yes, they are."], answer: "Yes, it is." })
+      ])
+    ];
+    return makeUnit8Lesson(unit, 2, "Yes / No 回答練熟", phases);
+  }
+
+  function unit8Day3(unit) {
+    const phases = [
+      customPhase("u8-d3-rule", "grammar", "Question Rule Review", "Move Is to the Front", 6, "review", [
+        practiceStep("u8-d3-rule", "U4 Rule Again", "This is a dog. → Is this a dog?", { visual: "🐶", modelAnswer: "Move is before this." })
+      ]),
+      customPhase("u8-d3-this", "practice", "This Transformation", "Statement → Question", 8, "check", [
+        u8PracticeStep(unit, "u8-d3-this-dog", "Make a question", "This is a dog.", "dog", { modelAnswer: "Is this a dog?" }),
+        u8PracticeStep(unit, "u8-d3-this-cow", "Make a question", "This is a cow.", "cow", { modelAnswer: "Is this a cow?" })
+      ]),
+      customPhase("u8-d3-that", "practice", "That Transformation", "Statement → Question", 8, "check", [
+        u8PracticeStep(unit, "u8-d3-that-rabbit", "Make a question", "That is a rabbit.", "rabbit", { modelAnswer: "Is that a rabbit?" }),
+        u8PracticeStep(unit, "u8-d3-that-horse", "Make a question", "That is a horse.", "horse", { modelAnswer: "Is that a horse?" })
+      ]),
+      customPhase("u8-d3-three", "grammar", "Three Sentence Forms", "Affirmative · Negative · Question", 10, "teaching", [
+        u8PracticeStep(unit, "u8-d3-three-dog", "Three Forms", "This is a dog.", "dog", { modelAnswer: "This is a dog. → This is not a dog. → Is this a dog?" }),
+        u8PracticeStep(unit, "u8-d3-three-pig", "Three Forms", "That is a pig.", "pig", { modelAnswer: "That is a pig. → That is not a pig. → Is that a pig?" })
+      ]),
+      customPhase("u8-d3-choose", "practice", "Choose the Form", "Statement / Negative / Question", 7, "check", [
+        u8PracticeStep(unit, "u8-d3-c-statement", "Choose the affirmative", "this + cow", "cow", { choices: ["This is a cow.", "This is not a cow.", "Is this a cow?"], answer: "This is a cow." }),
+        u8PracticeStep(unit, "u8-d3-c-negative", "Choose the negative", "this + not pig", "pig", { choices: ["This is a pig.", "This is not a pig.", "Is this a pig?"], answer: "This is not a pig." }),
+        u8PracticeStep(unit, "u8-d3-c-question", "Choose the question", "that + rabbit", "rabbit", { choices: ["That is a rabbit.", "That is not a rabbit.", "Is that a rabbit?"], answer: "Is that a rabbit?" })
+      ]),
+      customPhase("u8-d3-order", "practice", "Question Order", "Move Is to the Front", 4, "check", [
+        u8PracticeStep(unit, "u8-d3-o-this", "Choose the correct order", "this / Is / a / dog / ?", "dog", { choices: ["Is this a dog?", "This is a dog?"], answer: "Is this a dog?" })
+      ]),
+      customPhase("u8-d3-check", "check", "Form Check", "Three Forms", 2, "check", [
+        u8PracticeStep(unit, "u8-d3-final", "Choose the question", "That is a duck.", "duck", { choices: ["Is that a duck?", "That is not a duck."], answer: "Is that a duck?" })
+      ])
+    ];
+    return makeUnit8Lesson(unit, 3, "陳述句和問句連結", phases);
+  }
+
+  function unit8Day4(unit) {
+    const phases = [
+      customPhase("u8-d4-map", "grammar", "Question Map", "What is this / that? · Is this / that...?", 6, "review", [
+        practiceStep("u8-d4-map", "Two Question Types", "What is this / that? → ask the animal\nIs this / that a ___? → ask yes or no", { visual: "🐰", modelAnswer: "Name question / Yes-No question" })
+      ]),
+      customPhase("u8-d4-rabbit", "speaking", "Far Rabbit Challenge", "What is that? + Is that...?", 10, "check", [
+        u8PracticeStep(unit, "u8-d4-r1", "Name the animal", "What is that?", "rabbit", { modelAnswer: "It is a rabbit." }),
+        u8PracticeStep(unit, "u8-d4-r2", "Answer Yes", "Is that a rabbit?", "rabbit", { modelAnswer: "Yes, it is." }),
+        u8PracticeStep(unit, "u8-d4-r3", "Answer the trap question", "Is that a dog?", "rabbit", { modelAnswer: "No, it isn't." })
+      ]),
+      customPhase("u8-d4-mixed", "practice", "Mixed Animal Q&A", "Name + Yes / No", 8, "check", [
+        u8PracticeStep(unit, "u8-d4-m-dog", "Two questions", "What is this?\nIs this a dog?", "dog", { modelAnswer: "It is a dog.\nYes, it is." }),
+        u8PracticeStep(unit, "u8-d4-m-duck", "Two questions", "What is that?\nIs that a sheep?", "duck", { modelAnswer: "It is a duck.\nNo, it isn't." })
+      ]),
+      customPhase("u8-d4-error", "practice", "Error Correction", "Fix the Sentence", 8, "check", [
+        u8PracticeStep(unit, "u8-d4-e1", "Fix the question", "Is this is a cat? ✕", "cat", { modelAnswer: "Is this a cat? ✓" }),
+        u8PracticeStep(unit, "u8-d4-e2", "Fix the statement", "This a dog is. ✕", "dog", { modelAnswer: "This is a dog. ✓" }),
+        u8PracticeStep(unit, "u8-d4-e3", "Fix a / an", "Is that an pig? ✕", "pig", { modelAnswer: "Is that a pig? ✓" }),
+        u8PracticeStep(unit, "u8-d4-e4", "Fix the answer", "Yes, this is. ✕", "cow", { modelAnswer: "Yes, it is. ✓" })
+      ]),
+      customPhase("u8-d4-order", "practice", "Question Order", "Put the Words in Order", 8, "check", [
+        u8PracticeStep(unit, "u8-d4-o-cow", "Choose the correct order", "this / Is / a / cow / ?", "cow", { choices: ["Is this a cow?", "This is a cow?"], answer: "Is this a cow?" }),
+        u8PracticeStep(unit, "u8-d4-o-horse", "Choose the correct order", "that / horse / Is / a / ?", "horse", { choices: ["Is that a horse?", "That horse is a?"], answer: "Is that a horse?" })
+      ]),
+      customPhase("u8-d4-rapid", "practice", "Rapid Review", "What or Is?", 3, "check", [
+        u8PracticeStep(unit, "u8-d4-q-what", "Choose the name question", "Ask: 這是什麼？", "cat", { choices: ["What is this?", "Is this a cat?"], answer: "What is this?" }),
+        u8PracticeStep(unit, "u8-d4-q-is", "Choose the yes/no question", "Ask: 這是一隻貓嗎？", "cat", { choices: ["What is this?", "Is this a cat?"], answer: "Is this a cat?" })
+      ]),
+      customPhase("u8-d4-check", "check", "Final Check", "Question + Answer Map", 2, "check", [
+        practiceStep("u8-d4-final", "Complete the map", "What is this / that? → object  ·  Is this / that a ___? → yes/no", { visual: "🐶 ✅", modelAnswer: "Yes, it is. / No, it isn't." })
+      ])
+    ];
+    return makeUnit8Lesson(unit, 4, "U5＋U7＋U8 進階混合", phases);
+  }
+
+  function book1Unit8Lessons(unit) {
+    return [unit8Day1(unit), unit8Day2(unit), unit8Day3(unit), unit8Day4(unit)];
+  }
+
   function sharedLessonFromUnit(unit, unitIndex, bookId, day) {
     const vocabulary = vocabularyItems(unit.vocabulary);
     const activityIdeas = vocabularyGameIdeas(bookId, unit, day);
@@ -1879,7 +2043,9 @@
                   ? book1Unit5Lessons(unit)
                   : book.id === "book-1" && unit.id === "unit-6"
                     ? book1Unit6Lessons(unit)
-                    : [1, 2].map((day) => sharedLessonFromUnit(unit, unitIndex, book.id, day))
+                    : book.id === "book-1" && unit.id === "unit-8"
+                      ? book1Unit8Lessons(unit)
+                      : [1, 2].map((day) => sharedLessonFromUnit(unit, unitIndex, book.id, day))
       }))
     }));
   }

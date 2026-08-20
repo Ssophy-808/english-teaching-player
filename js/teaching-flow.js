@@ -748,6 +748,10 @@
 
   function makePhase(id, phaseSteps, extra = {}) {
     const definition = phaseById(id);
+    return makePhaseFromDefinition(definition, phaseSteps, extra);
+  }
+
+  function makePhaseFromDefinition(definition, phaseSteps, extra = {}) {
     const steps = phaseSteps.map((page, index) => ({
       ...page,
       duration: null,
@@ -764,6 +768,10 @@
       phaseStepTotal: phaseSteps.length
     }));
     return { ...definition, ...extra, steps };
+  }
+
+  function customPhase(id, groupId, groupTitle, title, duration, activityType, phaseSteps, extra = {}) {
+    return makePhaseFromDefinition({ id, groupId, groupTitle, title, duration, activityType }, phaseSteps, extra);
   }
 
   function warmUpPages(unit, unitIndex, day) {
@@ -821,6 +829,184 @@
     ];
   }
 
+  function practiceStep(id, title, prompt, options = {}) {
+    return step(id, "check", title, null, "", {
+      activity: "guided-practice",
+      practice: {
+        prompt,
+        choices: options.choices || [],
+        answer: options.answer || "",
+        modelAnswer: options.modelAnswer || options.answer || "",
+        image: options.image || "",
+        word: options.word || ""
+      }
+    });
+  }
+
+  function u1Image(unit, word) {
+    return vocabularyItems(unit.vocabulary).find((item) => item.word === word)?.image || "";
+  }
+
+  function u1PassportSteps(unit) {
+    const sentences = [
+      ["I am a boy.", "我是一個男孩。", "boy"],
+      ["You are a girl.", "你是一個女孩。", "girl"],
+      ["I am a student.", "我是學生。", "student"],
+      ["You are a teacher.", "你是老師。", "teacher"],
+      ["I am a man.", "我是男人。", "man"],
+      ["You are a woman.", "你是女人。", "woman"]
+    ];
+    return sentences.map(([text, translation, word], index) => step(`u1-passport-${index + 1}`, "grammar", "Passport Sentence", null, "", {
+      activity: "passport-sentence",
+      passportSentence: { text, translation, image: u1Image(unit, word), word },
+      questionIndex: index + 1,
+      questionTotal: sentences.length
+    }));
+  }
+
+  function unit1Day1(unit) {
+    const vocabulary = vocabularyItems(unit.vocabulary);
+    const phases = [
+      customPhase("u1-d1-vocabulary", "vocabulary", "Vocabulary", "Vocabulary", 6, "teaching", vocabularySteps(unit, 0, "u1-d1-word", "Vocabulary"), { vocabulary }),
+      customPhase("u1-d1-pronouns", "grammar", "I / You", "I = 我 / You = 你", 4, "teaching", [
+        practiceStep("u1-d1-i", "I = 我", "I", { modelAnswer: "I = 我（說話的人自己）" }),
+        practiceStep("u1-d1-you", "You = 你", "You", { modelAnswer: "You = 你（正在對話的對方）" })
+      ]),
+      customPhase("u1-d1-be", "grammar", "I am / You are", "I am / You are", 5, "teaching", [
+        practiceStep("u1-d1-i-am", "I am", "I ___", { modelAnswer: "I am" }),
+        practiceStep("u1-d1-you-are", "You are", "You ___", { modelAnswer: "You are" })
+      ]),
+      customPhase("u1-d1-guided", "practice", "Guided Practice", "Guided Practice", 8, "check", [
+        practiceStep("u1-d1-g1", "Choose the subject", "___ am a boy.", { choices: ["I", "You"], answer: "I", image: u1Image(unit, "boy") }),
+        practiceStep("u1-d1-g2", "Choose the subject", "___ are a girl.", { choices: ["I", "You"], answer: "You", image: u1Image(unit, "girl") }),
+        practiceStep("u1-d1-g3", "Choose the be verb", "I ___ a student.", { choices: ["am", "are"], answer: "am", image: u1Image(unit, "student") }),
+        practiceStep("u1-d1-g4", "Choose the be verb", "You ___ a teacher.", { choices: ["am", "are"], answer: "are", image: u1Image(unit, "teacher") })
+      ]),
+      customPhase("u1-d1-passport", "passport", "Passport", "Passport · Six Sentences", 10, "teaching", u1PassportSteps(unit)),
+      customPhase("u1-d1-phonics", "phonics", "Phonics", "Phonics", 7, "teaching", [step("u1-d1-phonics", "phonics", "Phonics", null, phonicsText(unit.phonics), { activity: "phonics-drill", phonics: unit.phonics })]),
+      customPhase("u1-d1-show-book", "book-review", "Book", "Show Book", 5, "book", [step("u1-d1-show-book", "showbook", "Show Book", null, "", { activity: "book-resource", embedUrl: unit.materials?.bookUrl || "" })])
+    ];
+    return makeUnit1Lesson(unit, 1, "第一次理解", phases);
+  }
+
+  function unit1Day2(unit) {
+    const vocabulary = vocabularyItems(unit.vocabulary);
+    const phases = [
+      customPhase("u1-d2-vocab-review", "vocabulary", "Vocabulary", "Quick Vocabulary Review", 5, "game", vocabularySteps(unit, 0, "u1-d2-review", "Quick Vocabulary Review"), { vocabulary }),
+      customPhase("u1-d2-pattern", "grammar", "I / You + am / are", "I / You / am / are", 5, "teaching", [
+        practiceStep("u1-d2-pattern-i", "I → am", "I ___", { modelAnswer: "I am" }),
+        practiceStep("u1-d2-pattern-you", "You → are", "You ___", { modelAnswer: "You are" })
+      ]),
+      customPhase("u1-d2-subject", "practice", "Practice", "Choose the Subject", 7, "check", [
+        practiceStep("u1-d2-s1", "Choose I or You", "___ am a man.", { choices: ["I", "You"], answer: "I", image: u1Image(unit, "man") }),
+        practiceStep("u1-d2-s2", "Choose I or You", "___ are a woman.", { choices: ["I", "You"], answer: "You", image: u1Image(unit, "woman") })
+      ]),
+      customPhase("u1-d2-be", "practice", "Practice", "Choose the Be Verb", 7, "check", [
+        practiceStep("u1-d2-b1", "Choose am or are", "I ___ a student.", { choices: ["am", "are"], answer: "am", image: u1Image(unit, "student") }),
+        practiceStep("u1-d2-b2", "Choose am or are", "You ___ a teacher.", { choices: ["am", "are"], answer: "are", image: u1Image(unit, "teacher") })
+      ]),
+      customPhase("u1-d2-match", "practice", "Practice", "Sentence Match", 7, "check", [
+        practiceStep("u1-d2-m1", "Match the sentence", "I + am + boy", { choices: ["I am a boy.", "You are a boy."], answer: "I am a boy.", image: u1Image(unit, "boy") }),
+        practiceStep("u1-d2-m2", "Match the sentence", "You + are + girl", { choices: ["I am a girl.", "You are a girl."], answer: "You are a girl.", image: u1Image(unit, "girl") })
+      ]),
+      customPhase("u1-d2-person", "practice", "Practice", "I or You?", 5, "check", [
+        practiceStep("u1-d2-p1", "Who is speaking?", "The speaker talks about oneself.", { choices: ["I", "You"], answer: "I" }),
+        practiceStep("u1-d2-p2", "Who is the listener?", "The speaker talks to another person.", { choices: ["I", "You"], answer: "You" })
+      ]),
+      customPhase("u1-d2-order", "practice", "Practice", "Sentence Order", 7, "check", [
+        practiceStep("u1-d2-o1", "Choose the correct order", "am / I / a boy", { choices: ["I am a boy.", "I a boy am."], answer: "I am a boy." }),
+        practiceStep("u1-d2-o2", "Choose the correct order", "a teacher / are / You", { choices: ["You are a teacher.", "You teacher are a."], answer: "You are a teacher." })
+      ]),
+      customPhase("u1-d2-check", "check", "Mastery Check", "I → am / You → are", 2, "check", [
+        practiceStep("u1-d2-check", "Complete both patterns", "I ___   /   You ___", { choices: ["am / are", "are / am"], answer: "am / are" })
+      ])
+    ];
+    return makeUnit1Lesson(unit, 2, "練到熟", phases);
+  }
+
+  function unit1Day3(unit) {
+    const phases = [
+      customPhase("u1-d3-review", "review", "Review", "Affirmative Review", 5, "teaching", u1PassportSteps(unit)),
+      customPhase("u1-d3-supplement", "supplement", "Course Supplement", "課程補充：肯定句與否定句", 5, "teaching", [
+        practiceStep("u1-d3-note", "Not a Passport Sentence", "這是 U1 課本補充內容，不列入護照六句。", { modelAnswer: "肯定句加入 not，變成否定句。" })
+      ]),
+      customPhase("u1-d3-not", "grammar", "Affirmative / Negative", "Add not", 8, "teaching", [
+        practiceStep("u1-d3-n1", "Affirmative → Negative", "I am a boy.", { modelAnswer: "I am not a boy.", image: u1Image(unit, "boy") }),
+        practiceStep("u1-d3-n2", "Affirmative → Negative", "You are a girl.", { modelAnswer: "You are not a girl.", image: u1Image(unit, "girl") })
+      ]),
+      customPhase("u1-d3-guided", "practice", "Guided Practice", "Make It Negative", 10, "check", [
+        practiceStep("u1-d3-g1", "Add not", "I am a student.", { modelAnswer: "I am not a student." }),
+        practiceStep("u1-d3-g2", "Add not", "You are a teacher.", { modelAnswer: "You are not a teacher." }),
+        practiceStep("u1-d3-g3", "Add not", "I am a man.", { modelAnswer: "I am not a man." }),
+        practiceStep("u1-d3-g4", "Add not", "You are a woman.", { modelAnswer: "You are not a woman." })
+      ]),
+      customPhase("u1-d3-choice", "practice", "Practice", "Choose the Negative Sentence", 8, "check", [
+        practiceStep("u1-d3-c1", "Choose the negative sentence", "I am a boy.", { choices: ["I am not a boy.", "I not am a boy."], answer: "I am not a boy." }),
+        practiceStep("u1-d3-c2", "Choose the negative sentence", "You are a girl.", { choices: ["You are not a girl.", "You not are a girl."], answer: "You are not a girl." })
+      ]),
+      customPhase("u1-d3-check", "check", "Check", "Affirmative or Negative?", 7, "check", [
+        practiceStep("u1-d3-check1", "Choose the correct sentence", "I + am + not + girl", { choices: ["I am not a girl.", "I are not a girl."], answer: "I am not a girl." }),
+        practiceStep("u1-d3-check2", "Choose the correct sentence", "You + are + not + boy", { choices: ["You are not a boy.", "You am not a boy."], answer: "You are not a boy." })
+      ]),
+      customPhase("u1-d3-homework", "book-review", "Wrap Up", "Homework", 2, "homework", [step("u1-d3-homework", "homework", "Homework", null, "", { activity: "homework" })])
+    ];
+    return makeUnit1Lesson(unit, 3, "補充課", phases);
+  }
+
+  function unit1Day4(unit) {
+    const phases = [
+      customPhase("u1-d4-review", "review", "Review", "I / You + am / are + not", 5, "teaching", [
+        practiceStep("u1-d4-review", "Pattern Review", "I → am   /   You → are   /   not → negative", { modelAnswer: "I am / You are / am not / are not" })
+      ]),
+      customPhase("u1-d4-error", "practice", "Advanced Practice", "Error Correction", 8, "check", [
+        practiceStep("u1-d4-e1", "Fix the sentence", "I are a boy. ✕", { modelAnswer: "I am a boy." }),
+        practiceStep("u1-d4-e2", "Fix the sentence", "You am a teacher. ✕", { modelAnswer: "You are a teacher." }),
+        practiceStep("u1-d4-e3", "Fix the sentence", "I are not a girl. ✕", { modelAnswer: "I am not a girl." })
+      ]),
+      customPhase("u1-d4-order", "practice", "Advanced Practice", "Sentence Order", 8, "check", [
+        practiceStep("u1-d4-o1", "Choose the correct order", "not / am / I / a girl", { choices: ["I am not a girl.", "I not am a girl."], answer: "I am not a girl." }),
+        practiceStep("u1-d4-o2", "Choose the correct order", "You / not / are / a student", { choices: ["You are not a student.", "You not are a student."], answer: "You are not a student." })
+      ]),
+      customPhase("u1-d4-choice", "practice", "Advanced Practice", "Multiple Choice", 7, "check", [
+        practiceStep("u1-d4-c1", "Choose the correct sentence", "I + boy", { choices: ["I am a boy.", "I are a boy."], answer: "I am a boy.", image: u1Image(unit, "boy") }),
+        practiceStep("u1-d4-c2", "Choose the correct sentence", "You + woman", { choices: ["You am a woman.", "You are a woman."], answer: "You are a woman.", image: u1Image(unit, "woman") })
+      ]),
+      customPhase("u1-d4-picture", "practice", "Advanced Practice", "Picture Sentence", 7, "check", [
+        practiceStep("u1-d4-p1", "Make a sentence", "I + student", { modelAnswer: "I am a student.", image: u1Image(unit, "student") }),
+        practiceStep("u1-d4-p2", "Make a sentence", "You + teacher", { modelAnswer: "You are a teacher.", image: u1Image(unit, "teacher") })
+      ]),
+      customPhase("u1-d4-transform", "practice", "Advanced Practice", "Affirmative → Negative", 7, "check", [
+        practiceStep("u1-d4-t1", "Make it negative", "I am a boy.", { modelAnswer: "I am not a boy." }),
+        practiceStep("u1-d4-t2", "Make it negative", "You are a girl.", { modelAnswer: "You are not a girl." })
+      ]),
+      customPhase("u1-d4-check", "check", "Final Check", "Mixed Challenge", 3, "check", [
+        practiceStep("u1-d4-final", "Choose the correct sentence", "I + not + girl", { choices: ["I am not a girl.", "I are not a girl."], answer: "I am not a girl." })
+      ])
+    ];
+    return makeUnit1Lesson(unit, 4, "進階應用", phases);
+  }
+
+  function makeUnit1Lesson(unit, day, dayGoal, phases) {
+    const steps = phases.flatMap((phase) => phase.steps);
+    const totalDuration = phases.reduce((total, phase) => total + (Number(phase.duration) || 0), 0);
+    return {
+      id: `day-${day}`,
+      title: `${unit.title} · Day ${day}｜${dayGoal}`,
+      day: `Day ${day}`,
+      dayGoal,
+      curriculum: curriculumFor(unit),
+      phases,
+      duration: totalDuration,
+      durationMinutes: totalDuration,
+      steps,
+      source: { document: "B1_教學流程.pdf", page: B1_DAY_PAGES[0]?.[Math.min(day - 1, 3)] }
+    };
+  }
+
+  function book1Unit1Lessons(unit) {
+    return [unit1Day1(unit), unit1Day2(unit), unit1Day3(unit), unit1Day4(unit)];
+  }
+
   function sharedLessonFromUnit(unit, unitIndex, bookId, day) {
     const vocabulary = vocabularyItems(unit.vocabulary);
     const activityIdeas = vocabularyGameIdeas(bookId, unit, day);
@@ -872,7 +1058,9 @@
         id: unit.id,
         title: `Unit ${unitIndex + 1}`,
         topic: unit.title,
-        lessons: [1, 2].map((day) => sharedLessonFromUnit(unit, unitIndex, book.id, day))
+        lessons: book.id === "book-1" && unit.id === "unit-1"
+          ? book1Unit1Lessons(unit)
+          : [1, 2].map((day) => sharedLessonFromUnit(unit, unitIndex, book.id, day))
       }))
     }));
   }

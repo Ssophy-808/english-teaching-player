@@ -110,7 +110,7 @@
       <article class="step-card flow-games-card" data-step-type="game">
         <div class="step-meta"><span class="phase-badge">${escapeHtml(step.phaseTitle)}</span>${duration}</div>
         <div class="flow-games-heading">
-          <div><p class="step-kicker">TEACH → PLAY → CHECK</p><h2>${escapeHtml(step.title)}</h2><p>建議選 2–3 個遊戲；可重玩、完成或跳過。</p></div>
+          <div><p class="step-kicker">TEACH → PLAY → CHECK</p><h2>${escapeHtml(step.title)}</h2></div>
           <span class="game-status ${step.completed ? "is-complete" : ""}">${step.completed ? "✓ 已完成" : "尚未標記"}</span>
         </div>
         ${step.gameScope === "vocabulary" ? `<div class="taught-word-list"><strong>已教單字</strong>${words}</div>` : `<div class="taught-word-list"><strong>本課句型</strong>${(step.mainSentences || []).slice(0, 6).map((line) => `<span>${escapeHtml(line)}</span>`).join("")}</div>`}
@@ -135,7 +135,7 @@
       <article class="step-card grammar-check-card" data-step-type="check">
         <div class="step-meta"><span class="phase-badge">Grammar Check</span>${duration}</div>
         <p class="step-kicker">READY TO MOVE ON?</p><h2>口說／理解檢核</h2>
-        <p class="grammar-check-prompt">${escapeHtml(prompt.includes("?") ? prompt : "Say a complete sentence about the picture or prompt.")}</p>
+        <p class="grammar-check-prompt">${escapeHtml(prompt)}</p>
         <button class="button button-secondary" type="button" data-check-answer>${step.checkRevealed ? "Hide model answer" : "Show model answer"}</button>
         ${step.checkRevealed ? `<p class="grammar-model-answer">${escapeHtml(prompt)}</p>` : ""}
         <button class="button button-primary" type="button" data-check-next>Next prompt</button>
@@ -151,6 +151,27 @@
         <h2>${escapeHtml(step.title)}</h2>
         <p class="topic-prompt">${escapeHtml(step.instruction)}</p>
         ${step.modelAnswer ? `<details class="model-answer"><summary>Show model answer</summary><p>${escapeHtml(step.modelAnswer)}</p></details>` : ""}
+      </article>`;
+  }
+
+  function renderGuidedPractice(step, duration) {
+    const practice = step.practice || {};
+    const picture = practice.image
+      ? `<div class="guided-picture">${renderPictureAsset(practice, "guided-image", "guided-visual")}</div>`
+      : "";
+    const choices = (practice.choices || []).map((choice) => `
+      <button class="quiz-choice" type="button" data-practice-choice="${escapeHtml(choice)}">${escapeHtml(choice)}</button>
+    `).join("");
+    return `
+      <article class="step-card guided-practice-card" data-step-type="check">
+        <div class="step-meta"><span class="phase-badge">${escapeHtml(step.phaseTitle)}</span>${duration}</div>
+        <h2>${escapeHtml(step.title)}</h2>
+        ${picture}
+        <p class="guided-prompt">${escapeHtml(practice.prompt)}</p>
+        <p class="quiz-feedback" role="status" aria-live="polite"></p>
+        ${choices ? `<div class="guided-options quiz-options">${choices}</div>` : `
+          <button class="button button-secondary" type="button" data-practice-answer>${step.practiceRevealed ? "Hide answer" : "Show answer"}</button>
+          ${step.practiceRevealed ? `<p class="grammar-model-answer">${escapeHtml(practice.modelAnswer)}</p>` : ""}`}
       </article>`;
   }
 
@@ -280,7 +301,6 @@
         </div>
         <h2>${escapeHtml(step.title)}</h2>
         <img class="activity-main-image" src="${escapeHtml(step.activityImage)}" alt="${escapeHtml(step.imageAlt || step.title)}">
-        ${step.instruction ? `<p class="activity-image-caption">${escapeHtml(step.instruction)}</p>` : ""}
       </article>
     `;
   }
@@ -358,6 +378,7 @@
     if (step.activity === "flow-games") return renderFlowGamesStep(step, duration);
     if (step.activity === "grammar-check") return renderGrammarCheck(step, duration);
     if (step.activity === "topic-conversation") return renderTopicConversation(step, duration);
+    if (step.activity === "guided-practice") return renderGuidedPractice(step, duration);
 
     if (step.type === "vocabulary" && step.word) {
       return renderVocabularyStep(step, duration);
@@ -444,6 +465,27 @@
           step.checkIndex = (Number(step.checkIndex) || 0) + 1;
           step.checkRevealed = false;
         } else return;
+        container.innerHTML = renderStep(step);
+        activateStep(container, step);
+      };
+      return;
+    }
+
+    if (step.activity === "guided-practice") {
+      container.onclick = (event) => {
+        const choice = event.target.closest("[data-practice-choice]");
+        if (choice) {
+          const feedback = container.querySelector(".quiz-feedback");
+          const isCorrect = choice.dataset.practiceChoice === step.practice.answer;
+          choice.classList.toggle("is-correct", isCorrect);
+          choice.classList.toggle("is-wrong", !isCorrect);
+          feedback.textContent = isCorrect ? "Correct!" : "Try again!";
+          feedback.className = `quiz-feedback ${isCorrect ? "is-correct" : "is-wrong"}`;
+          if (isCorrect) container.querySelectorAll("[data-practice-choice]").forEach((button) => { button.disabled = true; });
+          return;
+        }
+        if (!event.target.closest("[data-practice-answer]")) return;
+        step.practiceRevealed = !step.practiceRevealed;
         container.innerHTML = renderStep(step);
         activateStep(container, step);
       };

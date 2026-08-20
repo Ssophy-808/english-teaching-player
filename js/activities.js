@@ -175,6 +175,31 @@
       </article>`;
   }
 
+  function renderSentenceTransformer(step, duration) {
+    const transformer = step.transformer || {};
+    const modes = [["affirmative", "Affirmative"], ["negative", "Negative"], ["question", "Question"]];
+    const picture = transformer.image || transformer.sprite || transformer.visual
+      ? `<div class="guided-picture">${renderPictureAsset(transformer, "guided-image", "guided-visual")}</div>`
+      : "";
+    const activeLabel = modes.find(([mode]) => mode === step.transformMode)?.[1] || "";
+    const answer = step.transformMode ? transformer.forms?.[step.transformMode] : "";
+    return `
+      <article class="step-card sentence-transformer-card" data-step-type="practice">
+        <div class="step-meta"><span class="phase-badge">${escapeHtml(step.phaseTitle || "Sentence Transformer")}</span>${duration}</div>
+        <p class="step-kicker">SENTENCE TRANSFORMER</p>
+        <h2>${escapeHtml(transformer.source || step.title)}</h2>
+        ${picture}
+        <div class="transform-mode-buttons">
+          ${modes.map(([mode, label]) => `<button class="button ${step.transformMode === mode ? "button-primary" : "button-secondary"}" type="button" data-transform-mode="${mode}">${label}</button>`).join("")}
+        </div>
+        ${step.transformMode ? `
+          <p class="transform-task">Change it to: <strong>${escapeHtml(activeLabel)}</strong></p>
+          <button class="button button-secondary" type="button" data-transform-answer>${step.transformRevealed ? "Hide answer" : "Show answer"}</button>
+          ${step.transformRevealed ? `<p class="grammar-model-answer">${escapeHtml(answer)}</p>` : ""}
+        ` : `<p class="transform-task">Choose a sentence form.</p>`}
+      </article>`;
+  }
+
   function renderQuizStep(step, duration) {
     const question = step.question;
     const promptText = String(question.prompt || "");
@@ -378,6 +403,7 @@
     if (step.activity === "flow-games") return renderFlowGamesStep(step, duration);
     if (step.activity === "grammar-check") return renderGrammarCheck(step, duration);
     if (step.activity === "topic-conversation") return renderTopicConversation(step, duration);
+    if (step.activity === "sentence-transformer") return renderSentenceTransformer(step, duration);
     if (step.activity === "guided-practice") return renderGuidedPractice(step, duration);
 
     if (step.type === "vocabulary" && step.word) {
@@ -486,6 +512,21 @@
         }
         if (!event.target.closest("[data-practice-answer]")) return;
         step.practiceRevealed = !step.practiceRevealed;
+        container.innerHTML = renderStep(step);
+        activateStep(container, step);
+      };
+      return;
+    }
+
+    if (step.activity === "sentence-transformer") {
+      container.onclick = (event) => {
+        const mode = event.target.closest("[data-transform-mode]");
+        if (mode) {
+          step.transformMode = mode.dataset.transformMode;
+          step.transformRevealed = false;
+        } else if (event.target.closest("[data-transform-answer]")) {
+          step.transformRevealed = !step.transformRevealed;
+        } else return;
         container.innerHTML = renderStep(step);
         activateStep(container, step);
       };

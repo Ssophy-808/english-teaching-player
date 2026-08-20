@@ -845,6 +845,20 @@
     });
   }
 
+  function sentenceTransformerStep(id, source, forms, options = {}) {
+    return step(id, "practice", "Sentence Transformer", null, "", {
+      activity: "sentence-transformer",
+      transformer: {
+        source,
+        forms,
+        image: options.image || "",
+        sprite: options.sprite || null,
+        visual: options.visual || "",
+        word: options.word || ""
+      }
+    });
+  }
+
   function u1Image(unit, word) {
     return vocabularyItems(unit.vocabulary).find((item) => item.word === word)?.image || "";
   }
@@ -2300,6 +2314,182 @@
     return [unit9Day1(unit), unit9Day2(unit), unit9Day3(unit), unit9Day4(unit)];
   }
 
+  function b2u1Asset(unit, word) {
+    return vocabularyItems(unit.vocabulary).find((item) => item.word.toLowerCase() === word.toLowerCase()) || { word };
+  }
+
+  function b2u1PracticeStep(unit, id, title, prompt, word, options = {}) {
+    return practiceStep(id, title, prompt, { ...b2u1Asset(unit, word), word, ...options });
+  }
+
+  function b2u1TransformerStep(unit, id, source, word) {
+    const asset = b2u1Asset(unit, word);
+    return sentenceTransformerStep(id, source, {
+      affirmative: `There is a ${word}.`,
+      negative: `There is not a ${word}.`,
+      question: `Is there a ${word}?`
+    }, { ...asset, word });
+  }
+
+  function makeBook2Unit1Lesson(unit, day, dayGoal, phases) {
+    const steps = phases.flatMap((phase) => phase.steps);
+    const totalDuration = phases.reduce((total, phase) => total + (Number(phase.duration) || 0), 0);
+    return {
+      id: `day-${day}`,
+      title: `${unit.title} · Day ${day}｜${dayGoal}`,
+      day: `Day ${day}`,
+      dayGoal,
+      curriculum: curriculumFor(unit),
+      phases,
+      duration: totalDuration,
+      durationMinutes: totalDuration,
+      steps
+    };
+  }
+
+  function book2Unit1Day1(unit) {
+    const vocabulary = vocabularyItems(unit.vocabulary);
+    const passportAnswers = [true, true, false, true, true, false, true, true, false, true];
+    const phases = [
+      customPhase("b2u1-d1-vocab", "vocabulary", "Classroom Objects", "Classroom Vocabulary", 10, "teaching", vocabularySteps(unit, 0, "b2u1-d1-word", "Classroom Vocabulary"), { vocabulary }),
+      customPhase("b2u1-d1-there-is", "grammar", "There is", "There is + One Thing", 6, "teaching", [
+        b2u1PracticeStep(unit, "b2u1-d1-door", "There is + one thing", "There is a door.", "door", { modelAnswer: "有一扇門。" }),
+        b2u1PracticeStep(unit, "b2u1-d1-fan", "There is + one thing", "There is a fan.", "fan", { modelAnswer: "有一台電風扇。" })
+      ]),
+      customPhase("b2u1-d1-question", "grammar", "Statement → Question", "Move Is to the Front", 6, "teaching", [
+        b2u1PracticeStep(unit, "b2u1-d1-transform", "Statement → Question", "There is a door.  →  Is there a door?", "door", { modelAnswer: "Move is before there." }),
+        b2u1PracticeStep(unit, "b2u1-d1-positive", "Positive Answer", "Is there a fan?", "fan", { modelAnswer: "Yes, there is." })
+      ]),
+      customPhase("b2u1-d1-core", "grammar", "Is there...?", "Singular Question Pattern", 5, "teaching", [
+        practiceStep("b2u1-d1-formula", "Question Formula", "Is there + a + singular thing?", { visual: "🚪", modelAnswer: "Is there a door?  Yes, there is." })
+      ]),
+      customPhase("b2u1-d1-passport", "passport", "Passport", "Ten Classroom Questions", 12, "teaching", vocabulary.map((item, index) =>
+        b2u1PracticeStep(unit, `b2u1-d1-passport-${index + 1}`, `Passport ${index + 1} / ${vocabulary.length}`, `Is there a ${item.word}?`, item.word, {
+          modelAnswer: passportAnswers[index] ? "Yes, there is." : "No, there isn't."
+        })
+      )),
+      customPhase("b2u1-d1-hunt", "speaking", "Classroom Hunt", "Look Around and Answer", 3, "check", [
+        b2u1PracticeStep(unit, "b2u1-d1-hunt-fan", "Classroom Hunt", "Is there a fan in the classroom?", "fan", { modelAnswer: "Yes, there is. / No, there isn't." }),
+        b2u1PracticeStep(unit, "b2u1-d1-hunt-door", "Classroom Hunt", "Is there a door in the classroom?", "door", { modelAnswer: "Yes, there is. / No, there isn't." }),
+        b2u1PracticeStep(unit, "b2u1-d1-hunt-tv", "Classroom Hunt", "Is there a television in the classroom?", "television", { modelAnswer: "Yes, there is. / No, there isn't." })
+      ]),
+      customPhase("b2u1-d1-see-say", "practice", "See and Say", "There is a...", 3, "check", [
+        b2u1PracticeStep(unit, "b2u1-d1-see-window", "See and Say", "There is a ______.", "window", { modelAnswer: "There is a window." }),
+        b2u1PracticeStep(unit, "b2u1-d1-see-speaker", "See and Say", "There is a ______.", "speaker", { modelAnswer: "There is a speaker." }),
+        b2u1PracticeStep(unit, "b2u1-d1-see-table", "See and Say", "There is a ______.", "table", { modelAnswer: "There is a table." })
+      ])
+    ];
+    return makeBook2Unit1Lesson(unit, 1, "新課：There is + Is there...?", phases);
+  }
+
+  function book2Unit1Day2(unit) {
+    const phases = [
+      customPhase("b2u1-d2-review", "grammar", "Pattern Review", "Is there...?", 5, "review", [
+        practiceStep("b2u1-d2-review", "Question + Answer", "Is there a ___?", { modelAnswer: "Yes, there is. / No, there isn't." })
+      ]),
+      customPhase("b2u1-d2-map", "grammar", "Answer Map", "There, Not It", 5, "teaching", [
+        practiceStep("b2u1-d2-map", "Correct Answer Map", "Is there...? → Yes, there is. / No, there isn't.", { modelAnswer: "Do not answer: Yes, it is." })
+      ]),
+      customPhase("b2u1-d2-mystery", "practice", "Mystery Classroom", "Guess · Then Reveal", 10, "check", [
+        practiceStep("b2u1-d2-m-tv", "Mystery Classroom", "Is there a television?", { visual: "❓", modelAnswer: "📺  Yes, there is!" }),
+        practiceStep("b2u1-d2-m-fan", "Mystery Classroom", "Is there a fan?", { visual: "❓", modelAnswer: "🌀  Yes, there is!" }),
+        practiceStep("b2u1-d2-m-phone", "Mystery Classroom", "Is there a telephone?", { visual: "❓", modelAnswer: "No, there isn't." }),
+        practiceStep("b2u1-d2-m-board", "Mystery Classroom", "Is there a blackboard?", { visual: "❓", modelAnswer: "Yes, there is!" })
+      ]),
+      customPhase("b2u1-d2-guess", "speaking", "Guess and Ask", "Secret Object Card", 8, "check", [
+        practiceStep("b2u1-d2-g1", "Secret Card 1", "Ask: Is there a ___?", { visual: "🔒", modelAnswer: "fan" }),
+        practiceStep("b2u1-d2-g2", "Secret Card 2", "Ask: Is there a ___?", { visual: "🔒", modelAnswer: "whiteboard" }),
+        practiceStep("b2u1-d2-g3", "Secret Card 3", "Ask: Is there a ___?", { visual: "🔒", modelAnswer: "trash can" })
+      ]),
+      customPhase("b2u1-d2-is-are", "practice", "Choose Is / Are", "Singular There Question", 6, "check", [
+        b2u1PracticeStep(unit, "b2u1-d2-is-door", "Choose is or are", "___ there a door?", "door", { choices: ["Is", "Are"], answer: "Is" }),
+        b2u1PracticeStep(unit, "b2u1-d2-is-fan", "Choose is or are", "___ there a fan?", "fan", { choices: ["Is", "Are"], answer: "Is" })
+      ]),
+      customPhase("b2u1-d2-there-it", "practice", "Choose There / It", "Match the Answer Pattern", 5, "check", [
+        practiceStep("b2u1-d2-there-yes", "Choose there or it", "Yes, ___ is.", { choices: ["there", "it"], answer: "there" }),
+        practiceStep("b2u1-d2-there-no", "Choose there or it", "No, ___ isn't.", { choices: ["there", "it"], answer: "there" })
+      ]),
+      customPhase("b2u1-d2-order", "practice", "Sentence Order", "Build the Question and Answer", 4, "check", [
+        b2u1PracticeStep(unit, "b2u1-d2-order", "Choose the correct order", "there / Is / a / door / ?", "door", { choices: ["Is there a door?", "There is a door?"], answer: "Is there a door?" })
+      ]),
+      customPhase("b2u1-d2-check", "check", "Mastery Check", "Is there...?", 2, "check", [
+        b2u1PracticeStep(unit, "b2u1-d2-final", "Choose the correct answer", "Is there a speaker?", "speaker", { choices: ["Yes, there is.", "Yes, it is.", "Yes, they are."], answer: "Yes, there is." })
+      ])
+    ];
+    return makeBook2Unit1Lesson(unit, 2, "熟練：Is there...? Yes / No", phases);
+  }
+
+  function book2Unit1Day3(unit) {
+    const phases = [
+      customPhase("b2u1-d3-positive", "grammar", "Affirmative", "There is...", 6, "teaching", [
+        b2u1PracticeStep(unit, "b2u1-d3-p-speaker", "Affirmative Sentence", "There is a speaker.", "speaker", { modelAnswer: "有一個喇叭。" }),
+        b2u1PracticeStep(unit, "b2u1-d3-p-table", "Affirmative Sentence", "There is a table.", "table", { modelAnswer: "有一張桌子。" })
+      ]),
+      customPhase("b2u1-d3-negative", "grammar", "Negative", "There is not...", 6, "teaching", [
+        b2u1PracticeStep(unit, "b2u1-d3-n-speaker", "Make it negative", "There is a speaker.", "speaker", { modelAnswer: "There is not a speaker." }),
+        b2u1PracticeStep(unit, "b2u1-d3-n-tv", "Make it negative", "There is a television.", "television", { modelAnswer: "There is not a television." })
+      ]),
+      customPhase("b2u1-d3-contraction", "grammar", "Is Not / Isn't", "Contraction", 5, "teaching", [
+        practiceStep("b2u1-d3-contraction", "Contraction Map", "there is not = there isn't", { modelAnswer: "There is not a television. = There isn't a television." })
+      ]),
+      customPhase("b2u1-d3-three", "grammar", "Three Sentence Forms", "Affirmative · Negative · Question", 8, "teaching", [
+        b2u1TransformerStep(unit, "b2u1-d3-fan", "There is a fan.", "fan"),
+        b2u1TransformerStep(unit, "b2u1-d3-door", "There is a door.", "door")
+      ]),
+      customPhase("b2u1-d3-true-fake", "practice", "True / Fake Classroom", "Look Around and Decide", 8, "check", [
+        b2u1PracticeStep(unit, "b2u1-d3-t-blackboard", "True or False?", "There is a blackboard in the classroom.", "blackboard", { choices: ["True", "False"], answer: "True" }),
+        b2u1PracticeStep(unit, "b2u1-d3-t-phone", "True or False?", "There is a telephone in the classroom.", "telephone", { choices: ["True", "False"], answer: "False", modelAnswer: "There is not a telephone." })
+      ]),
+      customPhase("b2u1-d3-throw", "practice", "Throw and Say", "Digital 3 × 4 Grid", 10, "check", [
+        b2u1PracticeStep(unit, "b2u1-d3-r-door", "Random: door", "door", "door", { modelAnswer: "There is a door." }),
+        b2u1PracticeStep(unit, "b2u1-d3-r-fan", "Random: fan", "fan", "fan", { modelAnswer: "There is a fan." }),
+        b2u1PracticeStep(unit, "b2u1-d3-r-not-tv", "Random: not + television", "not + television", "television", { modelAnswer: "There is not a television." }),
+        b2u1PracticeStep(unit, "b2u1-d3-r-not-phone", "Random: not + telephone", "not + telephone", "telephone", { modelAnswer: "There is not a telephone." })
+      ]),
+      customPhase("b2u1-d3-check", "check", "Form Check", "There is / There is not / Is there?", 2, "check", [
+        b2u1PracticeStep(unit, "b2u1-d3-final", "Choose the negative", "fan", "fan", { choices: ["There is a fan.", "There is not a fan.", "Is there a fan?"], answer: "There is not a fan." })
+      ])
+    ];
+    return makeBook2Unit1Lesson(unit, 3, "文法延伸：There is / There is not", phases);
+  }
+
+  function book2Unit1Day4(unit) {
+    const phases = [
+      customPhase("b2u1-d4-map", "grammar", "Three Sentence Forms", "Affirmative · Negative · Question", 5, "review", [
+        b2u1PracticeStep(unit, "b2u1-d4-map", "Three Forms", "There is a door.\nThere is not a door.\nIs there a door?", "door", { modelAnswer: "affirmative / negative / question" })
+      ]),
+      customPhase("b2u1-d4-transformer", "practice", "Sentence Transformer", "Choose a Sentence Form", 12, "check", [
+        b2u1TransformerStep(unit, "b2u1-d4-t-phone", "There is a telephone.", "telephone"),
+        b2u1TransformerStep(unit, "b2u1-d4-t-fan", "There is a fan.", "fan"),
+        b2u1TransformerStep(unit, "b2u1-d4-t-tv", "There is a television.", "television")
+      ]),
+      customPhase("b2u1-d4-error", "practice", "Error Detective", "Find and Fix", 8, "check", [
+        b2u1PracticeStep(unit, "b2u1-d4-e1", "Fix the question", "Is there is a fan? ✕", "fan", { modelAnswer: "Is there a fan? ✓" }),
+        b2u1PracticeStep(unit, "b2u1-d4-e2", "Fix the statement", "There are a door. ✕", "door", { modelAnswer: "There is a door. ✓" }),
+        practiceStep("b2u1-d4-e3", "Fix the answer", "Yes, it is. ✕", { modelAnswer: "Yes, there is. ✓" }),
+        practiceStep("b2u1-d4-e4", "Fix the answer", "No, there aren't. ✕", { modelAnswer: "No, there isn't. ✓" })
+      ]),
+      customPhase("b2u1-d4-quickly", "practice", "Quickly!", "See · Remember · Say", 8, "check", [
+        b2u1PracticeStep(unit, "b2u1-d4-q-window", "Quick Look", "Say the sentence quickly.", "window", { modelAnswer: "There is a window." }),
+        b2u1PracticeStep(unit, "b2u1-d4-q-board", "Quick Look", "Say the sentence quickly.", "whiteboard", { modelAnswer: "There is a whiteboard." }),
+        b2u1PracticeStep(unit, "b2u1-d4-q-trash", "Quick Look", "Answer: Is there a trash can?", "trash can", { modelAnswer: "Yes, there is. / No, there isn't." })
+      ]),
+      customPhase("b2u1-d4-mixed", "practice", "Mixed Transformations", "Statement → Target Form", 8, "check", [
+        b2u1PracticeStep(unit, "b2u1-d4-m-fan", "Change to a question", "There is a fan.", "fan", { modelAnswer: "Is there a fan?" }),
+        b2u1PracticeStep(unit, "b2u1-d4-m-tv", "Change to negative", "There is a television.", "television", { modelAnswer: "There is not a television." }),
+        b2u1PracticeStep(unit, "b2u1-d4-m-table", "Change to affirmative", "Is there a table?", "table", { modelAnswer: "There is a table." })
+      ]),
+      customPhase("b2u1-d4-check", "check", "Final Check", "Book 2 Unit 1", 4, "check", [
+        practiceStep("b2u1-d4-final", "Complete the map", "There is + singular / There is not + singular / Is there + singular?", { modelAnswer: "Yes, there is. / No, there isn't." })
+      ])
+    ];
+    return makeBook2Unit1Lesson(unit, 4, "進階：肯定、否定、問句混合", phases);
+  }
+
+  function book2Unit1Lessons(unit) {
+    return [book2Unit1Day1(unit), book2Unit1Day2(unit), book2Unit1Day3(unit), book2Unit1Day4(unit)];
+  }
+
   function sharedLessonFromUnit(unit, unitIndex, bookId, day) {
     const vocabulary = vocabularyItems(unit.vocabulary);
     const activityIdeas = vocabularyGameIdeas(bookId, unit, day);
@@ -2351,7 +2541,9 @@
         id: unit.id,
         title: `Unit ${unitIndex + 1}`,
         topic: unit.title,
-        lessons: book.id === "book-1" && unit.id === "unit-1"
+        lessons: book.id === "book-2" && unit.id === "unit-1"
+          ? book2Unit1Lessons(unit)
+          : book.id === "book-1" && unit.id === "unit-1"
           ? book1Unit1Lessons(unit)
           : book.id === "book-1" && unit.id === "unit-2"
             ? book1Unit2Lessons(unit)

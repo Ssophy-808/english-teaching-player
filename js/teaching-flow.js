@@ -2490,6 +2490,179 @@
     return [book2Unit1Day1(unit), book2Unit1Day2(unit), book2Unit1Day3(unit), book2Unit1Day4(unit)];
   }
 
+  function b3u1Asset(unit, word) {
+    const normalized = String(word).toLowerCase();
+    return vocabularyItems(unit.vocabulary).find((item) => {
+      const aliases = item.aliases || [];
+      return item.word.toLowerCase() === normalized || aliases.some((alias) => alias.toLowerCase() === normalized);
+    }) || { word };
+  }
+
+  function b3u1PracticeStep(unit, id, title, prompt, word, options = {}) {
+    return practiceStep(id, title, prompt, { ...b3u1Asset(unit, word), word, ...options });
+  }
+
+  function b3u1TransformerStep(unit, id, subject, animal) {
+    const asset = b3u1Asset(unit, animal);
+    return sentenceTransformerStep(id, `${subject} like ${animal}.`, {
+      affirmative: `${subject} like ${animal}.`,
+      negative: `${subject} don't like ${animal}.`,
+      question: `Do ${subject.toLowerCase()} like ${animal}?`
+    }, { ...asset, word: animal });
+  }
+
+  function makeBook3Unit1Lesson(unit, day, dayGoal, phases) {
+    const steps = phases.flatMap((phase) => phase.steps);
+    const totalDuration = phases.reduce((total, phase) => total + (Number(phase.duration) || 0), 0);
+    return {
+      id: `day-${day}`,
+      title: `${unit.title} · Day ${day}｜${dayGoal}`,
+      day: `Day ${day}`,
+      dayGoal,
+      curriculum: curriculumFor(unit),
+      phases,
+      duration: totalDuration,
+      durationMinutes: totalDuration,
+      steps
+    };
+  }
+
+  function book3Unit1Day1(unit) {
+    const vocabulary = vocabularyItems(unit.vocabulary);
+    const passport = [
+      ["I", "birds"], ["You", "frogs"], ["We", "puppies"], ["They", "fish"]
+    ];
+    const phases = [
+      customPhase("b3u1-d1-vocab", "vocabulary", "Vocabulary", "Animals We Like", 10, "teaching", vocabularySteps(unit, 0, "b3u1-d1-word", "Animal Vocabulary"), { vocabulary }),
+      customPhase("b3u1-d1-subjects", "grammar", "Grammar Focus", "I / You / We / They + like", 8, "teaching", [
+        practiceStep("b3u1-d1-map", "Subject Map", "I like  ·  You like  ·  We like  ·  They like", { modelAnswer: "The subject changes. The verb like stays the same." }),
+        practiceStep("b3u1-d1-like", "What stays the same?", "I → You → We → They", { choices: ["like", "likes", "am"], answer: "like" })
+      ]),
+      customPhase("b3u1-d1-plural", "grammar", "Noun Focus", "Animals as a Group", 5, "teaching", [
+        b3u1PracticeStep(unit, "b3u1-d1-plural", "One type of animal", "I like birds.  ·  You like frogs.  ·  We like puppies.", "birds", { modelAnswer: "Use plural animal words when talking about the kind you like." }),
+        b3u1PracticeStep(unit, "b3u1-d1-fish", "Special Word", "They like fish.", "fish", { modelAnswer: "fish — not fishes in this sentence" })
+      ]),
+      customPhase("b3u1-d1-passport", "passport", "Passport", "First Four Sentences", 12, "teaching", passport.map(([subject, animal], index) =>
+        b3u1PracticeStep(unit, `b3u1-d1-passport-${index + 1}`, `Passport ${index + 1} / 4`, `${subject} like ______.`, animal, { modelAnswer: `${subject} like ${animal}.` })
+      )),
+      customPhase("b3u1-d1-substitution", "practice", "Substitution Drill", "Change the Subject", 8, "check", [
+        b3u1PracticeStep(unit, "b3u1-d1-s1", "Change I → You", "I like birds.  →  You ______ birds.", "birds", { choices: ["like", "likes"], answer: "like" }),
+        b3u1PracticeStep(unit, "b3u1-d1-s2", "Change You → We", "You like frogs.  →  We ______ frogs.", "frogs", { choices: ["like", "likes"], answer: "like" }),
+        b3u1PracticeStep(unit, "b3u1-d1-s3", "Change We → They", "We like puppies.  →  They ______ puppies.", "puppies", { choices: ["like", "likes"], answer: "like" })
+      ]),
+      customPhase("b3u1-d1-check", "check", "Mastery Check", "Subject + like", 2, "check", [
+        b3u1PracticeStep(unit, "b3u1-d1-final", "Choose the sentence", "🐟", "fish", { choices: ["They like fish.", "They likes fishes."], answer: "They like fish." })
+      ])
+    ];
+    return makeBook3Unit1Lesson(unit, 1, "I / You / We / They + like", phases);
+  }
+
+  function book3Unit1Day2(unit) {
+    const phases = [
+      customPhase("b3u1-d2-review", "review", "Quick Review", "Subject + like", 5, "review", [
+        practiceStep("b3u1-d2-review", "Complete all four", "I ___  ·  You ___  ·  We ___  ·  They ___", { choices: ["like / like / like / like", "like / likes / like / likes"], answer: "like / like / like / like" })
+      ]),
+      customPhase("b3u1-d2-formula", "grammar", "Grammar Focus", "What + do + Subject + like?", 8, "teaching", [
+        practiceStep("b3u1-d2-formula", "Question Formula", "What + do + you / they + like?", { modelAnswer: "What do you like?  ·  What do they like?" }),
+        practiceStep("b3u1-d2-do-map", "Do Map", "you → do  ·  they → do", { modelAnswer: "Use do with you and they." })
+      ]),
+      customPhase("b3u1-d2-compare", "grammar", "Statement → Question", "You / They", 7, "teaching", [
+        b3u1PracticeStep(unit, "b3u1-d2-you", "Statement → Question", "You like bunnies.  →  What do you like?", "bunnies", { modelAnswer: "I like bunnies." }),
+        b3u1PracticeStep(unit, "b3u1-d2-they", "Statement → Question", "They like turtles.  →  What do they like?", "turtles", { modelAnswer: "They like turtles." })
+      ]),
+      customPhase("b3u1-d2-random", "practice", "Random Animal", "Ask and Answer", 10, "check", [
+        b3u1PracticeStep(unit, "b3u1-d2-r-bunny", "Random: You", "What do you like?", "bunnies", { modelAnswer: "I like bunnies." }),
+        b3u1PracticeStep(unit, "b3u1-d2-r-turtle", "Random: They", "What do they like?", "turtles", { modelAnswer: "They like turtles." }),
+        b3u1PracticeStep(unit, "b3u1-d2-r-frog", "Random: You", "What do you like?", "frogs", { modelAnswer: "I like frogs." }),
+        b3u1PracticeStep(unit, "b3u1-d2-r-puppy", "Random: They", "What do they like?", "puppies", { modelAnswer: "They like puppies." })
+      ]),
+      customPhase("b3u1-d2-passport", "passport", "Passport", "What do you / they like?", 8, "teaching", [
+        b3u1PracticeStep(unit, "b3u1-d2-passport-you", "Passport Question", "What do you like?", "bunnies", { modelAnswer: "I like bunnies." }),
+        b3u1PracticeStep(unit, "b3u1-d2-passport-they", "Passport Question", "What do they like?", "turtles", { modelAnswer: "They like turtles." })
+      ]),
+      customPhase("b3u1-d2-order", "practice", "Sentence Order", "Build the Question", 5, "check", [
+        practiceStep("b3u1-d2-order-you", "Put it in order", "do / What / you / like / ?", { choices: ["What do you like?", "What you do like?"], answer: "What do you like?" }),
+        practiceStep("b3u1-d2-order-they", "Put it in order", "they / What / like / do / ?", { choices: ["What do they like?", "Do what they like?"], answer: "What do they like?" })
+      ]),
+      customPhase("b3u1-d2-check", "check", "Mastery Check", "you / they → do", 2, "check", [
+        b3u1PracticeStep(unit, "b3u1-d2-final", "Complete the question", "What ___ they like?", "turtles", { choices: ["do", "are", "is"], answer: "do" })
+      ])
+    ];
+    return makeBook3Unit1Lesson(unit, 2, "What do you / they like?", phases);
+  }
+
+  function book3Unit1Day3(unit) {
+    const phases = [
+      customPhase("b3u1-d3-review", "review", "Quick Review", "What do...?", 5, "review", [
+        b3u1PracticeStep(unit, "b3u1-d3-review", "Answer the question", "What do you like?", "hamsters", { modelAnswer: "I like hamsters." })
+      ]),
+      customPhase("b3u1-d3-do", "grammar", "Grammar Focus", "Do + Subject + like...?", 8, "teaching", [
+        b3u1PracticeStep(unit, "b3u1-d3-you", "Statement → Yes/No Question", "You like hamsters.  →  Do you like hamsters?", "hamsters", { modelAnswer: "Yes, I do." }),
+        b3u1PracticeStep(unit, "b3u1-d3-they", "Statement → Yes/No Question", "They like spiders.  →  Do they like spiders?", "spiders", { modelAnswer: "Yes, they do." })
+      ]),
+      customPhase("b3u1-d3-answer", "grammar", "Answer Map", "Yes / No", 7, "teaching", [
+        practiceStep("b3u1-d3-answer-you", "You Question", "Do you like...?", { modelAnswer: "Yes, I do.  /  No, I don't." }),
+        practiceStep("b3u1-d3-answer-they", "They Question", "Do they like...?", { modelAnswer: "Yes, they do.  /  No, they don't." })
+      ]),
+      customPhase("b3u1-d3-contrast", "grammar", "Important Comparison", "Be Verb vs Action Verb", 8, "teaching", [
+        practiceStep("b3u1-d3-be", "Be Verb Sentence", "You are happy.  →  Are you happy?", { modelAnswer: "Move the be verb to the front." }),
+        b3u1PracticeStep(unit, "b3u1-d3-action", "Action Verb Sentence", "You like hamsters.  →  Do you like hamsters?", "hamsters", { modelAnswer: "An action verb needs do to make a question." })
+      ]),
+      customPhase("b3u1-d3-extension", "grammar", "Grammar Extension", "Negative Answers", 8, "teaching", [
+        b3u1PracticeStep(unit, "b3u1-d3-no-you", "Grammar Extension", "Do you like spiders?", "spiders", { choices: ["No, I don't.", "No, I am not."], answer: "No, I don't." }),
+        b3u1PracticeStep(unit, "b3u1-d3-no-they", "Grammar Extension", "Do they like spiders?", "spiders", { choices: ["No, they don't.", "No, they aren't."], answer: "No, they don't." })
+      ]),
+      customPhase("b3u1-d3-errors", "practice", "Question Check", "Do Helps the Action Verb", 7, "check", [
+        b3u1PracticeStep(unit, "b3u1-d3-e1", "Fix the question", "Like you hamsters? ✕", "hamsters", { modelAnswer: "Do you like hamsters? ✓" }),
+        b3u1PracticeStep(unit, "b3u1-d3-e2", "Fix the question", "Are you like hamsters? ✕", "hamsters", { modelAnswer: "Do you like hamsters? ✓" })
+      ]),
+      customPhase("b3u1-d3-check", "check", "Mastery Check", "Do you / they...?", 2, "check", [
+        b3u1PracticeStep(unit, "b3u1-d3-final", "Choose the answer", "Do they like spiders?", "spiders", { choices: ["Yes, they do.", "Yes, they are.", "Yes, there is."], answer: "Yes, they do." })
+      ])
+    ];
+    return makeBook3Unit1Lesson(unit, 3, "Do you / Do they...? + Yes / No", phases);
+  }
+
+  function book3Unit1Day4(unit) {
+    const phases = [
+      customPhase("b3u1-d4-review", "review", "System Review", "Four Sentence Forms", 5, "review", [
+        practiceStep("b3u1-d4-map", "Complete System", "They like turtles.\nThey don't like turtles.\nWhat do they like?\nDo they like turtles?", { modelAnswer: "Yes, they do. / No, they don't." })
+      ]),
+      customPhase("b3u1-d4-negative", "grammar", "Negative", "don't like", 7, "teaching", [
+        b3u1PracticeStep(unit, "b3u1-d4-n-i", "Make it negative", "I like birds.", "birds", { modelAnswer: "I don't like birds." }),
+        b3u1PracticeStep(unit, "b3u1-d4-n-we", "Make it negative", "We like frogs.", "frogs", { modelAnswer: "We don't like frogs." }),
+        b3u1PracticeStep(unit, "b3u1-d4-n-they", "Make it negative", "They like spiders.", "spiders", { modelAnswer: "They don't like spiders." })
+      ]),
+      customPhase("b3u1-d4-choice", "practice", "Grammar Challenge", "Choose the Correct Word", 7, "check", [
+        b3u1PracticeStep(unit, "b3u1-d4-c1", "Choose the helper", "What ___ they like?", "turtles", { choices: ["do", "are", "is"], answer: "do" }),
+        b3u1PracticeStep(unit, "b3u1-d4-c2", "Choose the verb", "Do you ___ frogs?", "frogs", { choices: ["like", "likes", "liking"], answer: "like" })
+      ]),
+      customPhase("b3u1-d4-error", "practice", "Error Detective", "Find and Fix", 7, "check", [
+        b3u1PracticeStep(unit, "b3u1-d4-e1", "Fix the question", "What do they likes? ✕", "turtles", { modelAnswer: "What do they like? ✓" }),
+        b3u1PracticeStep(unit, "b3u1-d4-e2", "Fix the answer", "Do you like frogs?  Yes, I am. ✕", "frogs", { modelAnswer: "Yes, I do. ✓" }),
+        b3u1PracticeStep(unit, "b3u1-d4-e3", "Fix the sentence", "They doesn't like spiders. ✕", "spiders", { modelAnswer: "They don't like spiders. ✓" })
+      ]),
+      customPhase("b3u1-d4-transform", "practice", "Sentence Transformer", "Affirmative · Negative · Question", 6, "check", [
+        b3u1TransformerStep(unit, "b3u1-d4-t-they", "They", "turtles"),
+        b3u1TransformerStep(unit, "b3u1-d4-t-you", "You", "hamsters")
+      ]),
+      customPhase("b3u1-d4-wh", "practice", "Wh Transformation", "Statement → What do...?", 4, "check", [
+        b3u1PracticeStep(unit, "b3u1-d4-wh-they", "Change to a Wh question", "They like turtles.", "turtles", { modelAnswer: "What do they like?" })
+      ]),
+      customPhase("b3u1-d4-dialogue", "speaking", "Mini Dialogue", "Ask · Answer · Follow Up", 7, "check", [
+        b3u1PracticeStep(unit, "b3u1-d4-dialogue", "Complete the dialogue", "A: What do you like?\nB: I like puppies.\nA: Do you like spiders?\nB: ______", "puppies", { modelAnswer: "No, I don't." })
+      ]),
+      customPhase("b3u1-d4-check", "check", "Final Check", "Book 3 Unit 1", 2, "check", [
+        practiceStep("b3u1-d4-final", "Complete the map", "like / don't like / What do...? / Do...?", { modelAnswer: "Use do with I, you, we, and they to ask questions or make negatives." })
+      ])
+    ];
+    return makeBook3Unit1Lesson(unit, 4, "like / don't like / What do...? / Do...?", phases);
+  }
+
+  function book3Unit1Lessons(unit) {
+    return [book3Unit1Day1(unit), book3Unit1Day2(unit), book3Unit1Day3(unit), book3Unit1Day4(unit)];
+  }
+
   function sharedLessonFromUnit(unit, unitIndex, bookId, day) {
     const vocabulary = vocabularyItems(unit.vocabulary);
     const activityIdeas = vocabularyGameIdeas(bookId, unit, day);
@@ -2541,8 +2714,10 @@
         id: unit.id,
         title: `Unit ${unitIndex + 1}`,
         topic: unit.title,
-        lessons: book.id === "book-2" && unit.id === "unit-1"
-          ? book2Unit1Lessons(unit)
+        lessons: book.id === "book-3" && unit.id === "unit-1"
+          ? book3Unit1Lessons(unit)
+          : book.id === "book-2" && unit.id === "unit-1"
+            ? book2Unit1Lessons(unit)
           : book.id === "book-1" && unit.id === "unit-1"
           ? book1Unit1Lessons(unit)
           : book.id === "book-1" && unit.id === "unit-2"

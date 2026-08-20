@@ -219,5 +219,4 @@
   });
 
   window.CURRICULUM_BOOKS.push({ id: "book-2", title: "Book 2", subtitle: "Everyday English", units });
-  window.CURRICULUM_BOOKS.push({ id: "book-3", title: "Book 3", subtitle: "Growing Skills", units: [] });
 })();

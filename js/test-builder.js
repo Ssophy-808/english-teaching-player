@@ -3,7 +3,7 @@
 
   const STORAGE_KEY = "englishTeachingPlayer.testBuilder.v1";
   const TYPES = [
-    ["vocab-image", "看圖寫單字", 2], ["image-sentence", "看圖寫句子", 2],
+    ["vocab-image", "看圖寫單字", 2], ["image-sentence", "看圖問答", 2],
     ["choice", "文法選擇題", 3], ["fill", "填空題", 2], ["error", "改錯題", 2],
     ["reorder", "句子重組", 2], ["transform", "句型轉換", 1], ["dialogue", "對話填空", 0]
   ];
@@ -121,6 +121,25 @@
     if (match) return { question: /^I am/i.test(clean) ? "How old are you?" : /^He is/i.test(clean) ? "How old is he?" : "How old is she?", starter: `${match[1]}...` };
     if (/^He is my\b/i.test(clean)) return { question: "Who is he?", starter: "He is my..." };
     if (/^She is my\b/i.test(clean)) return { question: "Who is she?", starter: "She is my..." };
+    match = clean.match(/^(I am|You are|He is|She is) (?:not )?(.+?)\.$/i);
+    if (match && new RegExp(`^(?:${feelings})$`, "i").test(match[2])) {
+      const question = /^He is/i.test(clean) ? "How does he feel?" : /^She is/i.test(clean) ? "How does she feel?" : "How do you feel?";
+      return { question, starter: `${match[1]}...` };
+    }
+    if (match && new RegExp(`^(?:${descriptions})$`, "i").test(match[2])) {
+      const question = /^He is/i.test(clean) ? "What is he like?" : /^She is/i.test(clean) ? "What is she like?" : "What are you like?";
+      return { question, starter: `${match[1]}...` };
+    }
+    if (match && new RegExp(`^(?:${locationStart})\\b`, "i").test(match[2])) {
+      const question = /^He is/i.test(clean) ? "Where is he?" : /^She is/i.test(clean) ? "Where is she?" : "Where are you?";
+      return { question, starter: `${match[1]}...` };
+    }
+    match = clean.match(/^(I|You|He|She|We|They) can (.+)\.$/i);
+    if (match) {
+      const subject = match[1].toLowerCase();
+      const question = subject === "he" ? "What can he do?" : subject === "she" ? "What can she do?" : subject === "they" ? "What can they do?" : "What can you do?";
+      return { question, starter: `${match[1]} can...` };
+    }
     if (new RegExp(`^It is (?:not )?(?:${colors})\\.$`, "i").test(clean)) return { question: "What color is it?", starter: /^It is not/i.test(clean) ? "It is not..." : "It is..." };
     if (/^It is (?:not )?(?:an? )/i.test(clean)) return { question: "What is it?", starter: /^It is not/i.test(clean) ? "It is not..." : "It is..." };
     if (/^This is\b/i.test(clean)) return { question: "What is this?", starter: /^This is not/i.test(clean) ? "This is not..." : "This is..." };
@@ -135,6 +154,9 @@
     if (/^You like\b/i.test(clean)) return { question: "What do you like?", starter: "You like..." };
     if (/^We like\b/i.test(clean)) return { question: "What do you and your classmates like?", starter: "We like..." };
     if (/^They like\b/i.test(clean)) return { question: "What do they like?", starter: "They like..." };
+    if (/^I don't like\b/i.test(clean)) return { question: "What don't you like?", starter: "I don't like..." };
+    if (/^We don't like\b/i.test(clean)) return { question: "What don't you and your classmates like?", starter: "We don't like..." };
+    if (/^They don't like\b/i.test(clean)) return { question: "What don't they like?", starter: "They don't like..." };
     if (/^What do you like\?/i.test(clean)) return { question: "What question asks a person what they like?", starter: "What do you..." };
     if (/^What do they like\?/i.test(clean)) return { question: "What question asks what they like?", starter: "What do they..." };
     if (/^Do you like\b/i.test(clean)) return { question: "Write a Yes/No question about the picture.", starter: "Do you like..." };
@@ -143,17 +165,31 @@
     match = clean.match(/^(I am|You are|He is|She is|It is) (not )?/i);
     if (match) {
       const subject = match[1].split(" ")[0].toLowerCase();
-      const question = subject === "i" || subject === "you" ? "What can you say about the person?" : `What can you say about ${subject}?`;
+      const objectPronoun = subject === "he" ? "him" : subject === "she" ? "her" : subject;
+      const question = subject === "i" || subject === "you" ? "What can you say about the person?" : `What can you say about ${objectPronoun}?`;
       return { question, starter: match[2] ? `${match[1]} ${match[2].trim()}...` : `${match[1]}...` };
     }
     if (clean.endsWith("?")) return { question: "What question can you ask about the picture?", starter: `${clean.split(/\s+/).slice(0, 3).join(" ").replace(/[?]$/, "")}...` };
     return { question: "What do you see in the picture?", starter: `${clean.split(/\s+/).slice(0, 2).join(" ")}...` };
   }
 
-  function imageSentencePrompt(sentence) {
-    const cue = imageSentenceCue(sentence);
-    const instruction = sentence.trim().endsWith("?") ? "Write the complete question." : "Answer in a complete sentence.";
-    return `Question: ${cue.question}\n${instruction}\nStart with: ${cue.starter}`;
+  function vocabularyAsset(words, text) {
+    const clean = text.toLowerCase();
+    return words.find((item) => {
+      const forms = [item.word, ...(item.aliases || [])]
+        .map((form) => String(form).toLowerCase().replace(/\(s\)|\(es\)/g, "").trim())
+        .filter(Boolean);
+      return forms.some((form) => clean.includes(form));
+    });
+  }
+
+  function questionAnswerPair(sentence, nextSentence = "") {
+    const combined = sentence.trim().match(/^(.+?\?)\s+(.+)$/);
+    if (combined) return { question: combined[1], answer: combined[2], consumesNext: false };
+    if (sentence.trim().endsWith("?") && nextSentence && !nextSentence.includes("?")) {
+      return { question: sentence.trim(), answer: nextSentence.trim(), consumesNext: true };
+    }
+    return null;
   }
 
   function buildPools(units) {
@@ -164,12 +200,27 @@
       const data = curriculum(unit);
       const words = data.vocabulary || [];
       const sentences = (data.mainSentences || []).filter(Boolean);
+      const pairedAnswerIndexes = new Set();
       words.forEach((word) => {
         result["vocab-image"].push(tagged(unit, unitIndex, { type: "vocab-image", label: "看圖寫單字", prompt: "Look and write the word.", answer: word.word, asset: word, lines: 1, difficulty: 1 }));
       });
       sentences.forEach((sentence, sentenceIndex) => {
-        const word = words.find((item) => sentence.toLowerCase().includes(item.word.toLowerCase().replace("(s)", "")));
-        if (word) result["image-sentence"].push(tagged(unit, unitIndex, { type: "image-sentence", label: "看圖寫句子", prompt: imageSentencePrompt(sentence), answer: sentence, asset: word, lines: 2, difficulty: 2 }));
+        const pair = questionAnswerPair(sentence, sentences[sentenceIndex + 1]);
+        if (pair) {
+          const pairAsset = vocabularyAsset(words, `${pair.question} ${pair.answer}`);
+          if (pairAsset) {
+            result["image-sentence"].push(tagged(unit, unitIndex, { type: "image-sentence", label: "看圖回答", prompt: `Question: ${pair.question}`, answer: pair.answer, asset: pairAsset, lines: 2, difficulty: 2 }));
+            result["image-sentence"].push(tagged(unit, unitIndex, { type: "image-sentence", label: "看圖寫問句", prompt: "", givenAnswer: pair.answer, answer: pair.question, asset: pairAsset, lines: 2, difficulty: 2 }));
+          }
+          if (pair.consumesNext) pairedAnswerIndexes.add(sentenceIndex + 1);
+        } else if (!pairedAnswerIndexes.has(sentenceIndex) && !sentence.includes("?")) {
+          const word = vocabularyAsset(words, sentence);
+          if (word) {
+            const cue = imageSentenceCue(sentence);
+            result["image-sentence"].push(tagged(unit, unitIndex, { type: "image-sentence", label: "看圖回答", prompt: `Question: ${cue.question}`, answer: sentence, asset: word, lines: 2, difficulty: 2 }));
+          }
+        }
+        const word = vocabularyAsset(words, sentence);
         const grammar = grammarChoice(sentence);
         if (grammar) result.choice.push(tagged(unit, unitIndex, { type: "choice", label: "文法選擇題", ...grammar, lines: 0 }));
         const tokens = sentence.replace(/[?.!,]/g, "").split(/\s+/).filter((token) => token.length > 1);
@@ -222,8 +273,10 @@
   function lines(count) { return Array.from({ length: count || 0 }, () => `<span class="worksheet-answer-line" aria-hidden="true"></span>`).join(""); }
   function questionMarkup(question, index) {
     const choices = question.choices?.length ? `<div class="test-question-choices">${question.choices.map((choice, i) => `<span>(${String.fromCharCode(65 + i)}) ${esc(choice)}</span>`).join("")}</div>` : "";
+    const prompt = question.prompt ? `<p>${esc(question.prompt)}</p>` : "";
+    const givenAnswer = question.givenAnswer ? `<p class="test-given-answer"><strong>Answer:</strong> ${esc(question.givenAnswer)}</p>` : "";
     return `<article class="test-question" data-question-id="${esc(question.id)}">
-      <div class="test-question-number">${index + 1}</div><div class="test-question-content"><small>${esc(question.label)} · ${esc(question.unitLabel)}</small>${assetMarkup(question.asset)}<p>${esc(question.prompt)}</p>${choices}${lines(question.lines)}</div>
+      <div class="test-question-number">${index + 1}</div><div class="test-question-content"><small>${esc(question.label)} · ${esc(question.unitLabel)}</small>${assetMarkup(question.asset)}${prompt}${choices}${lines(question.lines)}${givenAnswer}</div>
       <label class="test-points no-print"><input data-points type="number" min="1" max="20" value="${question.points}"> 分</label>
       <div class="test-question-actions no-print"><button data-replace type="button">換一題</button><button data-remove type="button">刪除</button></div>
     </article>`;

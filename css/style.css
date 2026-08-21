@@ -382,6 +382,8 @@ body.test-builder-open { overflow: hidden; }
 .test-question-content { min-width: 0; }
 .test-question-content small { display: block; color: #72829a; font-size: 0.68rem; font-weight: 800; }
 .test-question-content p { margin: 4px 0; font-size: 0.91rem; font-weight: 750; line-height: 1.35; white-space: pre-line; }
+.test-question-content .test-given-answer { clear: both; margin-top: 7px; font-weight: 600; }
+.test-given-answer strong { color: var(--navy); }
 .test-question-image, .test-question-sprite, .test-question-emoji { float: right; width: 72px; height: 62px; margin: 0 0 4px 12px; object-fit: contain; border-radius: 10px; background-color: #f3f8fe; }
 .test-question-sprite { display: block; background-repeat: no-repeat; }
 .test-question-emoji { display: grid; place-items: center; font-size: 2.8rem; }

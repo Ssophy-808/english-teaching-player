@@ -83,9 +83,10 @@
     } else if (question.asset?.visual) {
       children.push(paragraph([text(question.asset.visual, { size: 42 })], { alignment: docx.AlignmentType.CENTER, after: 35, keepNext: true }));
     }
-    children.push(paragraph(multilineText(question.prompt, { size: 21, bold: true }), { after: 40, keepNext: true }));
+    if (question.prompt) children.push(paragraph(multilineText(question.prompt, { size: 21, bold: true }), { after: 40, keepNext: true }));
     if (question.choices?.length) children.push(paragraph([text(question.choices.map((choice, index) => `(${String.fromCharCode(65 + index)}) ${choice}`).join("     "), { size: 19 })], { after: 45 }));
     children.push(...handwriting(question.lines || 0));
+    if (question.givenAnswer) children.push(paragraph([text("Answer: ", { size: 19, bold: true }), text(question.givenAnswer, { size: 19 })], { before: 25, after: 30 }));
     return children;
   }
 

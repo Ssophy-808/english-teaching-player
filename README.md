@@ -108,7 +108,9 @@ The Book 3 Unit 1 Day 3/4 pilot is designed for an 85-minute spiral-review class
 
 Open Book 3 → Unit 1 → Day 3 or Day 4 and choose **📝 講義**. Student mode produces two A4 pages (Part A and Part B); teacher mode produces an answer page. Questions can be removed, shuffled, reset, printed, or saved as PDF from the browser print dialog.
 
-The same 85-minute spiral-review and worksheet system now covers every course with defined Day 3/4 content: Book 1 Units 1–9, Book 2 Unit 1, and Book 3 Unit 1. Existing lesson activities remain the content source; the flow engine groups them into Part A and Part B, adds two Write Time periods, and builds shared continuous-practice and four-line handwriting questions. Later Book 2 and Book 3 units can enter the same system after their Day 3/4 curriculum is supplied.
+The same 85-minute spiral-review and worksheet system now covers every course with defined Day 3/4 content: Book 1 Units 1–9, Book 2 Unit 1, and Book 3 Units 1–9. Existing lesson activities remain the content source; the flow engine groups them into Part A and Part B, adds two Write Time periods, and builds shared continuous-practice and four-line handwriting questions. Later Book 2 units can enter the same system after their Day 3/4 curriculum is supplied.
+
+Book 3 is complete through Unit 9. Units 2–9 include curriculum-accurate vocabulary, Chinese meanings, topic sentences, Passport review content, and phonics. Each Unit generates four lessons: Day 1/2 for the standard 45-minute content flow and Day 3/4 for the 85-minute spiral-review and printable worksheet flow.
 
 Each Book 3 Unit 1 day includes a continuous Practice Loop. It shows one question at a time and supports immediate choice feedback, answer reveal for speaking questions, next question, random question, and restart controls.
 

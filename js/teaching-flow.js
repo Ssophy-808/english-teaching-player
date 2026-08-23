@@ -2870,7 +2870,7 @@
   }
 
   function upgradeToSpiralReview(lesson, book, unit, unitIndex, day) {
-    const supported = (book.id === "book-1" || (book.id === "book-2" && unit.id === "unit-1")) && day >= 3;
+    const supported = (book.id === "book-1" || (book.id === "book-2" && unit.id === "unit-1") || (book.id === "book-3" && unit.id !== "unit-1")) && day >= 3;
     if (!supported || lesson.worksheet) return lesson;
     const phases = lesson.phases.map((phase) => ({ ...phase, steps: [...phase.steps] }));
     const splitIndex = Math.max(1, Math.ceil(phases.length / 2));
@@ -2940,7 +2940,7 @@
                         ? book1Unit8Lessons(unit)
                         : book.id === "book-1" && unit.id === "unit-9"
                           ? book1Unit9Lessons(unit)
-                          : [1, 2].map((day) => sharedLessonFromUnit(unit, unitIndex, book.id, day));
+                          : (book.id === "book-3" ? [1, 2, 3, 4] : [1, 2]).map((day) => sharedLessonFromUnit(unit, unitIndex, book.id, day));
     return lessons.map((lesson, index) => upgradeToSpiralReview(lesson, book, unit, unitIndex, index + 1));
   }
 

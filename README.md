@@ -112,6 +112,8 @@ The same 85-minute spiral-review and worksheet system now covers every course wi
 
 Book 3 is complete through Unit 9. Units 2–9 include curriculum-accurate vocabulary, Chinese meanings, topic sentences, Passport review content, and phonics. Each Unit generates four lessons: Day 1/2 for the standard 45-minute content flow and Day 3/4 for the 85-minute spiral-review and printable worksheet flow.
 
+Book 3 Units 2–9 use grammar-aware question generation rather than vocabulary-only substitution. Day 3/4 Player loops, worksheets, and the Test Bank recognize each Unit's target forms, including `like / likes`, `want / wants`, `some / any`, `have / has`, `does + have`, `on + weekday`, and `go + V-ing`, and produce dedicated choice, correction, reordering, and fill-in questions.
+
 Each Book 3 Unit 1 day includes a continuous Practice Loop. It shows one question at a time and supports immediate choice feedback, answer reveal for speaking questions, next question, random question, and restart controls.
 
 Generated lessons expose both `phases` and flattened `steps`. Every page has `phase`, `phaseId`, `activityType`, `title`, `content`, `phaseDuration`, curriculum-specific data, suggested games, and `skippable` where appropriate. Add curriculum data to a book file; do not copy the player or hard-code a new page sequence.

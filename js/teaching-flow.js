@@ -2541,6 +2541,7 @@
     const steps = phases.flatMap((phase) => phase.steps);
     const totalDuration = phases.reduce((total, phase) => total + (Number(phase.duration) || 0), 0);
     const reviewDay = window.BOOK3_REVIEW_BANK?.[unit.id]?.[`day${day}`] || null;
+    const firstPage = ((day - 1) * 4) + 1;
     return {
       id: `day-${day}`,
       title: `${unit.title} · Day ${day}｜${dayGoal}`,
@@ -2550,6 +2551,13 @@
       phases,
       duration: totalDuration,
       durationMinutes: totalDuration,
+      dailyHandout: {
+        day,
+        pageStart: firstPage,
+        pageEnd: firstPage + 3,
+        studentUrl: "assets/handouts/book3/unit1/book3-unit1-daily-handouts.pdf",
+        teacherUrl: "assets/handouts/book3/unit1/book3-unit1-teacher-key.pdf"
+      },
       worksheet: reviewDay ? { unitTitle: unit.title, day, ...reviewDay } : null,
       steps
     };
@@ -2795,7 +2803,74 @@
     };
   }
 
+  function book3GrammarToken(sentence) {
+    const groups = [
+      { pattern: /\b(doesn't|don't)\b/i, choices: ["doesn't", "don't", "isn't"] },
+      { pattern: /\b(wants|want)\b/i, choices: ["want", "wants", "wanting"] },
+      { pattern: /\b(likes|like)\b/i, choices: ["like", "likes", "liking"] },
+      { pattern: /\b(has|have)\b/i, choices: ["have", "has", "having"] },
+      { pattern: /\b(does|do)\b/i, choices: ["do", "does", "is"] },
+      { pattern: /\b(some|any)\b/i, choices: ["some", "any", "a"] },
+      { pattern: /\b(on)\b/i, choices: ["on", "in", "at"] }
+    ];
+    const group = groups.find((item) => item.pattern.test(sentence));
+    if (!group) return null;
+    const match = sentence.match(group.pattern);
+    const answer = match[0];
+    const choices = group.choices.map((choice) => match.index === 0 ? choice.charAt(0).toUpperCase() + choice.slice(1) : choice);
+    return { answer, choices, index: match.index, length: answer.length };
+  }
+
+  function book3FocusedQuestions(unit, bookId, day, part) {
+    const all = (unit.mainSentences || []).filter(Boolean);
+    const questions = all.filter((sentence) => sentence.includes("?"));
+    const negatives = all.filter((sentence) => /\b(?:not|don't|doesn't|isn't|aren't)\b/i.test(sentence));
+    const statements = all.filter((sentence) => !sentence.includes("?") && !/^(?:Yes|No),/i.test(sentence));
+    const affirmatives = statements.filter((sentence) => !negatives.includes(sentence));
+    let source = day === 4 ? (part === "A" ? questions : all) : (part === "A" ? affirmatives : negatives);
+    if (source.length < 2) source = part === "A" ? statements : all;
+    if (!source.length) return [];
+    const vocabulary = vocabularyItems(unit.vocabulary || []);
+    return Array.from({ length: 8 }, (_, index) => {
+      const sentence = source[index % source.length];
+      const token = book3GrammarToken(sentence);
+      const words = sentence.replace(/([?.!,])/g, " $1").split(/\s+/).filter(Boolean);
+      const visualItem = vocabulary.find((item) => sentence.toLowerCase().includes(String(item.word).replace(/\(s\)|\(es\)/g, "").toLowerCase()));
+      const mode = index % 4;
+      const base = {
+        id: `${bookId}-${unit.id}-d${day}${part.toLowerCase()}-focus-${index}`,
+        skill: unit.grammarFocus || "Book 3 grammar",
+        answer: sentence,
+        choices: [],
+        visual: visualItem?.visual || "",
+        difficulty: mode > 0 ? 2 : 1
+      };
+      if (mode === 0 && token) {
+        const prompt = `${sentence.slice(0, token.index)}___${sentence.slice(token.index + token.length)}`;
+        return { ...base, type: "choice", playerPrompt: prompt, worksheetPrompt: `Choose: ${prompt}`, answer: token.answer, choices: token.choices };
+      }
+      if (mode === 1 && token) {
+        const wrong = token.choices.find((choice) => choice.toLowerCase() !== token.answer.toLowerCase()) || token.choices[0];
+        const wrongSentence = `${sentence.slice(0, token.index)}${wrong}${sentence.slice(token.index + token.length)}`;
+        return { ...base, type: "error", playerPrompt: `Fix it: ${wrongSentence}`, worksheetPrompt: `Correct the sentence: ${wrongSentence}` };
+      }
+      if (mode === 2) {
+        const scrambled = words.slice().reverse().join(" / ");
+        return { ...base, type: "reorder", playerPrompt: scrambled, worksheetPrompt: `Put in order: ${scrambled}` };
+      }
+      if (token) {
+        const prompt = `${sentence.slice(0, token.index)}________${sentence.slice(token.index + token.length)}`;
+        return { ...base, type: "fill", playerPrompt: prompt, worksheetPrompt: `Complete: ${prompt}`, answer: token.answer };
+      }
+      return { ...base, type: "rewrite", playerPrompt: sentence, worksheetPrompt: `Write the complete sentence: ${sentence}` };
+    });
+  }
+
   function spiralWorksheetQuestions(phases, unit, bookId, day, part) {
+    if (bookId === "book-3" && unit.id !== "unit-1") {
+      const focused = book3FocusedQuestions(unit, bookId, day, part);
+      if (focused.length) return focused;
+    }
     const questions = phases.flatMap((phase, phaseIndex) => phase.steps.map((step, stepIndex) =>
       spiralWorksheetQuestion(step, `${bookId}-${unit.id}-d${day}${part.toLowerCase()}-${phaseIndex}-${stepIndex}`, phase.title)
     )).filter(Boolean);
@@ -2910,8 +2985,8 @@
         day,
         unitTitle: unit.title,
         blocks: {
-          A: { title: partAPhases[0].groupTitle, subtitle: partAPhases.map((phase) => phase.title).slice(0, 3).join(" → "), questions: partAQuestions },
-          B: { title: (partBPhases[0] || partAPhases[0]).groupTitle, subtitle: (partBPhases.length ? partBPhases : partAPhases).map((phase) => phase.title).slice(0, 3).join(" → "), questions: partBQuestions }
+          A: { title: partAPhases[0].groupTitle, subtitle: unit.grammarFocus || partAPhases.map((phase) => phase.title).slice(0, 3).join(" → "), questions: partAQuestions },
+          B: { title: (partBPhases[0] || partAPhases[0]).groupTitle, subtitle: day === 4 ? `Mixed review · ${unit.grammarFocus || unit.title}` : `Practice · ${unit.grammarFocus || unit.title}`, questions: partBQuestions }
         }
       }
     };

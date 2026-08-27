@@ -25,6 +25,7 @@
     elements.toolbox = document.getElementById("toolbox-button");
     elements.phaseTrail = document.getElementById("phase-trail");
     elements.practiceJump = document.getElementById("practice-jump-button");
+    elements.dailyHandout = document.getElementById("daily-handout-button");
     elements.worksheet = document.getElementById("worksheet-button");
     elements.flowButton = document.getElementById("flow-button");
     elements.flowModal = document.getElementById("flow-modal");
@@ -149,7 +150,9 @@
     visitedIndices.clear();
     for (let index = 0; index <= currentIndex; index += 1) visitedIndices.add(index);
     elements.practiceJump.hidden = !lessonContext.steps.some((step) => step.activity === "practice-loop");
+    elements.dailyHandout.hidden = !lessonContext.dailyHandout;
     elements.worksheet.hidden = !lessonContext.worksheet;
+    window.DailyHandout?.setLesson(lessonContext);
     window.WorksheetBuilder?.setLesson(lessonContext);
     window.ClassroomTools?.setLesson(lessonContext);
     window.scrollTo({ top: 0, behavior: "instant" });
@@ -159,6 +162,7 @@
   function close() {
     if (!currentLesson) return;
     saveProgress();
+    window.DailyHandout?.close();
     window.WorksheetBuilder?.close();
     currentLesson = null;
     elements.playerView.hidden = true;
@@ -189,7 +193,7 @@
   }
 
   function handleKeydown(event) {
-    if (!currentLesson || !document.getElementById("toolbox-modal")?.hidden || !document.getElementById("worksheet-modal")?.hidden || !elements.flowModal?.hidden || event.altKey || event.ctrlKey || event.metaKey) return;
+    if (!currentLesson || !document.getElementById("toolbox-modal")?.hidden || !document.getElementById("worksheet-modal")?.hidden || !document.getElementById("daily-handout-modal")?.hidden || !elements.flowModal?.hidden || event.altKey || event.ctrlKey || event.metaKey) return;
     if (event.key === "ArrowRight") {
       event.preventDefault();
       goTo(currentIndex + 1);
@@ -208,6 +212,7 @@
     elements.home.addEventListener("click", close);
     elements.fullscreen.addEventListener("click", toggleFullscreen);
     elements.toolbox.addEventListener("click", () => window.ClassroomTools?.open());
+    elements.dailyHandout.addEventListener("click", () => window.DailyHandout?.open());
     elements.worksheet.addEventListener("click", () => window.WorksheetBuilder?.open());
     elements.practiceJump.addEventListener("click", () => {
       const index = currentLesson?.steps.findIndex((step) => step.activity === "practice-loop") ?? -1;

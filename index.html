@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#2b59c3">
     <meta name="description" content="A simple, projection-friendly lesson player for English teachers.">
     <title>English Teaching Player</title>
-    <link rel="stylesheet" href="css/style.css?v=15">
+    <link rel="stylesheet" href="css/style.css?v=16">
   </head>
   <body>
     <noscript>請啟用 JavaScript 才能使用教材播放器。</noscript>
@@ -48,7 +48,8 @@
           <p id="phase-trail" class="phase-trail" aria-live="polite"></p>
         </div>
         <div class="player-tools">
-          <button id="worksheet-button" class="flow-button worksheet-button" type="button" hidden>📝 講義</button>
+          <button id="daily-handout-button" class="flow-button daily-handout-button" type="button" hidden>📘 每日講義</button>
+          <button id="worksheet-button" class="flow-button worksheet-button" type="button" title="可洗牌與調整題目的課堂練習" hidden>📝 可調整練習</button>
           <button id="practice-jump-button" class="flow-button practice-jump-button" type="button" hidden>▶ 連續訓練</button>
           <button id="flow-button" class="flow-button" type="button" aria-haspopup="dialog">課程流程</button>
           <button id="toolbox-button" class="icon-button toolbox-button" type="button" aria-label="Open classroom toolbox" title="Classroom toolbox">★</button>
@@ -88,6 +89,33 @@
         </header>
         <div id="flow-groups" class="flow-groups"></div>
         <button id="flow-return" class="button button-primary flow-return" type="button">返回目前進度</button>
+      </div>
+    </section>
+
+    <section id="daily-handout-modal" class="daily-handout-modal" hidden aria-label="每日固定講義" aria-modal="true" role="dialog">
+      <div class="daily-handout-shell">
+        <header class="daily-handout-header">
+          <div>
+            <p class="eyebrow">DAILY HANDOUT · FIXED 4 PAGES</p>
+            <h2 id="daily-handout-title">每日講義</h2>
+            <p id="daily-handout-meta"></p>
+          </div>
+          <button id="daily-handout-close" class="icon-button" type="button" aria-label="關閉每日講義">×</button>
+        </header>
+        <div class="daily-handout-body">
+          <aside class="daily-handout-actions">
+            <span class="daily-handout-label">與題庫分開</span>
+            <h3>本日固定四面</h3>
+            <p>內容已依照當天 Player 流程排好，不會隨機換題。完成遊戲後可直接書寫。</p>
+            <a id="daily-handout-student-open" class="button button-primary" target="_blank" rel="noopener">開啟本日學生講義</a>
+            <a id="daily-handout-student-download" class="button button-secondary" download>下載 Day 1–4 學生版</a>
+            <a id="daily-handout-key-open" class="button button-secondary" target="_blank" rel="noopener">開啟本日教師答案</a>
+            <small>列印時請依照上方標示選擇本日四個頁碼。</small>
+          </aside>
+          <main class="daily-handout-preview">
+            <iframe id="daily-handout-frame" title="每日講義 PDF 預覽"></iframe>
+          </main>
+        </div>
       </div>
     </section>
 
@@ -167,14 +195,15 @@
     <script src="data/book2.js?v=3" defer></script>
     <script src="data/book3.js?v=2" defer></script>
     <script src="data/book3-review.js?v=1" defer></script>
-    <script src="js/teaching-flow.js?v=32" defer></script>
+    <script src="js/teaching-flow.js?v=34" defer></script>
     <script src="js/activities.js?v=17" defer></script>
     <script src="js/worksheet.js?v=3" defer></script>
     <script src="js/classroom-tools.js?v=1" defer></script>
     <script src="js/vendor/docx.iife.js?v=1" defer></script>
     <script src="js/word-export.js?v=3" defer></script>
-    <script src="js/test-builder.js?v=12" defer></script>
-    <script src="js/player.js?v=5" defer></script>
-    <script src="js/app.js?v=2" defer></script>
+    <script src="js/test-builder.js?v=13" defer></script>
+    <script src="js/daily-handout.js?v=1" defer></script>
+    <script src="js/player.js?v=6" defer></script>
+    <script src="js/app.js?v=3" defer></script>
   </body>
 </html>

@@ -79,7 +79,7 @@
       return cardMarkup({
         number: index + 1,
         title: lesson.title,
-        subtitle: `${lesson.day || "Lesson"} · ${lesson.steps.length} steps · ${minutes} min`,
+        subtitle: `${lesson.day || "Lesson"} · ${lesson.steps.length} steps · ${minutes} min${lesson.dailyHandout ? " · 每日講義 4 面" : ""}`,
         action: `lesson:${lesson.id}`
       });
     }).join("");

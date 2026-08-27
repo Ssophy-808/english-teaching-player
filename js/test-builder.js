@@ -70,7 +70,12 @@
     const groups = [
       { pattern: /\b(am|are|is)\b/i, choices: ["am", "are", "is"], difficulty: 1 },
       { pattern: /\b(do|does)\b/i, choices: ["do", "does", "are"], difficulty: 2 },
-      { pattern: /\b(like|likes)\b/i, choices: ["like", "likes", "liking"], difficulty: 2 }
+      { pattern: /\b(don't|doesn't)\b/i, choices: ["don't", "doesn't", "isn't"], difficulty: 2 },
+      { pattern: /\b(like|likes)\b/i, choices: ["like", "likes", "liking"], difficulty: 2 },
+      { pattern: /\b(want|wants)\b/i, choices: ["want", "wants", "wanting"], difficulty: 2 },
+      { pattern: /\b(have|has)\b/i, choices: ["have", "has", "having"], difficulty: 2 },
+      { pattern: /\b(some|any)\b/i, choices: ["some", "any", "a"], difficulty: 2 },
+      { pattern: /\b(on)\b/i, choices: ["on", "in", "at"], difficulty: 2 }
     ];
     const group = groups.find((item) => item.pattern.test(clean));
     if (!group) return null;
@@ -93,6 +98,13 @@
     if (match) return { prompt: `Change to a question: ${clean}`, answer: `Is there ${match[1]}?` };
     match = clean.match(/^(I|You|We|They) like (.+)\.$/i);
     if (match) return { prompt: `Change to a Yes/No question: ${clean}`, answer: `Do ${match[1].toLowerCase()} like ${match[2]}?` };
+    match = clean.match(/^(I|You|We|They) (want|have) (.+)\.$/i);
+    if (match) return { prompt: `Change to a Yes/No question: ${clean}`, answer: `Do ${match[1].toLowerCase()} ${match[2].toLowerCase()} ${match[3]}?` };
+    match = clean.match(/^(He|She|Ludi|Lumi) (likes|wants|has) (.+)\.$/i);
+    if (match) {
+      const baseVerb = match[2].toLowerCase() === "has" ? "have" : match[2].toLowerCase().replace(/s$/, "");
+      return { prompt: `Change to a Yes/No question: ${clean}`, answer: `Does ${match[1].toLowerCase()} ${baseVerb} ${match[3]}?` };
+    }
     return null;
   }
 
@@ -100,7 +112,7 @@
     if (/^No, there (?:is|are) not\.$/i.test(sentence.trim())) return "No, there not.";
     if (/^No, there (?:isn't|aren't)\.$/i.test(sentence.trim())) return "No, there not.";
     if (/^Yes, there (?:is|are)\.$/i.test(sentence.trim())) return "Yes, there.";
-    const rules = [[" am ", " are "], [" are ", " is "], [" is ", " are "], [" like ", " likes "], ["There is ", "There are "]];
+    const rules = [[" am ", " are "], [" are ", " is "], [" is ", " are "], [" like ", " likes "], [" likes ", " like "], [" want ", " wants "], [" wants ", " want "], [" have ", " has "], [" has ", " have "], [" some ", " any "], [" any ", " some "], [" on ", " in "], ["There is ", "There are "]];
     const rule = rules.find(([from]) => sentence.includes(from));
     return rule ? sentence.replace(rule[0], rule[1]) : "";
   }

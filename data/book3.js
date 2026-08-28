@@ -64,7 +64,13 @@
         ["Do they like spiders?", "他們喜歡蜘蛛嗎？"],
         ["Yes, they do.", "是的，他們喜歡。"]
       ],
-      phonics: { groups: [] },
+      phonics: {
+        groups: [
+          { family: "-ai-", words: ["rain", "train"] },
+          { family: "-ay", words: ["day", "play"] },
+          { family: "-eigh-", words: ["eight", "weight"] }
+        ]
+      },
       materials: { wordwallDay1Url: "", wordwallDay2Url: "", bookUrl: "" }
     },
     makeUnit("unit-2", "Does Lumi like pizza?", "Fast Food", [

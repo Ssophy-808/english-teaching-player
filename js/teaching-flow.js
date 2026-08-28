@@ -874,6 +874,84 @@
     });
   }
 
+  function liveSectionPhase(prefix, id, groupTitle, title, duration, activityType, instruction, extra = {}) {
+    return customPhase(`${prefix}-${id}`, id, groupTitle, title, duration, activityType, [
+      step(`${prefix}-${id}-step`, extra.type || "lesson", title, null, instruction, {
+        activity: extra.activity || "lesson-section",
+        ...extra
+      })
+    ]);
+  }
+
+  function liveTalkPhase(unit, prefix, prompt, modelAnswer) {
+    return customPhase(`${prefix}-lets-talk`, "lets-talk", "Let’s Talk", "Let’s Talk", 6, "conversation", [
+      step(`${prefix}-lets-talk-step`, "speaking", "Let’s Talk", null, prompt, {
+        activity: "topic-conversation",
+        topicRole: "teacher-question",
+        topic: unit.topic,
+        modelAnswer,
+        mainSentences: unit.mainSentences
+      })
+    ]);
+  }
+
+  function liveVocabularyReviewPhase(unit, bookId, prefix, vocabulary) {
+    return customPhase(`${prefix}-vocabulary-review`, "vocabulary-review", "Vocabulary Review", "Vocabulary Games & Check", 10, "game", [
+      step(`${prefix}-vocabulary-games`, "game", "Vocabulary Games", null, "Choose a quick review game.", {
+        activity: "flow-games",
+        gameScope: "vocabulary",
+        vocabulary,
+        suggestedGames: VOCABULARY_GAMES,
+        skippable: true
+      }),
+      wordwallStep(unit, bookId, "day-1", 0)
+    ], { vocabulary, suggestedGames: VOCABULARY_GAMES, skippable: true });
+  }
+
+  function liveChantPhase(unit, prefix, chantLine) {
+    return liveSectionPhase(prefix, "lets-chant", "Let’s Chant / Sing", "Let’s Chant / Sing", 6, "speaking",
+      chantLine || `Chant the target words and pattern for ${unit.topic}.`, {
+        activity: "lesson-section",
+        mainSentences: unit.mainSentences
+      });
+  }
+
+  function liveGrammarBookPhase(unit, prefix) {
+    return liveSectionPhase(prefix, "grammar-book", "Grammar Book", "Grammar Book", 12, "book",
+      "Complete the assigned Grammar Book pages.", {
+        activity: "book-resource",
+        embedUrl: unit.materials?.grammarBookUrl || ""
+      });
+  }
+
+  function liveReadPhase(unit, prefix) {
+    return liveSectionPhase(prefix, "lets-read", "Let’s Read", "Let’s Read", 18, "reading",
+      "Open the official Live reading page. Read once for meaning, then read again and answer the comprehension questions.", {
+        activity: "book-resource",
+        embedUrl: unit.materials?.readUrl || unit.materials?.bookUrl || ""
+      });
+  }
+
+  function livePhonicsPhase(unit, prefix) {
+    const hasPhonics = unit.phonics?.review || unit.phonics?.groups?.length;
+    return customPhase(`${prefix}-lets-say`, "lets-say", "Let’s Say", "Let’s Say · Phonics", 15, "phonics", [
+      step(`${prefix}-lets-say-step`, "phonics", "Let’s Say · Phonics", null,
+        hasPhonics ? phonicsText(unit.phonics) : "Open the official Live Let’s Say page for this Unit.", {
+          activity: hasPhonics ? "phonics-drill" : "book-resource",
+          phonics: hasPhonics ? unit.phonics : undefined,
+          embedUrl: hasPhonics ? "" : (unit.materials?.bookUrl || "")
+        })
+    ]);
+  }
+
+  function liveShowBookPhase(unit, prefix) {
+    return liveSectionPhase(prefix, "show-book", "Show Book", "Show Book", 8, "book",
+      "Open the original Live e-book and finish today’s assigned section.", {
+        activity: "book-resource",
+        embedUrl: unit.materials?.bookUrl || ""
+      });
+  }
+
   function u1Image(unit, word) {
     return vocabularyItems(unit.vocabulary).find((item) => item.word === word)?.image || "";
   }
@@ -898,61 +976,61 @@
   function unit1Day1(unit) {
     const vocabulary = vocabularyItems(unit.vocabulary);
     const phases = [
-      customPhase("u1-d1-vocabulary", "vocabulary", "Vocabulary", "Vocabulary", 6, "teaching", vocabularySteps(unit, 0, "u1-d1-word", "Vocabulary"), { vocabulary }),
-      customPhase("u1-d1-pronouns", "grammar", "I / You", "I = 我 / You = 你", 4, "teaching", [
+      customPhase("u1-d1-warm-up", "warm-up", "Warm Up", "Throw and Catch", 6, "speaking", [
+        step("u1-d1-warm-up-step", "warmup", "Throw and Catch", null, "", {
+          activity: "visual-activity",
+          activityImage: "assets/images/throw-and-catch-activity.png",
+          imageAlt: "Students introduce themselves while passing a soft ball"
+        })
+      ]),
+      liveTalkPhase(unit, "u1-d1", "I am [name]. How are you?", "I am [name]. I am fine, thank you."),
+      customPhase("u1-d1-vocabulary", "lets-learn", "Let’s Learn", "Let’s Learn · Vocabulary", 10, "teaching", vocabularySteps(unit, 0, "u1-d1-word", "Let’s Learn"), { vocabulary }),
+      liveVocabularyReviewPhase(unit, "book-1", "u1-d1", vocabulary),
+      liveChantPhase(unit, "u1-d1", "boy, girl, student, teacher, man, woman — listen, point, chant, and repeat."),
+      customPhase("u1-d1-pronouns", "lets-practice", "Let’s Practice", "I = 我 / You = 你", 5, "teaching", [
         practiceStep("u1-d1-i", "I = 我", "I", { modelAnswer: "I = 我（說話的人自己）" }),
         practiceStep("u1-d1-you", "You = 你", "You", { modelAnswer: "You = 你（正在對話的對方）" })
       ]),
-      customPhase("u1-d1-be", "grammar", "I am / You are", "I am / You are", 5, "teaching", [
+      customPhase("u1-d1-be", "lets-practice", "Let’s Practice", "I am / You are", 5, "teaching", [
         practiceStep("u1-d1-i-am", "I am", "I ___", { modelAnswer: "I am" }),
         practiceStep("u1-d1-you-are", "You are", "You ___", { modelAnswer: "You are" })
       ]),
-      customPhase("u1-d1-guided", "practice", "Guided Practice", "Guided Practice", 8, "check", [
+      customPhase("u1-d1-passport", "lets-practice", "Let’s Practice", "Passport · Six Sentences", 10, "teaching", u1PassportSteps(unit)),
+      customPhase("u1-d1-guided", "grammar-activity", "Grammar Activity", "Guided Practice", 10, "check", [
         practiceStep("u1-d1-g1", "Choose the subject", "___ am a boy.", { choices: ["I", "You"], answer: "I", image: u1Image(unit, "boy") }),
         practiceStep("u1-d1-g2", "Choose the subject", "___ are a girl.", { choices: ["I", "You"], answer: "You", image: u1Image(unit, "girl") }),
         practiceStep("u1-d1-g3", "Choose the be verb", "I ___ a student.", { choices: ["am", "are"], answer: "am", image: u1Image(unit, "student") }),
         practiceStep("u1-d1-g4", "Choose the be verb", "You ___ a teacher.", { choices: ["am", "are"], answer: "are", image: u1Image(unit, "teacher") })
       ]),
-      customPhase("u1-d1-passport", "passport", "Passport", "Passport · Six Sentences", 10, "teaching", u1PassportSteps(unit)),
-      customPhase("u1-d1-phonics", "phonics", "Phonics", "Phonics", 7, "teaching", [step("u1-d1-phonics", "phonics", "Phonics", null, phonicsText(unit.phonics), { activity: "phonics-drill", phonics: unit.phonics })]),
-      customPhase("u1-d1-show-book", "book-review", "Book", "Show Book", 5, "book", [step("u1-d1-show-book", "showbook", "Show Book", null, "", { activity: "book-resource", embedUrl: unit.materials?.bookUrl || "" })])
+      liveGrammarBookPhase(unit, "u1-d1")
     ];
-    return makeUnit1Lesson(unit, 1, "第一次理解", phases);
+    return makeUnit1Lesson(unit, 1, "Let’s Talk → Learn → Chant → Practice → Grammar Book", phases);
   }
 
   function unit1Day2(unit) {
-    const vocabulary = vocabularyItems(unit.vocabulary);
     const phases = [
-      customPhase("u1-d2-vocab-review", "vocabulary", "Vocabulary", "Quick Vocabulary Review", 5, "game", vocabularySteps(unit, 0, "u1-d2-review", "Quick Vocabulary Review"), { vocabulary }),
-      customPhase("u1-d2-pattern", "grammar", "I / You + am / are", "I / You / am / are", 5, "teaching", [
-        practiceStep("u1-d2-pattern-i", "I → am", "I ___", { modelAnswer: "I am" }),
-        practiceStep("u1-d2-pattern-you", "You → are", "You ___", { modelAnswer: "You are" })
+      liveSectionPhase("u1-d2", "quick-review", "Quick Review", "Quick Review", 5, "review", "Review the six Unit 1 words and I am / You are."),
+      customPhase("u1-d2-lets-speak", "lets-speak", "Let’s Speak", "Let’s Speak · Dialogue", 18, "conversation", [
+        practiceStep("u1-d2-speak-1", "Dialogue 1", "A: I am Amy. How are you?", { modelAnswer: "B: I am Ben. I am fine, thank you." }),
+        practiceStep("u1-d2-speak-2", "Change the names", "A: I am ______. How are you?", { modelAnswer: "B: I am ______. I am fine, thank you." }),
+        practiceStep("u1-d2-speak-3", "Pair Practice", "Introduce yourself to a partner.", { modelAnswer: "I am [name]. How are you?" })
       ]),
-      customPhase("u1-d2-subject", "practice", "Practice", "Choose the Subject", 7, "check", [
-        practiceStep("u1-d2-s1", "Choose I or You", "___ am a man.", { choices: ["I", "You"], answer: "I", image: u1Image(unit, "man") }),
-        practiceStep("u1-d2-s2", "Choose I or You", "___ are a woman.", { choices: ["I", "You"], answer: "You", image: u1Image(unit, "woman") })
+      liveReadPhase(unit, "u1-d2"),
+      customPhase("u1-d2-reading-check", "reading-check", "Reading Check", "Read & Respond", 10, "check", [
+        practiceStep("u1-d2-read-check-1", "Who is speaking?", "The speaker says: I am Ludi.", { choices: ["I", "You"], answer: "I" }),
+        practiceStep("u1-d2-read-check-2", "Complete the reply", "You ___ Lumi.", { choices: ["am", "are"], answer: "are" })
       ]),
-      customPhase("u1-d2-be", "practice", "Practice", "Choose the Be Verb", 7, "check", [
-        practiceStep("u1-d2-b1", "Choose am or are", "I ___ a student.", { choices: ["am", "are"], answer: "am", image: u1Image(unit, "student") }),
-        practiceStep("u1-d2-b2", "Choose am or are", "You ___ a teacher.", { choices: ["am", "are"], answer: "are", image: u1Image(unit, "teacher") })
+      customPhase("u1-d2-speaking-activity", "speaking-activity", "Speaking Activity", "How Are You?", 6, "speaking", [
+        step("u1-d2-how-are-you", "game", "How Are You?", null, "", {
+          activity: "visual-activity",
+          activityImage: "assets/images/how-are-you-activity.png",
+          imageAlt: "Students walk around the classroom and practise introducing themselves"
+        })
       ]),
-      customPhase("u1-d2-match", "practice", "Practice", "Sentence Match", 7, "check", [
-        practiceStep("u1-d2-m1", "Match the sentence", "I + am + boy", { choices: ["I am a boy.", "You are a boy."], answer: "I am a boy.", image: u1Image(unit, "boy") }),
-        practiceStep("u1-d2-m2", "Match the sentence", "You + are + girl", { choices: ["I am a girl.", "You are a girl."], answer: "You are a girl.", image: u1Image(unit, "girl") })
-      ]),
-      customPhase("u1-d2-person", "practice", "Practice", "I or You?", 5, "check", [
-        practiceStep("u1-d2-p1", "Who is speaking?", "The speaker talks about oneself.", { choices: ["I", "You"], answer: "I" }),
-        practiceStep("u1-d2-p2", "Who is the listener?", "The speaker talks to another person.", { choices: ["I", "You"], answer: "You" })
-      ]),
-      customPhase("u1-d2-order", "practice", "Practice", "Sentence Order", 7, "check", [
-        practiceStep("u1-d2-o1", "Choose the correct order", "am / I / a boy", { choices: ["I am a boy.", "I a boy am."], answer: "I am a boy." }),
-        practiceStep("u1-d2-o2", "Choose the correct order", "a teacher / are / You", { choices: ["You are a teacher.", "You teacher are a."], answer: "You are a teacher." })
-      ]),
-      customPhase("u1-d2-check", "check", "Mastery Check", "I → am / You → are", 2, "check", [
-        practiceStep("u1-d2-check", "Complete both patterns", "I ___   /   You ___", { choices: ["am / are", "are / am"], answer: "am / are" })
-      ])
+      livePhonicsPhase(unit, "u1-d2"),
+      liveShowBookPhase(unit, "u1-d2")
     ];
-    return makeUnit1Lesson(unit, 2, "練到熟", phases);
+    return makeUnit1Lesson(unit, 2, "Let’s Speak → Read → Say", phases);
   }
 
   function unit1Day3(unit) {
@@ -2366,72 +2444,67 @@
     const vocabulary = vocabularyItems(unit.vocabulary);
     const passportAnswers = [true, true, false, true, true, false, true, true, false, true];
     const phases = [
-      customPhase("b2u1-d1-vocab", "vocabulary", "Classroom Objects", "Classroom Vocabulary", 10, "teaching", vocabularySteps(unit, 0, "b2u1-d1-word", "Classroom Vocabulary"), { vocabulary }),
-      customPhase("b2u1-d1-there-is", "grammar", "There is", "There is + One Thing", 6, "teaching", [
+      liveSectionPhase("b2u1-d1", "warm-up", "Warm Up", "Classroom Hunt Warm Up", 5, "speaking", "Look around the classroom. Point to an object you already know."),
+      liveTalkPhase(unit, "b2u1-d1", "What can you see in our classroom?", "There is a ______."),
+      customPhase("b2u1-d1-vocab", "lets-learn", "Let’s Learn", "Let’s Learn · Classroom Vocabulary", 12, "teaching", vocabularySteps(unit, 0, "b2u1-d1-word", "Let’s Learn"), { vocabulary }),
+      liveVocabularyReviewPhase(unit, "book-2", "b2u1-d1", vocabulary),
+      liveChantPhase(unit, "b2u1-d1", "door, window, television, speaker — point, clap, and chant the classroom words."),
+      customPhase("b2u1-d1-there-is", "lets-practice", "Let’s Practice", "There is + One Thing", 6, "teaching", [
         b2u1PracticeStep(unit, "b2u1-d1-door", "There is + one thing", "There is a door.", "door", { modelAnswer: "有一扇門。" }),
         b2u1PracticeStep(unit, "b2u1-d1-fan", "There is + one thing", "There is a fan.", "fan", { modelAnswer: "有一台電風扇。" })
       ]),
-      customPhase("b2u1-d1-question", "grammar", "Statement → Question", "Move Is to the Front", 6, "teaching", [
+      customPhase("b2u1-d1-question", "lets-practice", "Let’s Practice", "Move Is to the Front", 6, "teaching", [
         b2u1PracticeStep(unit, "b2u1-d1-transform", "Statement → Question", "There is a door.  →  Is there a door?", "door", { modelAnswer: "Move is before there." }),
         b2u1PracticeStep(unit, "b2u1-d1-positive", "Positive Answer", "Is there a fan?", "fan", { modelAnswer: "Yes, there is." })
       ]),
-      customPhase("b2u1-d1-core", "grammar", "Is there...?", "Singular Question Pattern", 5, "teaching", [
+      customPhase("b2u1-d1-core", "lets-practice", "Let’s Practice", "Singular Question Pattern", 5, "teaching", [
         practiceStep("b2u1-d1-formula", "Question Formula", "Is there + a + singular thing?", { visual: "🚪", modelAnswer: "Is there a door?  Yes, there is." })
       ]),
-      customPhase("b2u1-d1-passport", "passport", "Passport", "Ten Classroom Questions", 12, "teaching", vocabulary.map((item, index) =>
+      customPhase("b2u1-d1-passport", "lets-practice", "Let’s Practice", "Passport · Ten Classroom Questions", 10, "teaching", vocabulary.map((item, index) =>
         b2u1PracticeStep(unit, `b2u1-d1-passport-${index + 1}`, `Passport ${index + 1} / ${vocabulary.length}`, `Is there a ${item.word}?`, item.word, {
           modelAnswer: passportAnswers[index] ? "Yes, there is." : "No, there isn't."
         })
       )),
-      customPhase("b2u1-d1-hunt", "speaking", "Classroom Hunt", "Look Around and Answer", 3, "check", [
+      customPhase("b2u1-d1-hunt", "grammar-activity", "Grammar Activity", "Classroom Hunt", 6, "check", [
         b2u1PracticeStep(unit, "b2u1-d1-hunt-fan", "Classroom Hunt", "Is there a fan in the classroom?", "fan", { modelAnswer: "Yes, there is. / No, there isn't." }),
         b2u1PracticeStep(unit, "b2u1-d1-hunt-door", "Classroom Hunt", "Is there a door in the classroom?", "door", { modelAnswer: "Yes, there is. / No, there isn't." }),
         b2u1PracticeStep(unit, "b2u1-d1-hunt-tv", "Classroom Hunt", "Is there a television in the classroom?", "television", { modelAnswer: "Yes, there is. / No, there isn't." })
       ]),
-      customPhase("b2u1-d1-see-say", "practice", "See and Say", "There is a...", 3, "check", [
+      customPhase("b2u1-d1-see-say", "grammar-activity", "Grammar Activity", "See and Say", 6, "check", [
         b2u1PracticeStep(unit, "b2u1-d1-see-window", "See and Say", "There is a ______.", "window", { modelAnswer: "There is a window." }),
         b2u1PracticeStep(unit, "b2u1-d1-see-speaker", "See and Say", "There is a ______.", "speaker", { modelAnswer: "There is a speaker." }),
         b2u1PracticeStep(unit, "b2u1-d1-see-table", "See and Say", "There is a ______.", "table", { modelAnswer: "There is a table." })
-      ])
+      ]),
+      liveGrammarBookPhase(unit, "b2u1-d1")
     ];
-    return makeBook2Unit1Lesson(unit, 1, "新課：There is + Is there...?", phases);
+    return makeBook2Unit1Lesson(unit, 1, "Let’s Talk → Learn → Chant → Practice → Grammar Book", phases);
   }
 
   function book2Unit1Day2(unit) {
     const phases = [
-      customPhase("b2u1-d2-review", "grammar", "Pattern Review", "Is there...?", 5, "review", [
+      customPhase("b2u1-d2-review", "quick-review", "Quick Review", "Is there...?", 5, "review", [
         practiceStep("b2u1-d2-review", "Question + Answer", "Is there a ___?", { modelAnswer: "Yes, there is. / No, there isn't." })
       ]),
-      customPhase("b2u1-d2-map", "grammar", "Answer Map", "There, Not It", 5, "teaching", [
-        practiceStep("b2u1-d2-map", "Correct Answer Map", "Is there...? → Yes, there is. / No, there isn't.", { modelAnswer: "Do not answer: Yes, it is." })
-      ]),
-      customPhase("b2u1-d2-mystery", "practice", "Mystery Classroom", "Guess · Then Reveal", 10, "check", [
+      customPhase("b2u1-d2-speak", "lets-speak", "Let’s Speak", "Let’s Speak · Classroom Dialogue", 15, "conversation", [
+        practiceStep("b2u1-d2-map", "Correct Answer Map", "Is there...? → Yes, there is. / No, there isn't.", { modelAnswer: "Do not answer: Yes, it is." }),
         practiceStep("b2u1-d2-m-tv", "Mystery Classroom", "Is there a television?", { visual: "❓", modelAnswer: "📺  Yes, there is!" }),
         practiceStep("b2u1-d2-m-fan", "Mystery Classroom", "Is there a fan?", { visual: "❓", modelAnswer: "🌀  Yes, there is!" }),
-        practiceStep("b2u1-d2-m-phone", "Mystery Classroom", "Is there a telephone?", { visual: "❓", modelAnswer: "No, there isn't." }),
-        practiceStep("b2u1-d2-m-board", "Mystery Classroom", "Is there a blackboard?", { visual: "❓", modelAnswer: "Yes, there is!" })
+        practiceStep("b2u1-d2-m-phone", "Mystery Classroom", "Is there a telephone?", { visual: "❓", modelAnswer: "No, there isn't." })
       ]),
-      customPhase("b2u1-d2-guess", "speaking", "Guess and Ask", "Secret Object Card", 8, "check", [
+      liveReadPhase(unit, "b2u1-d2"),
+      customPhase("b2u1-d2-reading-check", "reading-check", "Reading Check", "Read & Respond", 10, "check", [
+        b2u1PracticeStep(unit, "b2u1-d2-read-1", "Choose the question", "You want to know about a door.", "door", { choices: ["Is there a door?", "It is a door?"], answer: "Is there a door?" }),
+        practiceStep("b2u1-d2-read-2", "Choose the reply", "Is there a speaker?", { choices: ["Yes, there is.", "Yes, it is."], answer: "Yes, there is." })
+      ]),
+      customPhase("b2u1-d2-speaking-activity", "speaking-activity", "Speaking Activity", "Guess and Ask", 10, "check", [
         practiceStep("b2u1-d2-g1", "Secret Card 1", "Ask: Is there a ___?", { visual: "🔒", modelAnswer: "fan" }),
         practiceStep("b2u1-d2-g2", "Secret Card 2", "Ask: Is there a ___?", { visual: "🔒", modelAnswer: "whiteboard" }),
         practiceStep("b2u1-d2-g3", "Secret Card 3", "Ask: Is there a ___?", { visual: "🔒", modelAnswer: "trash can" })
       ]),
-      customPhase("b2u1-d2-is-are", "practice", "Choose Is / Are", "Singular There Question", 6, "check", [
-        b2u1PracticeStep(unit, "b2u1-d2-is-door", "Choose is or are", "___ there a door?", "door", { choices: ["Is", "Are"], answer: "Is" }),
-        b2u1PracticeStep(unit, "b2u1-d2-is-fan", "Choose is or are", "___ there a fan?", "fan", { choices: ["Is", "Are"], answer: "Is" })
-      ]),
-      customPhase("b2u1-d2-there-it", "practice", "Choose There / It", "Match the Answer Pattern", 5, "check", [
-        practiceStep("b2u1-d2-there-yes", "Choose there or it", "Yes, ___ is.", { choices: ["there", "it"], answer: "there" }),
-        practiceStep("b2u1-d2-there-no", "Choose there or it", "No, ___ isn't.", { choices: ["there", "it"], answer: "there" })
-      ]),
-      customPhase("b2u1-d2-order", "practice", "Sentence Order", "Build the Question and Answer", 4, "check", [
-        b2u1PracticeStep(unit, "b2u1-d2-order", "Choose the correct order", "there / Is / a / door / ?", "door", { choices: ["Is there a door?", "There is a door?"], answer: "Is there a door?" })
-      ]),
-      customPhase("b2u1-d2-check", "check", "Mastery Check", "Is there...?", 2, "check", [
-        b2u1PracticeStep(unit, "b2u1-d2-final", "Choose the correct answer", "Is there a speaker?", "speaker", { choices: ["Yes, there is.", "Yes, it is.", "Yes, they are."], answer: "Yes, there is." })
-      ])
+      livePhonicsPhase(unit, "b2u1-d2"),
+      liveShowBookPhase(unit, "b2u1-d2")
     ];
-    return makeBook2Unit1Lesson(unit, 2, "熟練：Is there...? Yes / No", phases);
+    return makeBook2Unit1Lesson(unit, 2, "Let’s Speak → Read → Say", phases);
   }
 
   function book2Unit1Day3(unit) {
@@ -2585,19 +2658,23 @@
       ["I", "birds"], ["You", "frogs"], ["We", "puppies"], ["They", "fish"]
     ];
     const phases = [
-      customPhase("b3u1-d1-vocab", "vocabulary", "Vocabulary", "Animals We Like", 10, "teaching", vocabularySteps(unit, 0, "b3u1-d1-word", "Animal Vocabulary"), { vocabulary }),
-      customPhase("b3u1-d1-subjects", "grammar", "Grammar Focus", "I / You / We / They + like", 8, "teaching", [
+      liveSectionPhase("b3u1-d1", "warm-up", "Warm Up", "Animal Warm Up", 5, "speaking", "Name an animal you already know."),
+      liveTalkPhase(unit, "b3u1-d1", "What animals do you like?", "I like ______."),
+      customPhase("b3u1-d1-vocab", "lets-learn", "Let’s Learn", "Let’s Learn · Animals", 12, "teaching", vocabularySteps(unit, 0, "b3u1-d1-word", "Let’s Learn"), { vocabulary }),
+      liveVocabularyReviewPhase(unit, "book-3", "b3u1-d1", vocabulary),
+      liveChantPhase(unit, "b3u1-d1", "I like birds. You like frogs. We like puppies. They like fish."),
+      customPhase("b3u1-d1-subjects", "lets-practice", "Let’s Practice", "I / You / We / They + like", 8, "teaching", [
         practiceStep("b3u1-d1-map", "Subject Map", "I like  ·  You like  ·  We like  ·  They like", { modelAnswer: "The subject changes. The verb like stays the same." }),
         practiceStep("b3u1-d1-like", "What stays the same?", "I → You → We → They", { choices: ["like", "likes", "am"], answer: "like" })
       ]),
-      customPhase("b3u1-d1-plural", "grammar", "Noun Focus", "Animals as a Group", 5, "teaching", [
+      customPhase("b3u1-d1-plural", "lets-practice", "Let’s Practice", "Animals as a Group", 5, "teaching", [
         b3u1PracticeStep(unit, "b3u1-d1-plural", "One type of animal", "I like birds.  ·  You like frogs.  ·  We like puppies.", "birds", { modelAnswer: "Use plural animal words when talking about the kind you like." }),
         b3u1PracticeStep(unit, "b3u1-d1-fish", "Special Word", "They like fish.", "fish", { modelAnswer: "fish — not fishes in this sentence" })
       ]),
-      customPhase("b3u1-d1-passport", "passport", "Passport", "First Four Sentences", 12, "teaching", passport.map(([subject, animal], index) =>
+      customPhase("b3u1-d1-passport", "lets-practice", "Let’s Practice", "Passport · First Four Sentences", 12, "teaching", passport.map(([subject, animal], index) =>
         b3u1PracticeStep(unit, `b3u1-d1-passport-${index + 1}`, `Passport ${index + 1} / 4`, `${subject} like ______.`, animal, { modelAnswer: `${subject} like ${animal}.` })
       )),
-      customPhase("b3u1-d1-substitution", "practice", "Practice Loop", "主詞 + like 連續訓練", 8, "check", [
+      customPhase("b3u1-d1-substitution", "grammar-activity", "Grammar Activity", "主詞 + like 連續訓練", 10, "check", [
         practiceLoopStep("b3u1-d1-loop", "Subject + like Practice Loop", [
           b3u1LoopQuestion(unit, "I ___ birds.", "birds", { choices: ["like", "likes"], answer: "like" }),
           b3u1LoopQuestion(unit, "You ___ frogs.", "frogs", { choices: ["like", "likes"], answer: "like" }),
@@ -2609,27 +2686,25 @@
           b3u1LoopQuestion(unit, "Choose the correct sentence.", "fish", { choices: ["They like fish.", "They likes fishes."], answer: "They like fish." })
         ])
       ]),
-      customPhase("b3u1-d1-check", "check", "Mastery Check", "Subject + like", 2, "check", [
-        b3u1PracticeStep(unit, "b3u1-d1-final", "Choose the sentence", "🐟", "fish", { choices: ["They like fish.", "They likes fishes."], answer: "They like fish." })
-      ])
+      liveGrammarBookPhase(unit, "b3u1-d1")
     ];
-    return makeBook3Unit1Lesson(unit, 1, "I / You / We / They + like", phases);
+    return makeBook3Unit1Lesson(unit, 1, "Let’s Talk → Learn → Chant → Practice → Grammar Book", phases);
   }
 
   function book3Unit1Day2(unit) {
     const phases = [
-      customPhase("b3u1-d2-review", "review", "Quick Review", "Subject + like", 5, "review", [
+      customPhase("b3u1-d2-review", "quick-review", "Quick Review", "Subject + like", 5, "review", [
         practiceStep("b3u1-d2-review", "Complete all four", "I ___  ·  You ___  ·  We ___  ·  They ___", { choices: ["like / like / like / like", "like / likes / like / likes"], answer: "like / like / like / like" })
       ]),
-      customPhase("b3u1-d2-formula", "grammar", "Grammar Focus", "What + do + Subject + like?", 8, "teaching", [
+      customPhase("b3u1-d2-formula", "lets-speak", "Let’s Speak", "What + do + Subject + like?", 8, "conversation", [
         practiceStep("b3u1-d2-formula", "Question Formula", "What + do + you / they + like?", { modelAnswer: "What do you like?  ·  What do they like?" }),
         practiceStep("b3u1-d2-do-map", "Do Map", "you → do  ·  they → do", { modelAnswer: "Use do with you and they." })
       ]),
-      customPhase("b3u1-d2-compare", "grammar", "Statement → Question", "You / They", 7, "teaching", [
+      customPhase("b3u1-d2-compare", "lets-speak", "Let’s Speak", "Dialogue · You / They", 7, "conversation", [
         b3u1PracticeStep(unit, "b3u1-d2-you", "Statement → Question", "You like bunnies.  →  What do you like?", "bunnies", { modelAnswer: "I like bunnies." }),
         b3u1PracticeStep(unit, "b3u1-d2-they", "Statement → Question", "They like turtles.  →  What do they like?", "turtles", { modelAnswer: "They like turtles." })
       ]),
-      customPhase("b3u1-d2-random", "practice", "Practice Loop", "What do...? 連續訓練", 10, "check", [
+      customPhase("b3u1-d2-random", "speaking-activity", "Speaking Activity", "What do...? 連續訓練", 10, "check", [
         practiceLoopStep("b3u1-d2-loop", "What do...? Practice Loop", [
           b3u1LoopQuestion(unit, "What do you like?", "bunnies", { modelAnswer: "I like bunnies." }),
           b3u1LoopQuestion(unit, "What do they like?", "turtles", { modelAnswer: "They like turtles." }),
@@ -2641,19 +2716,19 @@
           b3u1LoopQuestion(unit, "they / What / like / do / ?", "spiders", { choices: ["What do they like?", "Do what they like?"], answer: "What do they like?" })
         ])
       ]),
-      customPhase("b3u1-d2-passport", "passport", "Passport", "What do you / they like?", 8, "teaching", [
+      customPhase("b3u1-d2-passport", "lets-speak", "Let’s Speak", "Passport · What do you / they like?", 8, "conversation", [
         b3u1PracticeStep(unit, "b3u1-d2-passport-you", "Passport Question", "What do you like?", "bunnies", { modelAnswer: "I like bunnies." }),
         b3u1PracticeStep(unit, "b3u1-d2-passport-they", "Passport Question", "What do they like?", "turtles", { modelAnswer: "They like turtles." })
       ]),
-      customPhase("b3u1-d2-order", "practice", "Sentence Order", "Build the Question", 5, "check", [
-        practiceStep("b3u1-d2-order-you", "Put it in order", "do / What / you / like / ?", { choices: ["What do you like?", "What you do like?"], answer: "What do you like?" }),
-        practiceStep("b3u1-d2-order-they", "Put it in order", "they / What / like / do / ?", { choices: ["What do they like?", "Do what they like?"], answer: "What do they like?" })
+      liveReadPhase(unit, "b3u1-d2"),
+      customPhase("b3u1-d2-reading-check", "reading-check", "Reading Check", "Read & Respond", 10, "check", [
+        b3u1PracticeStep(unit, "b3u1-d2-read-1", "Complete the answer", "What do you like? I like ______.", "bunnies", { choices: ["bunnies", "bunny"], answer: "bunnies" }),
+        b3u1PracticeStep(unit, "b3u1-d2-read-2", "Complete the answer", "What do they like? They like ______.", "turtles", { choices: ["turtles", "turtle"], answer: "turtles" })
       ]),
-      customPhase("b3u1-d2-check", "check", "Mastery Check", "you / they → do", 2, "check", [
-        b3u1PracticeStep(unit, "b3u1-d2-final", "Complete the question", "What ___ they like?", "turtles", { choices: ["do", "are", "is"], answer: "do" })
-      ])
+      livePhonicsPhase(unit, "b3u1-d2"),
+      liveShowBookPhase(unit, "b3u1-d2")
     ];
-    return makeBook3Unit1Lesson(unit, 2, "What do you / they like?", phases);
+    return makeBook3Unit1Lesson(unit, 2, "Let’s Speak → Read → Say", phases);
   }
 
   function book3Unit1Day3(unit) {

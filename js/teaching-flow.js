@@ -1107,6 +1107,13 @@
       phases,
       duration: totalDuration,
       durationMinutes: totalDuration,
+      dailyHandout: {
+        day,
+        pageStart: ((day - 1) * 4) + 1,
+        pageEnd: day * 4,
+        studentUrl: "assets/handouts/book1/unit1/book1-unit1-daily-handouts.pdf",
+        teacherUrl: "assets/handouts/book1/unit1/book1-unit1-teacher-key.pdf"
+      },
       steps,
       source: { document: "B1_教學流程.pdf", page: B1_DAY_PAGES[0]?.[Math.min(day - 1, 3)] }
     };
@@ -2436,6 +2443,13 @@
       phases,
       duration: totalDuration,
       durationMinutes: totalDuration,
+      dailyHandout: {
+        day,
+        pageStart: ((day - 1) * 4) + 1,
+        pageEnd: day * 4,
+        studentUrl: "assets/handouts/book2/unit1/book2-unit1-daily-handouts.pdf",
+        teacherUrl: "assets/handouts/book2/unit1/book2-unit1-teacher-key.pdf"
+      },
       steps
     };
   }

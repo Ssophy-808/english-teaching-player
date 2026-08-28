@@ -114,6 +114,8 @@ Book 3 is complete through Unit 9. Units 2–9 include curriculum-accurate vocab
 
 Book 1, Book 2, and Book 3 Unit 1 now use the classroom-tested Live sequence. Day 1 follows `Warm Up → Let’s Talk → Let’s Learn → Vocabulary Review → Let’s Chant/Sing → Let’s Practice → Grammar Activity → Grammar Book`. Day 2 follows `Quick Review → Let’s Speak → Let’s Read → Reading Check / Speaking Activity → Let’s Say (Phonics) → Show Book`. Day 3/4 keep the spiral-review and writing flow; Day 5 uses the existing Unit test and is not duplicated in the Player.
 
+Every Book 1, Book 2, and Book 3 Unit 1 lesson from Day 1 through Day 4 now includes a fixed four-page Daily Handout and a matching teacher key. The Player opens the correct four-page range for the selected day; these fixed handouts remain separate from the adjustable worksheet and Test Bank.
+
 Book 3 Units 2–9 use grammar-aware question generation rather than vocabulary-only substitution. Day 3/4 Player loops, worksheets, and the Test Bank recognize each Unit's target forms, including `like / likes`, `want / wants`, `some / any`, `have / has`, `does + have`, `on + weekday`, and `go + V-ing`, and produce dedicated choice, correction, reordering, and fill-in questions.
 
 Each Book 3 Unit 1 day includes a continuous Practice Loop. It shows one question at a time and supports immediate choice feedback, answer reveal for speaking questions, next question, random question, and restart controls.

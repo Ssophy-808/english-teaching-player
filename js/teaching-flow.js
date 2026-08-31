@@ -2912,6 +2912,122 @@
     return { answer, choices, index: match.index, length: answer.length };
   }
 
+  function worksheetGrammarToken(sentence) {
+    const groups = [
+      { pattern: /\b(am|are|is)\b/i, choices: ["am", "are", "is"] },
+      { pattern: /\b(do|does)\b/i, choices: ["do", "does", "is"] },
+      { pattern: /\b(like|likes)\b/i, choices: ["like", "likes", "liking"] },
+      { pattern: /\b(have|has)\b/i, choices: ["have", "has", "having"] },
+      { pattern: /\b(this|that)\b/i, choices: ["this", "that"] },
+      { pattern: /\b(a|an)\b/i, choices: ["a", "an"] }
+    ];
+    const group = groups.find((item) => item.pattern.test(sentence));
+    if (!group) return null;
+    const match = sentence.match(group.pattern);
+    const answer = match[0];
+    const choices = group.choices.map((choice) => match.index === 0 ? choice.charAt(0).toUpperCase() + choice.slice(1) : choice);
+    return { answer, choices, index: match.index, length: answer.length };
+  }
+
+  function worksheetEnglishSentence(question) {
+    const candidates = [question.answer, question.playerPrompt, question.worksheetPrompt];
+    return candidates.find((value) => {
+      const text = String(value || "").trim();
+      return /^[\x20-\x7E]+$/.test(text)
+        && /[.?!]$/.test(text)
+        && text.split(/\s+/).length >= 3
+        && !/[=+→✕✓]|___|\s\/\s/.test(text);
+    }) || "";
+  }
+
+  function worksheetWrongToken(token) {
+    const preferred = {
+      am: "are",
+      are: "is",
+      is: "are",
+      do: "does",
+      does: "do",
+      like: "likes",
+      likes: "like",
+      have: "has",
+      has: "have",
+      this: "that",
+      that: "this",
+      a: "an",
+      an: "a"
+    };
+    return preferred[token.answer.toLowerCase()]
+      || token.choices.find((choice) => choice.toLowerCase() !== token.answer.toLowerCase())
+      || token.choices[0];
+  }
+
+  function worksheetContentBlank(sentence) {
+    const stopWords = new Set(["a", "an", "the", "am", "are", "is", "do", "does", "to", "of", "in", "on", "my", "your", "his", "her", "it", "they", "you", "i", "we", "he", "she", "today"]);
+    const words = [...sentence.matchAll(/[A-Za-z]+(?:'[A-Za-z]+)?/g)];
+    const target = words.filter((match) => !stopWords.has(match[0].toLowerCase())).sort((a, b) => b[0].length - a[0].length)[0] || words[words.length - 1];
+    if (!target) return null;
+    return {
+      answer: sentence,
+      prompt: `${sentence.slice(0, target.index)}________${sentence.slice(target.index + target[0].length)}`
+    };
+  }
+
+  function strengthenWorksheetQuestion(question, day, part, index) {
+    if (question.choices?.length || question.type === "error" || question.type === "reorder" || question.type === "fill") return question;
+    const sentence = worksheetEnglishSentence(question);
+    if (!sentence) return question;
+    const token = worksheetGrammarToken(sentence);
+    const hasPicture = question.image || question.sprite || question.visual;
+    const mode = day === 4 ? index % 4 : (part === "A" ? index % 3 : (index + 1) % 3);
+
+    if ((mode === 0 || (part === "B" && day === 4)) && hasPicture) {
+      return {
+        ...question,
+        type: "picture",
+        worksheetPrompt: day === 4
+          ? "Look at the picture. Write a complete sentence without copying."
+          : "Look at the picture. Recall and write the complete sentence.",
+        answer: sentence,
+        difficulty: day === 4 ? 3 : 2
+      };
+    }
+    if (mode === 1 && token) {
+      const prompt = `${sentence.slice(0, token.index)}___${sentence.slice(token.index + token.length)}`;
+      return {
+        ...question,
+        type: "choice",
+        worksheetPrompt: `Choose the correct word: ${prompt}`,
+        answer: token.answer,
+        choices: token.choices,
+        difficulty: 2
+      };
+    }
+    if (mode === 2 && token) {
+      const wrong = worksheetWrongToken(token);
+      const replacement = token.index === 0 ? wrong.charAt(0).toUpperCase() + wrong.slice(1) : wrong;
+      const wrongSentence = `${sentence.slice(0, token.index)}${replacement}${sentence.slice(token.index + token.length)}`;
+      return {
+        ...question,
+        type: "error",
+        worksheetPrompt: `Find and correct the mistake: ${wrongSentence}`,
+        answer: sentence,
+        choices: [],
+        difficulty: day === 4 ? 3 : 2
+      };
+    }
+    const words = sentence.replace(/([?.!,])/g, " $1").split(/\s+/).filter(Boolean);
+    const split = Math.max(1, Math.floor(words.length / 2));
+    const scrambled = [...words.slice(split), ...words.slice(0, split)].join(" / ");
+    return {
+      ...question,
+      type: "reorder",
+      worksheetPrompt: `Put the words in order: ${scrambled}`,
+      answer: sentence,
+      choices: [],
+      difficulty: day === 4 ? 3 : 2
+    };
+  }
+
   function book3FocusedQuestions(unit, bookId, day, part) {
     const all = (unit.mainSentences || []).filter(Boolean);
     const questions = all.filter((sentence) => sentence.includes("?"));
@@ -2955,7 +3071,10 @@
         const prompt = `${sentence.slice(0, token.index)}________${sentence.slice(token.index + token.length)}`;
         return { ...base, type: "fill", playerPrompt: prompt, worksheetPrompt: `Complete: ${prompt}`, answer: token.answer };
       }
-      return { ...base, type: "rewrite", playerPrompt: sentence, worksheetPrompt: `Write the complete sentence: ${sentence}` };
+      const blank = worksheetContentBlank(sentence);
+      return blank
+        ? { ...base, type: "fill", playerPrompt: blank.prompt, worksheetPrompt: `Complete the sentence: ${blank.prompt}`, answer: blank.answer }
+        : { ...base, type: "rewrite", playerPrompt: sentence, worksheetPrompt: "Write the complete sentence from memory." };
     });
   }
 
@@ -3002,7 +3121,22 @@
         difficulty: 1
       });
     }
-    return questions.slice(0, 10);
+    const finalQuestions = questions.slice(0, 10);
+    const hasPicture = finalQuestions.some((question) => question.image || question.sprite || question.visual);
+    if (!hasPicture && vocabulary.length) {
+      finalQuestions.slice(0, 2).forEach((question, index) => {
+        const searchable = `${question.worksheetPrompt || ""} ${question.answer || ""}`.toLowerCase();
+        const matchingItem = vocabulary.find((item) => {
+          const word = String(item.word || "").replace(/\(s\)|\(es\)/gi, "").toLowerCase();
+          return word && searchable.includes(word);
+        });
+        const item = matchingItem || vocabulary[index % vocabulary.length];
+        question.image = item.image || "";
+        question.sprite = item.sprite || null;
+        question.visual = item.visual || "";
+      });
+    }
+    return finalQuestions.map((question, index) => strengthenWorksheetQuestion(question, day, part, index));
   }
 
   function scalePhaseDurations(phases, targetMinutes) {

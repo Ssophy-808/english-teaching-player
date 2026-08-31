@@ -31,6 +31,25 @@
     return order.map((index) => questions[index]).filter((question) => question && !hiddenQuestions.has(question.id));
   }
 
+  function questionVisualMarkup(question) {
+    const label = question.answer || question.skill || "Question picture";
+    if (question.image) {
+      return `<img class="worksheet-question-picture" src="${escapeHtml(question.image)}" alt="${escapeHtml(label)}">`;
+    }
+    if (question.sprite) {
+      const cols = Number(question.sprite.cols) || 1;
+      const rows = Number(question.sprite.rows) || 1;
+      const col = Math.max(0, Number(question.sprite.col) || 0);
+      const row = Math.max(0, Number(question.sprite.row) || 0);
+      const x = cols > 1 ? col * 100 / (cols - 1) : 0;
+      const y = rows > 1 ? row * 100 / (rows - 1) : 0;
+      return `<span class="worksheet-question-picture worksheet-question-sprite" role="img" aria-label="${escapeHtml(label)}" style="background-image:url('${escapeHtml(question.sprite.src || "")}');background-size:${cols * 100}% ${rows * 100}%;background-position:${x}% ${y}%"></span>`;
+    }
+    return question.visual
+      ? `<span class="worksheet-question-visual" role="img" aria-label="${escapeHtml(label)}">${escapeHtml(question.visual)}</span>`
+      : "";
+  }
+
   function questionMarkup(question, index) {
     const choices = question.choices?.length
       ? `<span class="worksheet-choices">${question.choices.map((choice, choiceIndex) => `(${String.fromCharCode(65 + choiceIndex)}) ${escapeHtml(choice)}`).join(" &nbsp; ")}</span>`
@@ -39,7 +58,7 @@
     return `
       <li class="worksheet-question" data-question-id="${escapeHtml(question.id)}">
         <button class="worksheet-remove no-print" type="button" data-remove-question="${escapeHtml(question.id)}" title="Remove this question">×</button>
-        <span class="worksheet-question-visual">${escapeHtml(question.visual || "")}</span>
+        ${questionVisualMarkup(question)}
         <div><p>${escapeHtml(question.worksheetPrompt)}</p>${choices}${Array.from({ length: writingLines }, () => `<span class="worksheet-answer-line" aria-hidden="true"></span>`).join("")}</div>
       </li>`;
   }

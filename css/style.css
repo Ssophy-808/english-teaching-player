@@ -337,6 +337,8 @@ body.toolbox-open { overflow: hidden; }
 .worksheet-question > div { min-width: 0; }
 .worksheet-question p { margin: 0 0 5px; font-weight: 750; line-height: 1.35; white-space: pre-line; }
 .worksheet-question-visual { float: right; margin: -2px 0 3px 12px; font-size: 1.65rem; line-height: 1; }
+.worksheet-question-picture { float: right; width: 78px; height: 64px; margin: -4px 0 4px 12px; border-radius: 10px; object-fit: contain; background-color: #f3f8fe; }
+.worksheet-question-sprite { display: block; background-repeat: no-repeat; }
 .worksheet-choices { display: block; color: #354963; font-size: 0.88rem; font-weight: 650; line-height: 1.45; }
 .worksheet-answer-line {
   display: block;

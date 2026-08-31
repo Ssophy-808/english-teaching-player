@@ -2887,7 +2887,9 @@
       worksheetPrompt: prompt,
       answer,
       choices: practice.choices || [],
-      visual: practice.visual || practice.word || step.visual || "",
+      image: practice.image || step.image || "",
+      sprite: practice.sprite || step.sprite || null,
+      visual: practice.visual || step.visual || ((!practice.image && !practice.sprite) ? practice.word : ""),
       difficulty: 1
     };
   }
@@ -2931,6 +2933,8 @@
         skill: unit.grammarFocus || "Book 3 grammar",
         answer: sentence,
         choices: [],
+        image: visualItem?.image || "",
+        sprite: visualItem?.sprite || null,
         visual: visualItem?.visual || "",
         difficulty: mode > 0 ? 2 : 1
       };
@@ -2992,6 +2996,8 @@
         worksheetPrompt: `Write the English word: ${item.visual || item.meaning || "picture"}`,
         answer: item.word,
         choices: [],
+        image: item.image || "",
+        sprite: item.sprite || null,
         visual: item.visual || "",
         difficulty: 1
       });

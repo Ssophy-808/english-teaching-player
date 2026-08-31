@@ -279,6 +279,7 @@ body:has(.flow-modal:not([hidden])) { overflow: hidden; }
 .practice-loop-heading { display: flex; width: min(1040px, 100%); align-items: center; justify-content: space-between; gap: 24px; }
 .practice-loop-heading h2 { margin: 0; color: var(--navy); font-size: clamp(2rem, 4vw, 4rem); }
 .practice-loop-heading > strong { flex: 0 0 auto; border-radius: 999px; padding: 10px 18px; color: #2456bd; background: #e9f2ff; font-size: clamp(1rem, 2vw, 1.35rem); }
+.practice-loop-task { margin: -5px 0 -8px; border-radius: 999px; padding: 7px 15px; color: #2556bd; background: #eaf2ff; font-size: 0.82rem; font-weight: 900; letter-spacing: 0.1em; }
 .practice-loop-actions { display: flex; width: min(900px, 100%); justify-content: center; gap: 12px; flex-wrap: wrap; }
 .practice-loop-actions .button { min-height: 54px; }
 .write-time-card { display: grid; justify-items: center; gap: 22px; }

@@ -193,6 +193,15 @@
       return `<button class="quiz-choice ${isCorrect ? "is-correct" : ""}" type="button" data-loop-choice="${escapeHtml(choice)}" ${step.loopAnswered ? "disabled" : ""}>${escapeHtml(choice)}</button>`;
     }).join("");
     const feedbackClass = step.loopFeedback === "Correct!" ? "is-correct" : step.loopFeedback ? "is-wrong" : "";
+    const taskLabels = {
+      picture: "LOOK & SAY",
+      choice: "CHOOSE",
+      error: "FIND & FIX",
+      reorder: "PUT IN ORDER",
+      fill: "COMPLETE",
+      dialogue: "PAIR RESPONSE",
+      rewrite: "ANSWER IN A COMPLETE SENTENCE"
+    };
     return `
       <article class="step-card practice-loop-card" data-step-type="practice">
         <div class="step-meta"><span class="phase-badge">${escapeHtml(step.phaseTitle || "Practice Loop")}</span>${duration}</div>
@@ -201,6 +210,7 @@
           <strong>${position + 1} / ${questions.length}</strong>
         </div>
         ${picture}
+        <p class="practice-loop-task">${escapeHtml(taskLabels[question.type] || "THINK & ANSWER")}</p>
         <p class="guided-prompt">${escapeHtml(question.prompt || "")}</p>
         <p class="quiz-feedback ${feedbackClass}" role="status" aria-live="polite">${escapeHtml(step.loopFeedback || "")}</p>
         ${choices ? `<div class="guided-options quiz-options">${choices}</div>` : `

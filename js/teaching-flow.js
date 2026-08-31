@@ -2656,7 +2656,11 @@
       choices: item.choices || [],
       answer: item.answer,
       modelAnswer: item.answer,
+      image: item.image || "",
+      sprite: item.sprite || null,
       visual: item.visual || "",
+      word: item.answer || item.skill || "Teaching picture",
+      type: item.type || "rewrite",
       skill: item.skill,
       difficulty: item.difficulty
     };
@@ -2984,6 +2988,9 @@
       return {
         ...question,
         type: "picture",
+        playerPrompt: day === 4
+          ? "Look at the picture. Say a complete sentence without a model."
+          : "Look at the picture. Recall and say the complete sentence.",
         worksheetPrompt: day === 4
           ? "Look at the picture. Write a complete sentence without copying."
           : "Look at the picture. Recall and write the complete sentence.",
@@ -2996,6 +3003,7 @@
       return {
         ...question,
         type: "choice",
+        playerPrompt: prompt,
         worksheetPrompt: `Choose the correct word: ${prompt}`,
         answer: token.answer,
         choices: token.choices,
@@ -3009,6 +3017,7 @@
       return {
         ...question,
         type: "error",
+        playerPrompt: wrongSentence,
         worksheetPrompt: `Find and correct the mistake: ${wrongSentence}`,
         answer: sentence,
         choices: [],
@@ -3021,6 +3030,7 @@
     return {
       ...question,
       type: "reorder",
+      playerPrompt: scrambled,
       worksheetPrompt: `Put the words in order: ${scrambled}`,
       answer: sentence,
       choices: [],

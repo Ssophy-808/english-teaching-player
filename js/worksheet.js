@@ -31,6 +31,12 @@
     return order.map((index) => questions[index]).filter((question) => question && !hiddenQuestions.has(question.id));
   }
 
+  function worksheetParts() {
+    const preferredOrder = ["A", "B", "C", "D"];
+    const blocks = lesson?.worksheet?.blocks || {};
+    return preferredOrder.filter((part) => blocks[part]).concat(Object.keys(blocks).filter((part) => !preferredOrder.includes(part)));
+  }
+
   function questionVisualMarkup(question) {
     const label = question.answer || question.skill || "Question picture";
     if (question.image) {
@@ -80,13 +86,12 @@
       </section>`;
   }
 
-  function answerPage() {
-    const parts = ["A", "B"];
+  function answerPage(parts, pageIndex) {
     return `
       <section class="worksheet-page worksheet-answer-page">
         <header class="worksheet-page-header teacher-key">
           <div><span>TEACHER ANSWER KEY</span><h1>${escapeHtml(lesson.bookTitle)} ${escapeHtml(lesson.unitTitle)} · Day ${escapeHtml(lesson.worksheet.day)}</h1></div>
-          <strong>KEY</strong>
+          <strong>KEY ${pageIndex + 1}</strong>
         </header>
         <div class="worksheet-answer-columns">
           ${parts.map((part) => {
@@ -94,16 +99,24 @@
             return `<section><h2>${escapeHtml(block.title)}</h2><ol>${visibleQuestions(part).map((question) => `<li><strong>${escapeHtml(question.answer)}</strong><small>${escapeHtml(question.skill)}</small></li>`).join("")}</ol></section>`;
           }).join("")}
         </div>
-        <section class="worksheet-teaching-note"><h2>Teaching Notes 教學提示</h2><p>Player 全班複習後進入 Write Time。Part A、Part B 分兩次完成；先讓學生獨立書寫，再顯示答案進行同儕或全班訂正。</p></section>
+        <section class="worksheet-teaching-note"><h2>Teaching Notes 教學提示</h2><p>先用 Player 做全班口說與判斷，再讓學生獨立完成講義；A、B 保留基礎練習，C、D 加入改錯、重組與完整句輸出。</p></section>
       </section>`;
+  }
+
+  function answerPages(parts) {
+    const groups = [];
+    for (let index = 0; index < parts.length; index += 2) groups.push(parts.slice(index, index + 2));
+    return groups.map((group, index) => answerPage(group, index)).join("");
   }
 
   function render() {
     if (!lesson?.worksheet) return;
     title.textContent = `${lesson.bookTitle} ${lesson.unitTitle} · Day ${lesson.worksheet.day} 講義`;
+    const parts = worksheetParts();
+    studentButton.textContent = `學生版 · ${parts.length} pages`;
     studentButton.classList.toggle("is-active", mode === "student");
     answerButton.classList.toggle("is-active", mode === "answer");
-    preview.innerHTML = mode === "student" ? studentPage("A") + studentPage("B") : answerPage();
+    preview.innerHTML = mode === "student" ? parts.map(studentPage).join("") : answerPages(parts);
   }
 
   function setLesson(nextLesson) {
@@ -148,7 +161,7 @@
   studentButton.addEventListener("click", () => { mode = "student"; render(); });
   answerButton.addEventListener("click", () => { mode = "answer"; render(); });
   shuffleButton.addEventListener("click", () => {
-    ["A", "B"].forEach((part) => {
+    worksheetParts().forEach((part) => {
       const count = lesson?.worksheet?.blocks?.[part]?.questions?.length || 0;
       orders[part] = shuffle(Array.from({ length: count }, (_, index) => index));
     });

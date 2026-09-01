@@ -3149,6 +3149,82 @@
     return finalQuestions.map((question, index) => strengthenWorksheetQuestion(question, day, part, index));
   }
 
+  function challengeSentencePool(unit, sourceQuestions) {
+    const sentences = [];
+    const addSentence = (value) => {
+      String(value || "").match(/[^.?!]+[.?!]+/g)?.forEach((part) => {
+        const sentence = part.trim();
+        if (/^[\x20-\x7E]+$/.test(sentence) && sentence.split(/\s+/).length >= 3) sentences.push(sentence);
+      });
+    };
+    sourceQuestions.forEach((question) => {
+      const sentence = worksheetEnglishSentence(question);
+      if (sentence) addSentence(sentence);
+    });
+    (unit.mainSentences || []).forEach(addSentence);
+    return [...new Set(sentences)].sort((a, b) => b.split(/\s+/).length - a.split(/\s+/).length);
+  }
+
+  function challengeVisual(sentence, sourceQuestions, vocabulary) {
+    const lower = sentence.toLowerCase();
+    const source = sourceQuestions.find((question) => worksheetEnglishSentence(question).toLowerCase() === lower
+      && (question.image || question.sprite || question.visual));
+    if (source) return { image: source.image || "", sprite: source.sprite || null, visual: source.visual || "" };
+    const item = vocabulary.find((entry) => {
+      const word = String(entry.word || "").replace(/\(s\)|\(es\)/gi, "").toLowerCase();
+      return word && lower.includes(word);
+    });
+    if (item) return { image: item.image || "", sprite: item.sprite || null, visual: item.visual || "" };
+    return { image: "", sprite: null, visual: "" };
+  }
+
+  function challengeWorksheetQuestions(unit, bookId, day, part, sourceQuestions) {
+    const vocabulary = vocabularyItems(unit.vocabulary || []);
+    const sentences = challengeSentencePool(unit, sourceQuestions);
+    if (!sentences.length) return sourceQuestions.slice(0, 8).map((question, index) => ({
+      ...question,
+      id: `${bookId}-${unit.id}-d${day}${part.toLowerCase()}-challenge-${index}`,
+      difficulty: part === "D" ? 4 : 3
+    }));
+    return Array.from({ length: 8 }, (_, index) => {
+      const sentence = sentences[index % sentences.length];
+      const token = worksheetGrammarToken(sentence) || book3GrammarToken(sentence);
+      const words = sentence.replace(/([?.!,])/g, " $1").split(/\s+/).filter(Boolean);
+      const visual = challengeVisual(sentence, sourceQuestions, vocabulary);
+      const base = {
+        id: `${bookId}-${unit.id}-d${day}${part.toLowerCase()}-challenge-${index}`,
+        skill: part === "C" ? "grammar challenge" : "independent spiral review",
+        answer: sentence,
+        choices: [],
+        ...visual,
+        difficulty: part === "D" ? 4 : 3
+      };
+      const mode = index % 4;
+      if (part === "D" && mode === 0 && (visual.image || visual.sprite || visual.visual)) {
+        return { ...base, type: "picture", playerPrompt: "Look carefully. Say a complete sentence without a model.", worksheetPrompt: "Look at the picture. Write a complete sentence without a model." };
+      }
+      if (mode === 0 && token) {
+        const prompt = `${sentence.slice(0, token.index)}___${sentence.slice(token.index + token.length)}`;
+        return { ...base, type: "choice", playerPrompt: prompt, worksheetPrompt: `Choose the correct grammar word: ${prompt}`, answer: token.answer, choices: token.choices };
+      }
+      if (mode === 1 && token) {
+        const wrong = worksheetWrongToken(token);
+        const replacement = token.index === 0 ? wrong.charAt(0).toUpperCase() + wrong.slice(1) : wrong;
+        const wrongSentence = `${sentence.slice(0, token.index)}${replacement}${sentence.slice(token.index + token.length)}`;
+        return { ...base, type: "error", playerPrompt: wrongSentence, worksheetPrompt: `Find the mistake and rewrite the whole sentence: ${wrongSentence}` };
+      }
+      if (mode === 2) {
+        const pivot = Math.max(1, Math.floor(words.length / 2));
+        const scrambled = [...words.slice(pivot), ...words.slice(0, pivot)].join(" / ");
+        return { ...base, type: "reorder", playerPrompt: scrambled, worksheetPrompt: `Put the words in order and write the complete sentence: ${scrambled}` };
+      }
+      const blank = worksheetContentBlank(sentence);
+      return blank
+        ? { ...base, type: "fill", playerPrompt: blank.prompt, worksheetPrompt: `Complete the sentence, then copy the whole sentence: ${blank.prompt}` }
+        : { ...base, type: "rewrite", playerPrompt: "Say the complete sentence from memory.", worksheetPrompt: "Write the complete sentence from memory." };
+    });
+  }
+
   function scalePhaseDurations(phases, targetMinutes) {
     const weights = phases.map((phase) => Math.max(1, Number(phase.duration) || 1));
     const totalWeight = weights.reduce((sum, value) => sum + value, 0);
@@ -3231,6 +3307,37 @@
     };
   }
 
+  function extendWorksheetToFourPages(lesson, book, unit, day) {
+    const blocks = lesson.worksheet?.blocks;
+    if (!blocks?.A || !blocks?.B || day < 3 || (blocks.C && blocks.D)) return lesson;
+    const partAQuestions = blocks.A.questions || [];
+    const partBQuestions = blocks.B.questions || [];
+    const partCQuestions = challengeWorksheetQuestions(unit, book.id, day, "C", [...partAQuestions, ...partBQuestions]);
+    const partDQuestions = challengeWorksheetQuestions(unit, book.id, day, "D", [...partBQuestions, ...partAQuestions]);
+    const phases = lesson.phases.map((phase) => ({ ...phase, steps: [...phase.steps] }));
+    const writingIndexes = phases.reduce((indexes, phase, index) => {
+      if (phase.steps.some((step) => step.activity === "write-time")) indexes.push(index);
+      return indexes;
+    }, []);
+    const firstTargetIndex = Math.max(0, (writingIndexes[0] ?? Math.ceil(phases.length / 2)) - 1);
+    const secondTargetIndex = Math.max(0, (writingIndexes[1] ?? phases.length) - 1);
+    addSpiralLoop(phases[firstTargetIndex], partCQuestions, `${book.id}-${unit.id}-d${day}-loop-c`, "Part C · Grammar Challenge");
+    addSpiralLoop(phases[secondTargetIndex], partDQuestions, `${book.id}-${unit.id}-d${day}-loop-d`, "Part D · Independent Challenge");
+    return {
+      ...lesson,
+      phases,
+      steps: phases.flatMap((phase) => phase.steps),
+      worksheet: {
+        ...lesson.worksheet,
+        blocks: {
+          ...blocks,
+          C: { title: "Block C｜文法挑戰", subtitle: "Choose · Find and fix · Complete · Reorder", questions: partCQuestions },
+          D: { title: "Block D｜獨立應用", subtitle: "Picture production · Mixed spiral review · Full sentences", questions: partDQuestions }
+        }
+      }
+    };
+  }
+
   function lessonsForUnit(book, unit, unitIndex) {
     const lessons = book.id === "book-3" && unit.id === "unit-1"
       ? book3Unit1Lessons(unit)
@@ -3255,7 +3362,10 @@
                         : book.id === "book-1" && unit.id === "unit-9"
                           ? book1Unit9Lessons(unit)
                           : (book.id === "book-3" ? [1, 2, 3, 4] : [1, 2]).map((day) => sharedLessonFromUnit(unit, unitIndex, book.id, day));
-    return lessons.map((lesson, index) => upgradeToSpiralReview(lesson, book, unit, unitIndex, index + 1));
+    return lessons.map((lesson, index) => {
+      const day = index + 1;
+      return extendWorksheetToFourPages(upgradeToSpiralReview(lesson, book, unit, unitIndex, day), book, unit, day);
+    });
   }
 
   function buildCatalog(books) {

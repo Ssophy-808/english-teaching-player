@@ -4,8 +4,9 @@
   const STORAGE_KEY = "englishTeachingPlayer.testBuilder.v1";
   const TYPES = [
     ["vocab-image", "看圖寫單字", 2], ["image-sentence", "看圖問答", 2],
-    ["choice", "文法選擇題", 3], ["fill", "填空題", 2], ["error", "改錯題", 2],
-    ["reorder", "句子重組", 2], ["transform", "句型轉換", 1], ["dialogue", "對話填空", 0]
+    ["choice", "文法選擇題", 2], ["sentence-choice", "選出正確句", 2],
+    ["fill", "單／雙空格填空", 2], ["error", "改錯題", 2],
+    ["reorder", "句子重組", 2], ["transform", "句型轉換", 2], ["dialogue", "情境對話", 1]
   ];
   const catalog = window.COURSE_CATALOG || [];
   const modal = document.getElementById("test-builder-modal");
@@ -115,6 +116,38 @@
     const rules = [[" am ", " are "], [" are ", " is "], [" is ", " are "], [" like ", " likes "], [" likes ", " like "], [" want ", " wants "], [" wants ", " want "], [" have ", " has "], [" has ", " have "], [" some ", " any "], [" any ", " some "], [" on ", " in "], ["There is ", "There are "]];
     const rule = rules.find(([from]) => sentence.includes(from));
     return rule ? sentence.replace(rule[0], rule[1]) : "";
+  }
+
+  function wrongVariants(sentence) {
+    const clean = sentence.trim();
+    const variants = new Set();
+    const add = (value) => { if (value && value !== clean) variants.add(value); };
+    add(wrongSentence(clean));
+    const rules = [
+      [/^I am\b/i, "I are"], [/^You are\b/i, "You am"], [/^(He|She|It) is\b/i, "$1 are"],
+      [/^(We|They) are\b/i, "$1 is"], [/^There is\b/i, "There are"], [/^Is there\b/i, "Are there"],
+      [/^What do (you|they)\b/i, "What does $1"], [/^Do (you|they)\b/i, "Does $1"],
+      [/^What does (he|she|Ludi|Lumi)\b/i, "What do $1"], [/^Does (he|she|Ludi|Lumi)\b/i, "Do $1"],
+      [/\b(I|You|We|They) like\b/i, "$1 likes"], [/\b(He|She|Ludi|Lumi) likes\b/i, "$1 like"],
+      [/\b(I|You|We|They) want\b/i, "$1 wants"], [/\b(He|She|Ludi|Lumi) wants\b/i, "$1 want"],
+      [/\b(I|You|We|They) have\b/i, "$1 has"], [/\b(He|She|Ludi|Lumi) has\b/i, "$1 have"],
+      [/\ba ([aeiou])/i, "an $1"], [/\ban ([^aeiou\W])/i, "a $1"]
+    ];
+    rules.forEach(([pattern, replacement]) => { if (pattern.test(clean)) add(clean.replace(pattern, replacement)); });
+    if (clean.endsWith("?")) add(clean.replace(/\?$/, "."));
+    else if (clean.endsWith(".")) add(clean.replace(/\.$/, "?"));
+    return [...variants];
+  }
+
+  function sentenceChoice(sentence) {
+    const wrong = shuffle(wrongVariants(sentence)).slice(0, 2);
+    if (wrong.length < 2) return null;
+    return {
+      prompt: "Choose the only correct complete sentence.",
+      answer: sentence,
+      choices: shuffle([sentence, ...wrong]),
+      difficulty: 2
+    };
   }
 
   function imageSentenceCue(sentence) {
@@ -235,19 +268,61 @@
         const word = vocabularyAsset(words, sentence);
         const grammar = grammarChoice(sentence);
         if (grammar) result.choice.push(tagged(unit, unitIndex, { type: "choice", label: "文法選擇題", ...grammar, lines: 0 }));
+        const completeChoice = sentenceChoice(sentence);
+        if (completeChoice) result["sentence-choice"].push(tagged(unit, unitIndex, { type: "sentence-choice", label: "選出正確句", ...completeChoice, lines: 0 }));
         const tokens = sentence.replace(/[?.!,]/g, "").split(/\s+/).filter((token) => token.length > 1);
         const target = (word?.word || tokens[Math.max(0, tokens.length - 1)] || "").replace("(s)", "");
         if (target && sentence.toLowerCase().includes(target.toLowerCase())) result.fill.push(tagged(unit, unitIndex, { type: "fill", label: "填空題", prompt: sentence.replace(new RegExp(target.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i"), "________"), answer: target, lines: 1, difficulty: 1 }));
-        const wrong = wrongSentence(sentence);
-        if (wrong) result.error.push(tagged(unit, unitIndex, { type: "error", label: "改錯題", prompt: `Correct the sentence: ${wrong}`, answer: sentence, lines: 2, difficulty: 2 }));
+        if (grammar && target && grammar.answer.toLowerCase() !== target.toLowerCase()) {
+          const grammarBlank = grammar.prompt.split("\n").pop().replace("___", "________");
+          const doubleBlank = grammarBlank.replace(new RegExp(target.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i"), "________");
+          if ((doubleBlank.match(/________/g) || []).length >= 2) result.fill.push(tagged(unit, unitIndex, {
+            type: "fill", label: "雙線索填空", prompt: `${doubleBlank}\nComplete both blanks and rewrite the full sentence.`,
+            answer: sentence, lines: 2, difficulty: 3
+          }));
+        }
+        wrongVariants(sentence).slice(0, 2).forEach((wrong) => result.error.push(tagged(unit, unitIndex, { type: "error", label: "改錯題", prompt: `Find the mistake and rewrite the whole sentence: ${wrong}`, answer: sentence, lines: 2, difficulty: 2 })));
         const ordered = sentence.replace(/([?.!,])/g, " $1").split(/\s+/).filter(Boolean);
         result.reorder.push(tagged(unit, unitIndex, { type: "reorder", label: "句子重組", prompt: `Put in order: ${shuffle(ordered).join(" / ")}`, answer: sentence, lines: 2, difficulty: 2 }));
         const transformed = negativeOrQuestion(sentence);
         if (transformed) result.transform.push(tagged(unit, unitIndex, { type: "transform", label: "句型轉換", ...transformed, lines: 2, difficulty: 3 }));
-        if (sentence.endsWith("?") && sentences[sentenceIndex + 1]) result.dialogue.push(tagged(unit, unitIndex, { type: "dialogue", label: "對話填空", prompt: `A: ${sentence}\nB: ____________________`, answer: sentences[sentenceIndex + 1], lines: 2, difficulty: 3 }));
+        if (pair) {
+          result.dialogue.push(tagged(unit, unitIndex, { type: "dialogue", label: "完成回答", prompt: `A: ${pair.question}\nB: ____________________`, answer: pair.answer, lines: 2, difficulty: 3 }));
+          result.dialogue.push(tagged(unit, unitIndex, { type: "dialogue", label: "寫出問句", prompt: `A: ____________________\nB: ${pair.answer}`, answer: pair.question, lines: 2, difficulty: 3 }));
+        }
+      });
+    });
+    Object.keys(result).forEach((type) => {
+      const seen = new Set();
+      result[type] = result[type].filter((question) => {
+        const key = `${question.type}|${question.prompt}|${question.answer}|${question.asset?.word || ""}`.toLowerCase().replace(/\s+/g, " ");
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
       });
     });
     return result;
+  }
+
+  function selectDiverse(candidates, wanted, selected) {
+    const remaining = shuffle(candidates);
+    const picked = [];
+    const normalized = (value) => String(value || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+    while (picked.length < wanted && remaining.length) {
+      const usage = new Map();
+      [...selected, ...picked].forEach((question) => {
+        const answer = normalized(question.answer);
+        const unit = question.unitLabel || "";
+        usage.set(`a:${answer}`, (usage.get(`a:${answer}`) || 0) + 1);
+        usage.set(`u:${unit}`, (usage.get(`u:${unit}`) || 0) + 1);
+      });
+      remaining.sort((a, b) => {
+        const score = (q) => (usage.get(`a:${normalized(q.answer)}`) || 0) * 6 + (usage.get(`u:${q.unitLabel}`) || 0);
+        return score(a) - score(b);
+      });
+      picked.push(remaining.shift());
+    }
+    return picked;
   }
 
   function config() {
@@ -273,9 +348,7 @@
       let candidates = pools[type] || [];
       if (settings.difficulty === "easy") candidates = candidates.filter((q) => q.difficulty <= 1);
       if (settings.difficulty === "challenge") candidates = candidates.filter((q) => q.difficulty >= 2);
-      if (!candidates.length) candidates = pools[type] || [];
-      const shuffled = shuffle(candidates);
-      for (let index = 0; index < wanted && shuffled.length; index += 1) questions.push({ ...shuffled[index % shuffled.length], id: `exam-${type}-${index}-${Date.now()}` });
+      selectDiverse(candidates, wanted, questions).forEach((question, index) => questions.push({ ...question, id: `exam-${type}-${index}-${Date.now()}-${serial++}` }));
     });
     questions = shuffle(questions);
     mode = "student";
@@ -317,13 +390,13 @@
     document.getElementById("test-answer-mode").classList.toggle("is-active", mode === "answer");
     if (!questions.length) { preview.innerHTML = ""; return; }
     const pages = [];
-    for (let index = 0; index < questions.length; index += 8) pages.push(questions.slice(index, index + 8));
+    for (let index = 0; index < questions.length; index += 6) pages.push(questions.slice(index, index + 6));
     const answerPages = [];
     for (let index = 0; index < questions.length; index += 24) answerPages.push(questions.slice(index, index + 24));
     document.getElementById("test-student-mode").textContent = `學生考卷 · ${pages.length} pages`;
     document.getElementById("test-answer-mode").textContent = `教師答案 · ${answerPages.length} pages`;
     preview.innerHTML = mode === "student"
-      ? pages.map((items, index) => examPage(items, index + 1, index * 8, pages.length)).join("")
+      ? pages.map((items, index) => examPage(items, index + 1, index * 6, pages.length)).join("")
       : answerPages.map((items, index) => answerPage(items, index + 1, index * 24, answerPages.length)).join("");
   }
 

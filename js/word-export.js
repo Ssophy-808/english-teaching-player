@@ -122,7 +122,7 @@
 
   async function studentChildren(exam) {
     const pages = [];
-    for (let index = 0; index < exam.questions.length; index += 8) pages.push(exam.questions.slice(index, index + 8));
+    for (let index = 0; index < exam.questions.length; index += 6) pages.push(exam.questions.slice(index, index + 6));
     const children = [];
     for (let page = 0; page < pages.length; page += 1) {
       if (page) children.push(paragraph([new docx.PageBreak()], { after: 0 }));

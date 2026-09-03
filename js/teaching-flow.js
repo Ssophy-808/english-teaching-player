@@ -1111,8 +1111,8 @@
         day,
         pageStart: ((day - 1) * 4) + 1,
         pageEnd: day * 4,
-        studentUrl: "assets/handouts/book1/unit1/book1-unit1-daily-handouts.pdf?v=2",
-        teacherUrl: "assets/handouts/book1/unit1/book1-unit1-teacher-key.pdf?v=2"
+        studentUrl: "assets/handouts/book1/unit1/book1-unit1-daily-handouts.pdf?v=3",
+        teacherUrl: "assets/handouts/book1/unit1/book1-unit1-teacher-key.pdf?v=3"
       },
       steps,
       source: { document: "B1_教學流程.pdf", page: B1_DAY_PAGES[0]?.[Math.min(day - 1, 3)] }
@@ -2447,8 +2447,8 @@
         day,
         pageStart: ((day - 1) * 4) + 1,
         pageEnd: day * 4,
-        studentUrl: "assets/handouts/book2/unit1/book2-unit1-daily-handouts.pdf?v=2",
-        teacherUrl: "assets/handouts/book2/unit1/book2-unit1-teacher-key.pdf?v=2"
+        studentUrl: "assets/handouts/book2/unit1/book2-unit1-daily-handouts.pdf?v=3",
+        teacherUrl: "assets/handouts/book2/unit1/book2-unit1-teacher-key.pdf?v=3"
       },
       steps
     };
@@ -2642,8 +2642,8 @@
         day,
         pageStart: firstPage,
         pageEnd: firstPage + 3,
-        studentUrl: "assets/handouts/book3/unit1/book3-unit1-daily-handouts.pdf",
-        teacherUrl: "assets/handouts/book3/unit1/book3-unit1-teacher-key.pdf"
+        studentUrl: "assets/handouts/book3/unit1/book3-unit1-daily-handouts.pdf?v=2",
+        teacherUrl: "assets/handouts/book3/unit1/book3-unit1-teacher-key.pdf?v=2"
       },
       worksheet: reviewDay ? { unitTitle: unit.title, day, ...reviewDay } : null,
       steps

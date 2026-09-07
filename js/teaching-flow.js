@@ -859,10 +859,39 @@
     });
   }
 
-  function practiceLoopStep(id, title, questions) {
+  function practiceLoopStep(id, title, questions, options = {}) {
     return step(id, "practice", title, null, "", {
       activity: "practice-loop",
-      practiceLoop: { title, questions }
+      practiceLoop: {
+        title,
+        questions,
+        kicker: options.kicker || "CONTINUOUS PRACTICE",
+        instruction: options.instruction || ""
+      }
+    });
+  }
+
+  function pictureFlashStep(id, title, items, options = {}) {
+    return step(id, "game", title, null, "", {
+      activity: "picture-flash",
+      pictureFlash: {
+        title,
+        items,
+        instruction: options.instruction || "Look for three seconds. Hide the picture, then answer in a complete sentence."
+      }
+    });
+  }
+
+  function bossBattleStep(id, title, questions, options = {}) {
+    return step(id, "game", title, null, "", {
+      activity: "boss-battle",
+      bossBattle: {
+        title,
+        questions,
+        maxHp: options.maxHp || 100,
+        damage: options.damage || 20,
+        instruction: options.instruction || "The class attacks only after saying the complete answer."
+      }
     });
   }
 
@@ -975,6 +1004,49 @@
 
   function unit1Day1(unit) {
     const vocabulary = vocabularyItems(unit.vocabulary);
+    const vocabularyTeachingSteps = vocabularySteps(unit, 0, "u1-d1-word", "Let’s Learn")
+      .flatMap((vocabularyStep) => {
+        if (vocabularyStep.word.word !== "student") return [vocabularyStep];
+        return [
+          vocabularyStep,
+          step("u1-d1-student-spelling-1", "spelling", "Build student", null, "", {
+            activity: "word-spelling",
+            phaseTitle: "Spelling Focus",
+            word: vocabularyStep.word,
+            spellingSyllables: [
+              [{ blank: true }, { blank: true }, { text: "u" }],
+              [{ text: "d" }, { text: "e" }, { text: "n" }, { text: "t" }]
+            ],
+            accessiblePattern: "First syllable: two missing letters and u. Second syllable: d e n t.",
+            promptIndex: 1,
+            promptTotal: 3
+          }),
+          step("u1-d1-student-spelling-2", "spelling", "Build student", null, "", {
+            activity: "word-spelling",
+            phaseTitle: "Spelling Focus",
+            word: vocabularyStep.word,
+            spellingSyllables: [
+              [{ blank: true }, { blank: true }, { blank: true }],
+              [{ text: "d" }, { text: "e" }, { text: "n" }, { text: "t" }]
+            ],
+            accessiblePattern: "First syllable: three missing letters. Second syllable: d e n t.",
+            promptIndex: 2,
+            promptTotal: 3
+          }),
+          step("u1-d1-student-spelling-3", "spelling", "Write student", null, "", {
+            activity: "word-spelling",
+            phaseTitle: "Spelling Focus",
+            word: vocabularyStep.word,
+            spellingSyllables: [
+              [{ blank: true }, { blank: true }, { blank: true }],
+              [{ blank: true }, { blank: true }, { blank: true }, { blank: true }]
+            ],
+            accessiblePattern: "Write all three letters in the first syllable and all four letters in the second syllable.",
+            promptIndex: 3,
+            promptTotal: 3
+          })
+        ];
+      });
     const phases = [
       customPhase("u1-d1-warm-up", "warm-up", "Warm Up", "Throw and Catch", 6, "speaking", [
         step("u1-d1-warm-up-step", "warmup", "Throw and Catch", null, "", {
@@ -984,7 +1056,7 @@
         })
       ]),
       liveTalkPhase(unit, "u1-d1", "I am [name]. How are you?", "I am [name]. I am fine, thank you."),
-      customPhase("u1-d1-vocabulary", "lets-learn", "Let’s Learn", "Let’s Learn · Vocabulary", 10, "teaching", vocabularySteps(unit, 0, "u1-d1-word", "Let’s Learn"), { vocabulary }),
+      customPhase("u1-d1-vocabulary", "lets-learn", "Let’s Learn", "Let’s Learn · Vocabulary", 10, "teaching", vocabularyTeachingSteps, { vocabulary }),
       liveVocabularyReviewPhase(unit, "book-1", "u1-d1", vocabulary),
       liveChantPhase(unit, "u1-d1", "boy, girl, student, teacher, man, woman — listen, point, chant, and repeat."),
       customPhase("u1-d1-pronouns", "lets-practice", "Let’s Practice", "I = 我 / You = 你", 5, "teaching", [
@@ -2611,7 +2683,9 @@
       choices: options.choices || [],
       answer: options.answer || "",
       modelAnswer: options.modelAnswer || options.answer || "",
-      visual: options.visual || (word ? b3u1Asset(unit, word).visual : "")
+      visual: options.visual || (word ? b3u1Asset(unit, word).visual : ""),
+      type: options.type || (options.choices?.length ? "choice" : "rewrite"),
+      instruction: options.instruction || ""
     };
   }
 
@@ -2662,7 +2736,8 @@
       word: item.answer || item.skill || "Teaching picture",
       type: item.type || "rewrite",
       skill: item.skill,
-      difficulty: item.difficulty
+      difficulty: item.difficulty,
+      instruction: item.instruction || ""
     };
   }
 
@@ -2752,82 +2827,143 @@
   function book3Unit1Day3(unit) {
     const partA = reviewQuestions(unit.id, 3, "A");
     const partB = reviewQuestions(unit.id, 3, "B");
+    const animals = ["birds", "frogs", "puppies", "fish", "bunnies", "turtles", "hamsters", "spiders"];
+    const pictureItems = animals.map((animal, index) => ({
+      ...b3u1Asset(unit, animal),
+      word: animal,
+      prompt: index % 2 === 0 ? "Say an affirmative sentence." : "Say a negative sentence.",
+      answer: index % 2 === 0 ? `We like ${animal}.` : `We don't like ${animal}.`
+    }));
+    const bossQuestions = [
+      ...partA.slice(4),
+      ...partB.slice(4),
+      b3u1LoopQuestion(unit, "Answer: We like puppies.\nChoose the teacher's question.", "puppies", {
+        choices: ["What do you like?", "What do we like?", "Do you like puppies?"],
+        answer: "What do you like?",
+        instruction: "The answer gives information. The teacher says YOU; the class answers WE."
+      }),
+      b3u1LoopQuestion(unit, "Answer: Yes, we do.\nChoose the teacher's question.", "puppies", {
+        choices: ["What do you like?", "Do you like puppies?", "Do we like puppies?"],
+        answer: "Do you like puppies?",
+        instruction: "Yes/No answer → begin with Do."
+      })
+    ];
     const phases = [
-      customPhase("b3u1-d3-a-retrieval", "block-a", "Block A｜肯定句", "Quick Retrieval", 7, "review", [
-        practiceStep("b3u1-d3-a-map", "Subject Map", "I like  ·  You like  ·  We like  ·  They like", { modelAnswer: "The subject changes. The verb like stays the same." }),
-        b3u1PracticeStep(unit, "b3u1-d3-a-fish", "Special Word", "They like fish.", "fish", { modelAnswer: "Use fish, not fishes, in this sentence." })
+      customPhase("b3u1-d3-picture", "picture-game", "1｜快速圖片遊戲", "Quick Picture Game · 5 min", 5, "game", [
+        pictureFlashStep("b3u1-d3-picture-flash", "Animal Flash", pictureItems, {
+          instruction: "看圖 3 秒 → 遮住圖片 → 全班說肯定或否定完整句。"
+        })
       ]),
-      customPhase("b3u1-d3-a-grammar", "block-a", "Block A｜肯定句", "Grammar Box · Affirmative", 8, "teaching", [
-        practiceStep("b3u1-d3-a-formula", "Grammar Box", "I / You / We / They + like + plural animal", { modelAnswer: "I like birds.  ·  We like puppies.  ·  They like fish." })
+      customPhase("b3u1-d3-player", "player-practice", "2｜Player 題目", "Affirmative & Negative · 8 min", 8, "check", [
+        practiceLoopStep("b3u1-d3-player-loop", "Say It, Change It, Fix It", [...partA, ...partB.slice(0, 4)], {
+          kicker: "PLAYER PRACTICE",
+          instruction: "先看任務標籤，再說完整句；選擇題答對後才能換下一題。"
+        })
       ]),
-      customPhase("b3u1-d3-a-loop", "block-a", "Block A｜肯定句", "Affirmative Practice Loop", 10, "check", [
-        practiceLoopStep("b3u1-d3-a-practice", "Part A · Affirmative Practice", partA)
+      customPhase("b3u1-d3-write-a", "write-a", "3｜第一段講義", "Worksheet · Part A · 10 min", 10, "writing", [
+        writeTimeStep("b3u1-d3-write-a-step", "A", 10, "完成 Day 3 講義 Part A：看圖寫單字與肯定句。完成後全班核對。")
       ]),
-      customPhase("b3u1-d3-a-wordwall", "block-a", "Block A｜肯定句", "Game / Wordwall", 5, "game", [
-        { ...wordwallStep(unit, "book-3", "day-3-part-a", 0), title: "Part A Wordwall" }
+      customPhase("b3u1-d3-team", "team-game", "4｜團隊遊戲", "Grammar Battle · 8 min", 8, "game", [
+        practiceLoopStep("b3u1-d3-team-loop", "Two-Team Sentence Rescue", partB, {
+          kicker: "TEAM BATTLE",
+          instruction: "每隊輪流：先找錯或完成句子，再全隊齊說完整答案。答對得 1 分。"
+        })
       ]),
-      customPhase("b3u1-d3-a-write", "block-a", "Block A｜肯定句", "Write Time · Part A", 12, "writing", [
-        writeTimeStep("b3u1-d3-write-a", "A", 12, "Complete Part A on the Day 3 worksheet. Then check the affirmative sentences together.")
+      customPhase("b3u1-d3-write-b", "write-b", "5｜第二段講義", "Worksheet · Part B · 10 min", 10, "writing", [
+        writeTimeStep("b3u1-d3-write-b-step", "B", 10, "完成 Day 3 講義 Part B：否定句、重組與改錯。")
       ]),
-      customPhase("b3u1-d3-b-grammar", "block-b", "Block B｜否定句", "Grammar Box · Negative", 8, "teaching", [
-        practiceStep("b3u1-d3-b-formula", "Grammar Box", "I / You / We / They + don't like + animal", { modelAnswer: "They don't like spiders.  ·  We don't like frogs." }),
-        practiceStep("b3u1-d3-b-contrast", "Do not mix the patterns", "You don't like spiders.  ✓\nYou aren't like spiders.  ✕", { modelAnswer: "Use don't with the action verb like." })
-      ]),
-      customPhase("b3u1-d3-b-transform", "block-b", "Block B｜否定句", "Sentence Transformer", 8, "game", [
-        b3u1TransformerStep(unit, "b3u1-d3-b-t1", "They", "spiders"),
-        b3u1TransformerStep(unit, "b3u1-d3-b-t2", "We", "puppies")
-      ]),
-      customPhase("b3u1-d3-b-loop", "block-b", "Block B｜否定句", "Negative Practice Loop", 10, "check", [
-        practiceLoopStep("b3u1-d3-b-practice", "Part B · Negative Practice", partB)
-      ]),
-      customPhase("b3u1-d3-b-write", "block-b", "Block B｜否定句", "Write Time · Part B", 12, "writing", [
-        writeTimeStep("b3u1-d3-write-b", "B", 12, "Complete Part B on the Day 3 worksheet. Use don't like in every negative sentence.")
-      ]),
-      customPhase("b3u1-d3-b-exit", "block-b", "Block B｜否定句", "Correction & Exit Ticket", 5, "check", [
-        practiceLoopStep("b3u1-d3-exit", "Day 3 Exit Ticket", partB.slice(4, 8))
+      customPhase("b3u1-d3-boss", "boss-battle", "6｜Boss Battle", "Final Review · 10 min", 10, "game", [
+        bossBattleStep("b3u1-d3-boss-step", "Day 3 Grammar Boss", bossQuestions, {
+          instruction: "全班說出完整答案才能攻擊。最後兩題開始分辨 What / Do 與 You / We。"
+        })
       ])
     ];
-    return makeBook3Unit1Lesson(unit, 3, "肯定句 → 否定句｜雙區塊複習", phases);
+    return makeBook3Unit1Lesson(unit, 3, "圖片快問 → Player → 書寫 → 團隊戰 → 書寫 → Boss", phases);
   }
 
   function book3Unit1Day4(unit) {
     const partA = reviewQuestions(unit.id, 4, "A");
     const partB = reviewQuestions(unit.id, 4, "B");
+    const animals = ["bunnies", "turtles", "hamsters", "spiders", "birds", "frogs", "puppies", "fish"];
+    const pictureItems = animals.map((animal, index) => ({
+      ...b3u1Asset(unit, animal),
+      word: animal,
+      prompt: index % 2 === 0 ? "Ask: WHICH animal?" : "Ask: YES or NO?",
+      answer: index % 2 === 0 ? "What do you like?" : `Do you like ${animal}?`
+    }));
+    const diagnosticQuestions = [
+      b3u1LoopQuestion(unit, "Answer: We like puppies.\nWhich question did the teacher ask?", "puppies", {
+        choices: ["What do you like?", "What do we like?", "Do you like puppies?"],
+        answer: "What do you like?",
+        instruction: "The answer gives INFORMATION, so use What. The teacher says YOU; the class answers WE."
+      }),
+      b3u1LoopQuestion(unit, "Answer: Yes, we do.\nWhich question did the teacher ask?", "puppies", {
+        choices: ["What do you like?", "Do you like puppies?", "Do we like puppies?"],
+        answer: "Do you like puppies?",
+        instruction: "The answer is YES/NO, so use Do. The teacher says YOU; the class answers WE."
+      }),
+      b3u1LoopQuestion(unit, "Answer: They like fish.\nChoose the matching question.", "fish", {
+        choices: ["What do they like?", "Do they like fish?", "What do you like?"],
+        answer: "What do they like?",
+        instruction: "The answer names the animal, so use What."
+      }),
+      b3u1LoopQuestion(unit, "Answer: No, they don't.\nChoose the matching question.", "spiders", {
+        choices: ["What do they like?", "Do they like spiders?", "Are they spiders?"],
+        answer: "Do they like spiders?",
+        instruction: "The answer is YES/NO, so use Do."
+      }),
+      b3u1LoopQuestion(unit, "The teacher asks the whole class.\nThe class answers: We like frogs.", "frogs", {
+        choices: ["What do you like?", "What do we like?", "Do you like frogs?"],
+        answer: "What do you like?",
+        instruction: "Speaker change: teacher says YOU; the class answers WE."
+      }),
+      b3u1LoopQuestion(unit, "You only need a YES or NO answer.\nChoose the question.", "turtles", {
+        choices: ["What do they like?", "Do they like turtles?", "What are turtles?"],
+        answer: "Do they like turtles?",
+        instruction: "YES or NO → Do + subject + like...?"
+      })
+    ];
+    const teamQuestions = [
+      ...partA.slice(4, 8),
+      ...partB.slice(4, 10),
+      ...diagnosticQuestions
+    ];
+    const bossQuestions = [
+      ...diagnosticQuestions,
+      ...partA.slice(0, 8),
+      ...partB.slice(0, 10)
+    ];
     const phases = [
-      customPhase("b3u1-d4-a-retrieval", "block-a", "Block A｜疑問句", "Quick Retrieval", 6, "review", [
-        practiceStep("b3u1-d4-a-map", "Question Map", "What do you / they like?\nDo you / they like...?", { modelAnswer: "Wh question → information answer  |  Do question → Yes / No answer" })
+      customPhase("b3u1-d4-picture", "picture-game", "1｜快速圖片遊戲", "What or Do? · 5 min", 5, "game", [
+        pictureFlashStep("b3u1-d4-picture-flash", "Picture Question Flash", pictureItems, {
+          instruction: "看到 WHICH animal 就說 What 問句；看到 YES or NO 就說 Do 問句。"
+        })
       ]),
-      customPhase("b3u1-d4-a-grammar", "block-a", "Block A｜疑問句", "Grammar Box · Questions", 10, "teaching", [
-        practiceStep("b3u1-d4-a-wh", "Wh Question", "What + do + you / they + like?", { modelAnswer: "What do they like?  →  They like turtles." }),
-        practiceStep("b3u1-d4-a-yesno", "Yes / No Question", "Do + you / they + like + animal?", { modelAnswer: "Do you like spiders?  →  No, I don't." })
+      customPhase("b3u1-d4-player", "player-practice", "2｜Player 題目", "Choose the Question · 8 min", 8, "check", [
+        practiceLoopStep("b3u1-d4-player-loop", "Answer → Choose the Question", [...diagnosticQuestions, ...partA.slice(0, 8)], {
+          kicker: "WHAT OR DO?",
+          instruction: "先看答句：回答動物名稱用 What；回答 Yes／No 用 Do。老師問全班用 you，全班回答用 we。"
+        })
       ]),
-      customPhase("b3u1-d4-a-loop", "block-a", "Block A｜疑問句", "Question Practice Loop", 10, "check", [
-        practiceLoopStep("b3u1-d4-a-practice", "Part A · Questions and Answers", partA)
+      customPhase("b3u1-d4-write-a", "write-a", "3｜第一段講義", "Worksheet · Part A · 10 min", 10, "writing", [
+        writeTimeStep("b3u1-d4-write-a-step", "A", 10, "完成 Day 4 講義 Part A：先圈出答句類型，再寫 What 或 Do 問句。")
       ]),
-      customPhase("b3u1-d4-a-wordwall", "block-a", "Block A｜疑問句", "Game / Wordwall", 4, "game", [
-        { ...wordwallStep(unit, "book-3", "day-4-part-a", 0), title: "Part A Wordwall" }
+      customPhase("b3u1-d4-team", "team-game", "4｜團隊遊戲", "Question Detective · 8 min", 8, "game", [
+        practiceLoopStep("b3u1-d4-team-loop", "What Team vs Do Team", teamQuestions, {
+          kicker: "TEAM BATTLE",
+          instruction: "一隊判斷 What 或 Do；另一隊完成主詞與完整問句。下一題交換任務。"
+        })
       ]),
-      customPhase("b3u1-d4-a-write", "block-a", "Block A｜疑問句", "Write Time · Part A", 12, "writing", [
-        writeTimeStep("b3u1-d4-write-a", "A", 12, "Complete Part A on the Day 4 worksheet. Build the questions before choosing an answer.")
+      customPhase("b3u1-d4-write-b", "write-b", "5｜第二段講義", "Worksheet · Part B · 10 min", 10, "writing", [
+        writeTimeStep("b3u1-d4-write-b-step", "B", 10, "完成 Day 4 講義 Part B：You／We 視角轉換、改錯與完整問答。")
       ]),
-      customPhase("b3u1-d4-b-map", "block-b", "Block B｜綜合螺旋", "Spiral Grammar Map", 8, "teaching", [
-        practiceStep("b3u1-d4-b-map", "Choose the Question Helper", "be verb → Am / Are / Is\nthere be → Is there\naction verb → Do", { modelAnswer: "Are you happy?  ·  Is there a fan?  ·  Do they like turtles?" })
-      ]),
-      customPhase("b3u1-d4-b-loop", "block-b", "Block B｜綜合螺旋", "Mixed Spiral Practice", 12, "check", [
-        practiceLoopStep("b3u1-d4-b-practice", "Part B · Mixed Spiral Review", partB)
-      ]),
-      customPhase("b3u1-d4-b-challenge", "block-b", "Block B｜綜合螺旋", "Error Detective & Transformer", 8, "game", [
-        b3u1TransformerStep(unit, "b3u1-d4-b-t1", "They", "turtles"),
-        b3u1PracticeStep(unit, "b3u1-d4-b-error", "Fix the question", "Are you like hamsters? ✕", "hamsters", { modelAnswer: "Do you like hamsters? ✓" })
-      ]),
-      customPhase("b3u1-d4-b-write", "block-b", "Block B｜綜合螺旋", "Write Time · Part B", 12, "writing", [
-        writeTimeStep("b3u1-d4-write-b", "B", 12, "Complete Part B on the Day 4 worksheet. Decide whether each sentence needs a be verb, there be, or do.")
-      ]),
-      customPhase("b3u1-d4-b-exit", "block-b", "Block B｜綜合螺旋", "Exit Ticket", 3, "check", [
-        practiceLoopStep("b3u1-d4-exit", "Day 4 Exit Ticket", partB.slice(5, 10))
+      customPhase("b3u1-d4-boss", "boss-battle", "6｜Boss Battle", "Question Master · 10 min", 10, "game", [
+        bossBattleStep("b3u1-d4-boss-step", "What or Do Boss", bossQuestions, {
+          instruction: "先說規則，再答完整句：資訊答案＝What；Yes／No＝Do；老師問 you，班級答 we。"
+        })
       ])
     ];
-    return makeBook3Unit1Lesson(unit, 4, "疑問句 → 全題型｜雙區塊螺旋複習", phases);
+    return makeBook3Unit1Lesson(unit, 4, "What / Do → You / We｜問句辨識與螺旋複習", phases);
   }
 
   function book3Unit1Lessons(unit) {
@@ -3321,8 +3457,16 @@
     }, []);
     const firstTargetIndex = Math.max(0, (writingIndexes[0] ?? Math.ceil(phases.length / 2)) - 1);
     const secondTargetIndex = Math.max(0, (writingIndexes[1] ?? phases.length) - 1);
-    addSpiralLoop(phases[firstTargetIndex], partCQuestions, `${book.id}-${unit.id}-d${day}-loop-c`, "Part C · Grammar Challenge");
-    addSpiralLoop(phases[secondTargetIndex], partDQuestions, `${book.id}-${unit.id}-d${day}-loop-d`, "Part D · Independent Challenge");
+    const isBook3Unit1SixStageFlow = book.id === "book-3" && unit.id === "unit-1";
+    if (isBook3Unit1SixStageFlow) {
+      const playerLoop = phases.flatMap((phase) => phase.steps).find((step) => step.id.includes("-player-loop"));
+      const teamLoop = phases.flatMap((phase) => phase.steps).find((step) => step.id.includes("-team-loop"));
+      if (playerLoop?.practiceLoop) playerLoop.practiceLoop.questions.push(...partCQuestions.map(reviewLoopQuestion));
+      if (teamLoop?.practiceLoop) teamLoop.practiceLoop.questions.push(...partDQuestions.map(reviewLoopQuestion));
+    } else {
+      addSpiralLoop(phases[firstTargetIndex], partCQuestions, `${book.id}-${unit.id}-d${day}-loop-c`, "Part C · Grammar Challenge");
+      addSpiralLoop(phases[secondTargetIndex], partDQuestions, `${book.id}-${unit.id}-d${day}-loop-d`, "Part D · Independent Challenge");
+    }
     return {
       ...lesson,
       phases,

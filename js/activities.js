@@ -67,6 +67,36 @@
     `;
   }
 
+  function renderWordSpellingStep(step, duration) {
+    const word = step.word || {};
+    const image = renderPictureAsset(word, "word-spelling-image", "word-spelling-visual");
+    const syllables = (step.spellingSyllables || []).map((syllable) => `
+      <span class="spelling-syllable">
+        ${syllable.map((part) => part.blank
+          ? `<span class="spelling-blank" aria-label="missing letter"></span>`
+          : `<span class="spelling-given">${escapeHtml(part.text)}</span>`
+        ).join("")}
+      </span>
+    `).join('<span class="syllable-divider" aria-hidden="true">|</span>');
+
+    return `
+      <article class="step-card word-spelling-card" data-step-type="spelling">
+        <div class="step-meta">
+          <span class="phase-badge">${escapeHtml(step.phaseTitle || "Spelling Focus")} · ${escapeHtml(step.promptIndex)} / ${escapeHtml(step.promptTotal)}</span>
+          ${duration}
+        </div>
+        <div class="word-spelling-layout">
+          <div class="word-spelling-picture">${image}</div>
+          <div class="word-spelling-work">
+            <p class="step-kicker">Listen · Sound it out · Write</p>
+            <div class="spelling-pattern" role="img" aria-label="${escapeHtml(step.accessiblePattern || "Complete the missing letters")}">${syllables}</div>
+            <p class="word-spelling-prompt">Say the syllables. Write the missing letters.</p>
+          </div>
+        </div>
+      </article>
+    `;
+  }
+
   function flowGameContent(step) {
     const words = step.vocabulary || [];
     const sentences = step.mainSentences || [];
@@ -206,11 +236,13 @@
       <article class="step-card practice-loop-card" data-step-type="practice">
         <div class="step-meta"><span class="phase-badge">${escapeHtml(step.phaseTitle || "Practice Loop")}</span>${duration}</div>
         <div class="practice-loop-heading">
-          <div><p class="step-kicker">CONTINUOUS PRACTICE</p><h2>${escapeHtml(loop.title || step.title)}</h2></div>
+          <div><p class="step-kicker">${escapeHtml(loop.kicker || "CONTINUOUS PRACTICE")}</p><h2>${escapeHtml(loop.title || step.title)}</h2></div>
           <strong>${position + 1} / ${questions.length}</strong>
         </div>
+        ${loop.instruction ? `<p class="practice-loop-instruction">${escapeHtml(loop.instruction)}</p>` : ""}
         ${picture}
         <p class="practice-loop-task">${escapeHtml(taskLabels[question.type] || "THINK & ANSWER")}</p>
+        ${question.instruction ? `<p class="question-rule">💡 ${escapeHtml(question.instruction)}</p>` : ""}
         <p class="guided-prompt">${escapeHtml(question.prompt || "")}</p>
         <p class="quiz-feedback ${feedbackClass}" role="status" aria-live="polite">${escapeHtml(step.loopFeedback || "")}</p>
         ${choices ? `<div class="guided-options quiz-options">${choices}</div>` : `
@@ -221,6 +253,84 @@
           <button class="button button-primary" type="button" data-loop-next>${position === questions.length - 1 ? "Start again" : "Next question"}</button>
           <button class="button button-secondary" type="button" data-loop-random>🔀 Random question</button>
           <button class="button button-quiet" type="button" data-loop-restart>↻ Restart</button>
+        </div>
+      </article>`;
+  }
+
+  function renderPictureFlash(step, duration) {
+    const activity = step.pictureFlash || {};
+    const items = activity.items || [];
+    const index = Math.min(Number(step.flashIndex) || 0, Math.max(items.length - 1, 0));
+    const item = items[index] || {};
+    const picture = step.flashHidden
+      ? `<div class="picture-flash-cover" aria-label="Picture hidden">?</div>`
+      : renderPictureAsset(item, "picture-flash-image", "picture-flash-visual");
+    return `
+      <article class="step-card picture-flash-card" data-step-type="game">
+        <div class="step-meta"><span class="phase-badge">${escapeHtml(step.phaseTitle || "Quick Picture Game")}</span>${duration}</div>
+        <div class="practice-loop-heading">
+          <div><p class="step-kicker">LOOK · HIDE · SAY</p><h2>${escapeHtml(activity.title || step.title)}</h2></div>
+          <strong>${index + 1} / ${items.length}</strong>
+        </div>
+        <p class="practice-loop-instruction">${escapeHtml(activity.instruction || "")}</p>
+        <div class="picture-flash-stage">${picture}</div>
+        <p class="picture-flash-prompt">${escapeHtml(item.prompt || "Say the complete sentence.")}</p>
+        ${step.flashRevealed ? `<p class="grammar-model-answer">${escapeHtml(item.answer || item.word || "")}</p>` : ""}
+        <div class="practice-loop-actions">
+          <button class="button button-primary" type="button" data-flash-hide>${step.flashHidden ? "Show picture" : "Hide picture"}</button>
+          <button class="button button-secondary" type="button" data-flash-answer>${step.flashRevealed ? "Hide answer" : "Show answer"}</button>
+          <button class="button button-secondary" type="button" data-flash-next>Next picture</button>
+          <button class="button button-quiet" type="button" data-flash-random>🔀 Random</button>
+        </div>
+      </article>`;
+  }
+
+  function renderBossBattle(step, duration) {
+    const battle = step.bossBattle || {};
+    const questions = battle.questions || [];
+    const maxHp = Math.max(20, Number(battle.maxHp) || 100);
+    const hp = Number.isFinite(step.bossHp) ? step.bossHp : maxHp;
+    const index = Math.min(Number(step.bossIndex) || 0, Math.max(questions.length - 1, 0));
+    const question = questions[index] || {};
+    const defeated = hp <= 0;
+    const picture = question.image || question.sprite || question.visual
+      ? `<div class="guided-picture">${renderPictureAsset(question, "guided-image", "guided-visual")}</div>`
+      : "";
+    const choices = (question.choices || []).map((choice) => {
+      const correct = step.bossAnswered && choice === question.answer;
+      return `<button class="quiz-choice ${correct ? "is-correct" : ""}" type="button" data-boss-choice="${escapeHtml(choice)}" ${step.bossAnswered ? "disabled" : ""}>${escapeHtml(choice)}</button>`;
+    }).join("");
+    if (defeated) {
+      return `
+        <article class="step-card boss-battle-card is-defeated" data-step-type="game">
+          <div class="step-meta"><span class="phase-badge">${escapeHtml(step.phaseTitle || "Boss Battle")}</span>${duration}</div>
+          <p class="boss-icon" aria-hidden="true">🏆</p>
+          <h2>Boss defeated!</h2>
+          <p class="boss-victory">全班完成了 What／Do 與 You／We 挑戰！</p>
+          <button class="button button-primary" type="button" data-boss-reset>Play again</button>
+        </article>`;
+    }
+    return `
+      <article class="step-card boss-battle-card" data-step-type="game">
+        <div class="step-meta"><span class="phase-badge">${escapeHtml(step.phaseTitle || "Boss Battle")}</span>${duration}</div>
+        <div class="boss-topline">
+          <div><p class="step-kicker">FINAL TEAM CHALLENGE</p><h2>${escapeHtml(battle.title || step.title)}</h2></div>
+          <strong>Boss HP ${hp} / ${maxHp}</strong>
+        </div>
+        <div class="boss-health" aria-label="Boss health"><i style="width:${Math.max(0, Math.min(100, hp / maxHp * 100))}%"></i></div>
+        <p class="practice-loop-instruction">${escapeHtml(battle.instruction || "")}</p>
+        ${picture}
+        ${question.instruction ? `<p class="question-rule">💡 ${escapeHtml(question.instruction)}</p>` : ""}
+        <p class="boss-question">${escapeHtml(question.prompt || "")}</p>
+        <p class="quiz-feedback ${step.bossFeedback ? (step.bossAnswered ? "is-correct" : "is-wrong") : ""}" role="status" aria-live="polite">${escapeHtml(step.bossFeedback || "")}</p>
+        ${choices ? `<div class="guided-options quiz-options">${choices}</div>` : `
+          <button class="button button-secondary" type="button" data-boss-answer>${step.bossRevealed ? "Hide answer" : "Show answer"}</button>
+          ${step.bossRevealed ? `<p class="grammar-model-answer">${escapeHtml(question.modelAnswer || question.answer || "")}</p>` : ""}
+          <button class="button button-primary" type="button" data-boss-correct>✓ Correct · Attack</button>
+        `}
+        <div class="boss-actions">
+          <button class="button button-secondary" type="button" data-boss-next>Next challenge</button>
+          <button class="button button-quiet" type="button" data-boss-reset>↻ Reset battle</button>
         </div>
       </article>`;
   }
@@ -479,8 +589,11 @@
     if (step.activity === "topic-conversation") return renderTopicConversation(step, duration);
     if (step.activity === "sentence-transformer") return renderSentenceTransformer(step, duration);
     if (step.activity === "practice-loop") return renderPracticeLoop(step, duration);
+    if (step.activity === "picture-flash") return renderPictureFlash(step, duration);
+    if (step.activity === "boss-battle") return renderBossBattle(step, duration);
     if (step.activity === "write-time") return renderWriteTime(step, duration);
     if (step.activity === "guided-practice") return renderGuidedPractice(step, duration);
+    if (step.activity === "word-spelling") return renderWordSpellingStep(step, duration);
 
     if (step.type === "vocabulary" && step.word) {
       return renderVocabularyStep(step, duration);
@@ -627,6 +740,75 @@
           step.loopOrder = questions.map((_, index) => index);
           step.loopIndex = 0;
           resetQuestion();
+        } else return;
+        container.innerHTML = renderStep(step);
+        activateStep(container, step);
+      };
+      return;
+    }
+
+    if (step.activity === "picture-flash") {
+      container.onclick = (event) => {
+        const items = step.pictureFlash?.items || [];
+        const current = Number(step.flashIndex) || 0;
+        if (event.target.closest("[data-flash-hide]")) {
+          step.flashHidden = !step.flashHidden;
+        } else if (event.target.closest("[data-flash-answer]")) {
+          step.flashRevealed = !step.flashRevealed;
+        } else if (event.target.closest("[data-flash-next]")) {
+          step.flashIndex = items.length ? (current + 1) % items.length : 0;
+          step.flashHidden = false;
+          step.flashRevealed = false;
+        } else if (event.target.closest("[data-flash-random]")) {
+          if (items.length > 1) {
+            let next = current;
+            while (next === current) next = Math.floor(Math.random() * items.length);
+            step.flashIndex = next;
+          }
+          step.flashHidden = false;
+          step.flashRevealed = false;
+        } else return;
+        container.innerHTML = renderStep(step);
+        activateStep(container, step);
+      };
+      return;
+    }
+
+    if (step.activity === "boss-battle") {
+      const battle = step.bossBattle || {};
+      const questions = battle.questions || [];
+      const maxHp = Math.max(20, Number(battle.maxHp) || 100);
+      const damage = Math.max(1, Number(battle.damage) || 20);
+      if (!Number.isFinite(step.bossHp)) step.bossHp = maxHp;
+      const resetRound = () => {
+        step.bossAnswered = false;
+        step.bossRevealed = false;
+        step.bossFeedback = "";
+      };
+      const attack = () => {
+        if (step.bossAnswered) return;
+        step.bossAnswered = true;
+        step.bossHp = Math.max(0, step.bossHp - damage);
+        step.bossFeedback = `Great! Boss -${damage} HP`;
+      };
+      container.onclick = (event) => {
+        const current = Number(step.bossIndex) || 0;
+        const question = questions[current] || {};
+        const choice = event.target.closest("[data-boss-choice]");
+        if (choice) {
+          if (choice.dataset.bossChoice === question.answer) attack();
+          else step.bossFeedback = "Try again — first decide: information or Yes/No?";
+        } else if (event.target.closest("[data-boss-answer]")) {
+          step.bossRevealed = !step.bossRevealed;
+        } else if (event.target.closest("[data-boss-correct]")) {
+          attack();
+        } else if (event.target.closest("[data-boss-next]")) {
+          step.bossIndex = questions.length ? (current + 1) % questions.length : 0;
+          resetRound();
+        } else if (event.target.closest("[data-boss-reset]")) {
+          step.bossHp = maxHp;
+          step.bossIndex = 0;
+          resetRound();
         } else return;
         container.innerHTML = renderStep(step);
         activateStep(container, step);

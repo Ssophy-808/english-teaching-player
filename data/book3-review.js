@@ -10,7 +10,8 @@
     answer,
     choices: options.choices || [],
     visual: options.visual || "",
-    difficulty: options.difficulty || 1
+    difficulty: options.difficulty || 1,
+    instruction: options.instruction || ""
   });
 
   window.BOOK3_REVIEW_BANK = {

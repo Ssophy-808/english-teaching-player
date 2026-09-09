@@ -3512,10 +3512,24 @@
                         ? book1Unit8Lessons(unit)
                         : book.id === "book-1" && unit.id === "unit-9"
                           ? book1Unit9Lessons(unit)
-                          : (book.id === "book-3" ? [1, 2, 3, 4] : [1, 2]).map((day) => sharedLessonFromUnit(unit, unitIndex, book.id, day));
+                          : (book.id === "book-3" || (book.id === "book-2" && unit.id === "unit-2") ? [1, 2, 3, 4] : [1, 2]).map((day) => sharedLessonFromUnit(unit, unitIndex, book.id, day));
     return lessons.map((lesson, index) => {
       const day = index + 1;
-      return extendWorksheetToFourPages(upgradeToSpiralReview(lesson, book, unit, unitIndex, day), book, unit, day);
+      const upgraded = extendWorksheetToFourPages(upgradeToSpiralReview(lesson, book, unit, unitIndex, day), book, unit, day);
+      if (unit.id === "unit-2" && (book.id === "book-1" || book.id === "book-2")) {
+        const bookNumber = book.id === "book-1" ? 1 : 2;
+        return {
+          ...upgraded,
+          dailyHandout: {
+            day,
+            pageStart: ((day - 1) * 4) + 1,
+            pageEnd: day * 4,
+            studentUrl: `assets/handouts/book${bookNumber}/unit2/book${bookNumber}-unit2-daily-handouts.pdf?v=1`,
+            teacherUrl: `assets/handouts/book${bookNumber}/unit2/book${bookNumber}-unit2-teacher-key.pdf?v=1`
+          }
+        };
+      }
+      return upgraded;
     });
   }
 

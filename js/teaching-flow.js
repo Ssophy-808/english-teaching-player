@@ -3014,8 +3014,8 @@
         day,
         pageStart: ((day - 1) * 4) + 1,
         pageEnd: day * 4,
-        studentUrl: "assets/handouts/book3/unit2/book3-unit2-daily-handouts.pdf?v=1",
-        teacherUrl: "assets/handouts/book3/unit2/book3-unit2-teacher-key.pdf?v=1"
+        studentUrl: "assets/handouts/book3/unit2/book3-unit2-daily-handouts.pdf?v=2",
+        teacherUrl: "assets/handouts/book3/unit2/book3-unit2-teacher-key.pdf?v=2"
       } : undefined,
       source: bookId === "book-1" ? { document: "B1_教學流程.pdf", page: B1_DAY_PAGES[unitIndex]?.[day - 1] } : undefined
     };
@@ -3524,8 +3524,8 @@
             day,
             pageStart: ((day - 1) * 4) + 1,
             pageEnd: day * 4,
-            studentUrl: `assets/handouts/book${bookNumber}/unit2/book${bookNumber}-unit2-daily-handouts.pdf?v=1`,
-            teacherUrl: `assets/handouts/book${bookNumber}/unit2/book${bookNumber}-unit2-teacher-key.pdf?v=1`
+            studentUrl: `assets/handouts/book${bookNumber}/unit2/book${bookNumber}-unit2-daily-handouts.pdf?v=2`,
+            teacherUrl: `assets/handouts/book${bookNumber}/unit2/book${bookNumber}-unit2-teacher-key.pdf?v=2`
           }
         };
       }

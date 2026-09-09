@@ -3010,6 +3010,13 @@
       duration: totalDuration,
       durationMinutes: totalDuration,
       steps,
+      dailyHandout: bookId === "book-3" && unit.id === "unit-2" ? {
+        day,
+        pageStart: ((day - 1) * 4) + 1,
+        pageEnd: day * 4,
+        studentUrl: "assets/handouts/book3/unit2/book3-unit2-daily-handouts.pdf?v=1",
+        teacherUrl: "assets/handouts/book3/unit2/book3-unit2-teacher-key.pdf?v=1"
+      } : undefined,
       source: bookId === "book-1" ? { document: "B1_教學流程.pdf", page: B1_DAY_PAGES[unitIndex]?.[day - 1] } : undefined
     };
   }

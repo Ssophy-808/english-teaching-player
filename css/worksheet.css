@@ -57,7 +57,12 @@
 .wb-picture-prompt small { display: block; margin-bottom: 4mm; color: var(--wb-accent); font-size: 10pt; font-weight: 900; }
 .wb-picture-prompt p, .wb-question-card p { margin: 0; font-size: 12pt; font-weight: 800; line-height: 1.45; }
 .wb-answer-lines { display: block; margin-top: 3mm; }
-.wb-answer-lines i { display: block; height: 8mm; border-bottom: 1.5px solid #9fc4e4; }
+.wb-handwriting-row { position: relative; display: block; height: 9mm; }
+.wb-handwriting-row b { position: absolute; right: 0; left: 0; height: 0; border-top: 1.35px solid #8db8dc; }
+.wb-handwriting-row b:nth-child(1) { top: 0; }
+.wb-handwriting-row b:nth-child(2) { top: 33.333%; border-top-style: dashed; border-top-color: #b4cee5; }
+.wb-handwriting-row b:nth-child(3) { top: 66.666%; border-top-style: dashed; border-top-color: #b4cee5; }
+.wb-handwriting-row b:nth-child(4) { bottom: 0; }
 .wb-question-card { display: flex; min-height: 30mm; gap: 4mm; padding: 4mm 5mm; border: 2px solid color-mix(in srgb, var(--wb-accent) 30%, white); border-radius: 16px; background: white; }
 .wb-question-card > div { flex: 1; }
 .wb-question-card > .wb-picture, .wb-question-card > .wb-visual { width: 24mm; height: 24mm; flex: 0 0 24mm; border: 1.5px solid color-mix(in srgb, var(--wb-accent) 24%, white); }

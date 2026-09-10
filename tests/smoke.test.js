@@ -28,6 +28,12 @@ books.forEach((book) => {
       lesson.worksheet.pages.forEach((page) => {
         assert.ok(page.items.length > 0, `${lesson.id}/${page.type} must contain questions`);
         assert.ok((page.sceneAssets || []).length > 0 || page.items.some((item) => item.asset?.image || item.asset?.sprite?.src || item.asset?.visual), `${lesson.id}/${page.type} must contain visible picture assets`);
+        if (page.type === "sentence_transform") page.items.forEach((item) => {
+          const source = item.prompt.split("→")[0].trim();
+          const sourceIsNegative = /\b(?:am|is|are) not\b|\b(?:cannot|can't|do not|don't|does not|doesn't)\b/i.test(source);
+          assert.equal(item.prompt.includes("Change to affirmative."), sourceIsNegative, `${lesson.id} transform direction must match source polarity`);
+          assert.notEqual(item.expectedAnswer, source, `${lesson.id} sentence transformation must change the sentence`);
+        });
       });
       assert.ok(lesson.steps.length > 0, `${lesson.id} must have player steps`);
       assert.ok(lesson.steps.some((step) => step.activity === "flow-games" || step.activity === "guided-practice" || step.activity === "practice-loop" || step.activity === "picture-flash" || step.activity === "boss-battle"), `${lesson.id} must include an activity`);

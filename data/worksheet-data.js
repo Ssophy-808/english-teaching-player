@@ -97,8 +97,33 @@
   function negative(sentence) {
     if (/\b(am|is|are)\b/i.test(sentence)) return sentence.replace(/\b(am|is|are)\b/i, "$1 not");
     if (/\bcan\b/i.test(sentence)) return sentence.replace(/\bcan\b/i, "cannot");
-    if (/\b\w+s\b/i.test(sentence)) return sentence.replace(/\b(likes|wants|has)\b/i, (verb) => `does not ${verb === "has" ? "have" : verb.slice(0, -1)}`);
-    return sentence.replace(/\b(like|want|have|go)\b/i, "do not $1");
+    if (/\b(likes|wants|has|goes|does)\b/i.test(sentence)) {
+      return sentence.replace(/\b(likes|wants|has|goes|does)\b/i, (verb) => {
+        const base = { likes: "like", wants: "want", has: "have", goes: "go", does: "do" }[verb.toLowerCase()];
+        return `does not ${base}`;
+      });
+    }
+    return sentence.replace(/\b(like|want|have|go|do)\b/i, "do not $1");
+  }
+
+  function positive(sentence) {
+    if (/\b(am|is|are) not\b/i.test(sentence)) return sentence.replace(/\b(am|is|are) not\b/i, "$1");
+    if (/\b(cannot|can't)\b/i.test(sentence)) return sentence.replace(/\b(cannot|can't)\b/i, "can");
+    if (/\b(does not|doesn't)\s+(like|want|have|go|do)\b/i.test(sentence)) {
+      return sentence.replace(/\b(does not|doesn't)\s+(like|want|have|go|do)\b/i, (_, __, verb) => {
+        const thirdPerson = { like: "likes", want: "wants", have: "has", go: "goes", do: "does" }[verb.toLowerCase()];
+        return thirdPerson;
+      });
+    }
+    return sentence.replace(/\b(do not|don't)\s+(like|want|have|go|do)\b/i, "$2");
+  }
+
+  function isNegative(sentence) {
+    return /\b(?:am|is|are) not\b|\b(?:cannot|can't|do not|don't|does not|doesn't)\b/i.test(sentence);
+  }
+
+  function canTransform(sentence) {
+    return /\b(?:am|is|are|can|cannot|can't|like|likes|want|wants|have|has|go|goes|do|does)(?:\s+not)?\b/i.test(sentence);
   }
 
   function statements(unit) {
@@ -120,7 +145,10 @@
     if (type === "write_answer") return qa.slice(0, 6).map((item, index) => ({ asset: assetFor(item.answer, vocabulary, index), subjectCue: item.question, starter: "", expectedAnswer: item.answer, lines: 1 }));
     if (type === "fix_mistakes") return sentenceValues.slice(0, 6).map((sentence, index) => ({ asset: assetFor(sentence, vocabulary, index), prompt: wrongSentence(sentence), expectedAnswer: sentence, lines: 2 }));
     if (type === "unscramble") return sentencePool(unit).slice(0, 6).map((sentence, index) => ({ asset: assetFor(sentence, vocabulary, index), prompt: scramble(sentence), expectedAnswer: sentence, lines: 2 }));
-    if (type === "sentence_transform") return sentenceValues.slice(0, 6).map((sentence, index) => ({ asset: assetFor(sentence, vocabulary, index), prompt: `${sentence}  →  Change to negative.`, expectedAnswer: negative(sentence), lines: 2 }));
+    if (type === "sentence_transform") return sentenceValues.filter(canTransform).slice(0, 6).map((sentence, index) => {
+      const direction = isNegative(sentence) ? "affirmative" : "negative";
+      return { asset: assetFor(sentence, vocabulary, index), prompt: `${sentence}  →  Change to ${direction}.`, expectedAnswer: direction === "negative" ? negative(sentence) : positive(sentence), lines: 2 };
+    });
     return qa.slice(0, 6).map((item, index) => ({ asset: assetFor(item.answer, vocabulary, index), prompt: item.question, expectedAnswer: item.answer, lines: 1 }));
   }
 

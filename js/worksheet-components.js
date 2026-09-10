@@ -19,7 +19,8 @@
   }
 
   function answerLines(count = 1) {
-    return `<span class="wb-answer-lines">${Array.from({ length: count }, () => "<i></i>").join("")}</span>`;
+    const guide = '<i class="wb-handwriting-row" aria-hidden="true"><b></b><b></b><b></b><b></b></i>';
+    return `<span class="wb-answer-lines" aria-label="Four-line English handwriting guide">${Array.from({ length: count }, () => guide).join("")}</span>`;
   }
 
   function pictureSentence(item, index) {

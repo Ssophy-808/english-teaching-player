@@ -53,6 +53,10 @@
     scrollToTop();
   }
 
+  function dayNumber(lesson, index = 0) {
+    return Number(String(lesson?.day || index + 1).match(/\d+/)?.[0]) || index + 1;
+  }
+
   function renderUnits(book) {
     selectedBook = book;
     selectedUnit = null;
@@ -104,9 +108,24 @@
     return book && unit && lesson ? { book, unit, lesson } : null;
   }
 
-  function openLesson(book, unit, lesson, stepIndex = 0) {
+  function openLesson(book, unit, lesson, stepIndex = 0, updateRoute = true) {
     scrollToTop();
+    if (updateRoute) window.LessonRoutes.navigate(window.LessonRoutes.pathFor(book.id, unit.id, dayNumber(lesson)));
     window.LessonPlayer.open(buildLessonContext(book, unit, lesson), stepIndex);
+  }
+
+  function applyRoute() {
+    const route = window.LessonRoutes.parse();
+    if (!route.bookId) { renderBooks(); return; }
+    const book = catalog.find((item) => item.id === route.bookId);
+    if (!book) { renderBooks(); return; }
+    if (!route.unitId) { renderUnits(book); return; }
+    const unit = book.units.find((item) => item.id === route.unitId);
+    if (!unit) { renderUnits(book); return; }
+    if (!route.day) { renderLessons(book, unit); return; }
+    const lesson = unit.lessons.find((item, index) => dayNumber(item, index) === route.day);
+    if (lesson) { selectedBook = book; selectedUnit = unit; openLesson(book, unit, lesson, 0, false); }
+    else renderLessons(book, unit);
   }
 
   function updateContinueLesson() {
@@ -127,14 +146,14 @@
     if (!card || card.disabled) return;
     const [type, id] = card.dataset.action.split(":");
 
-    if (type === "books") renderBooks();
+    if (type === "books") { window.LessonRoutes.navigate(window.LessonRoutes.pathFor()); renderBooks(); }
     if (type === "book") {
       const book = catalog.find((item) => item.id === id);
-      if (book) renderUnits(book);
+      if (book) { window.LessonRoutes.navigate(window.LessonRoutes.pathFor(book.id)); renderUnits(book); }
     }
     if (type === "unit" && selectedBook) {
       const unit = selectedBook.units.find((item) => item.id === id);
-      if (unit) renderLessons(selectedBook, unit);
+      if (unit) { window.LessonRoutes.navigate(window.LessonRoutes.pathFor(selectedBook.id, unit.id)); renderLessons(selectedBook, unit); }
     }
     if (type === "lesson" && selectedBook && selectedUnit) {
       const lesson = selectedUnit.lessons.find((item) => item.id === id);
@@ -145,8 +164,13 @@
   window.LessonPlayer.init({
     onExit() {
       updateContinueLesson();
+      if (selectedBook && selectedUnit) {
+        window.LessonRoutes.navigate(window.LessonRoutes.pathFor(selectedBook.id, selectedUnit.id), true);
+        renderLessons(selectedBook, selectedUnit);
+      }
     }
   });
-  renderBooks();
+  window.addEventListener("popstate", () => window.location.reload());
+  applyRoute();
   updateContinueLesson();
 })();

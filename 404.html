@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head><meta charset="utf-8"><title>Opening lesson…</title></head>
+  <body>
+    <p>Opening the requested lesson…</p>
+    <script>
+      (function () {
+        const parts = location.pathname.split("/").filter(Boolean);
+        const routeIndex = parts.findIndex((part) => /^book\d+$/i.test(part));
+        const base = `/${parts.slice(0, Math.max(0, routeIndex)).join("/")}${routeIndex > 0 ? "/" : ""}`;
+        location.replace(`${base}?route=${encodeURIComponent(location.pathname + location.search + location.hash)}`);
+      })();
+    </script>
+  </body>
+</html>

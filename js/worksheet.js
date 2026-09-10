@@ -112,6 +112,23 @@
   function render() {
     if (!lesson?.worksheet) return;
     title.textContent = `${lesson.bookTitle} ${lesson.unitTitle} · Day ${lesson.worksheet.day} 講義`;
+    if (Array.isArray(lesson.worksheet.pages)) {
+      const pages = lesson.worksheet.pages.map((page, pageIndex) => {
+        const order = orders[`page-${pageIndex}`] || page.items.map((_, index) => index);
+        return { ...page, items: order.map((index) => page.items[index]).filter(Boolean) };
+      });
+      studentButton.textContent = `學生版 · ${pages.length} pages`;
+      studentButton.classList.toggle("is-active", mode === "student");
+      answerButton.classList.toggle("is-active", mode === "answer");
+      if (mode === "student") {
+        preview.innerHTML = pages.map((page, index) => window.WorksheetComponents.studentPage(lesson, page, index, pages.length)).join("");
+      } else {
+        const groups = [];
+        for (let index = 0; index < pages.length; index += 2) groups.push(pages.slice(index, index + 2));
+        preview.innerHTML = groups.map((group) => window.WorksheetComponents.answerPage(lesson, group)).join("");
+      }
+      return;
+    }
     const parts = worksheetParts();
     studentButton.textContent = `學生版 · ${parts.length} pages`;
     studentButton.classList.toggle("is-active", mode === "student");
@@ -161,6 +178,13 @@
   studentButton.addEventListener("click", () => { mode = "student"; render(); });
   answerButton.addEventListener("click", () => { mode = "answer"; render(); });
   shuffleButton.addEventListener("click", () => {
+    if (Array.isArray(lesson?.worksheet?.pages)) {
+      lesson.worksheet.pages.forEach((page, pageIndex) => {
+        orders[`page-${pageIndex}`] = shuffle(Array.from({ length: page.items.length }, (_, index) => index));
+      });
+      render();
+      return;
+    }
     worksheetParts().forEach((part) => {
       const count = lesson?.worksheet?.blocks?.[part]?.questions?.length || 0;
       orders[part] = shuffle(Array.from({ length: count }, (_, index) => index));

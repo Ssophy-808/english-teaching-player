@@ -6,7 +6,14 @@
     <meta name="theme-color" content="#2b59c3">
     <meta name="description" content="A simple, projection-friendly lesson player for English teachers.">
     <title>English Teaching Player</title>
-    <link rel="stylesheet" href="css/style.css?v=21">
+    <script>
+      (function () {
+        const match = location.pathname.match(/^(.*?\/)(?:book\d+(?:\/unit\d+)?(?:\/day\d+)?\/?)?$/i);
+        document.write(`<base href="${match ? match[1] : "./"}">`);
+      })();
+    </script>
+    <link rel="stylesheet" href="css/style.css?v=22">
+    <link rel="stylesheet" href="css/worksheet.css?v=1">
   </head>
   <body>
     <noscript>請啟用 JavaScript 才能使用教材播放器。</noscript>
@@ -51,6 +58,7 @@
           <button id="daily-handout-button" class="flow-button daily-handout-button" type="button" hidden>📘 每日講義</button>
           <button id="worksheet-button" class="flow-button worksheet-button" type="button" title="可洗牌與調整題目的課堂練習" hidden>📝 可調整練習</button>
           <button id="practice-jump-button" class="flow-button practice-jump-button" type="button" hidden>▶ 連續訓練</button>
+          <button id="copy-lesson-link" class="flow-button" type="button" title="Copy a permanent link to this lesson">🔗 Copy Lesson Link</button>
           <button id="flow-button" class="flow-button" type="button" aria-haspopup="dialog">課程流程</button>
           <button id="toolbox-button" class="icon-button toolbox-button" type="button" aria-label="Open classroom toolbox" title="Classroom toolbox">★</button>
           <span id="step-count" class="step-count" aria-live="polite"></span>
@@ -195,15 +203,19 @@
     <script src="data/book2.js?v=3" defer></script>
     <script src="data/book3.js?v=3" defer></script>
     <script src="data/book3-review.js?v=2" defer></script>
-    <script src="js/teaching-flow.js?v=51" defer></script>
+    <script src="data/course-schema.js?v=1" defer></script>
+    <script src="js/teaching-flow.js?v=52" defer></script>
+    <script src="data/worksheet-data.js?v=1" defer></script>
     <script src="js/activities.js?v=21" defer></script>
-    <script src="js/worksheet.js?v=5" defer></script>
+    <script src="js/worksheet-components.js?v=1" defer></script>
+    <script src="js/worksheet.js?v=6" defer></script>
     <script src="js/classroom-tools.js?v=1" defer></script>
     <script src="js/vendor/docx.iife.js?v=1" defer></script>
     <script src="js/word-export.js?v=4" defer></script>
     <script src="js/test-builder.js?v=14" defer></script>
     <script src="js/daily-handout.js?v=1" defer></script>
-    <script src="js/player.js?v=6" defer></script>
-    <script src="js/app.js?v=3" defer></script>
+    <script src="js/routes.js?v=1" defer></script>
+    <script src="js/player.js?v=7" defer></script>
+    <script src="js/app.js?v=4" defer></script>
   </body>
 </html>

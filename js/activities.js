@@ -172,6 +172,34 @@
       </article>`;
   }
 
+  function renderGrammarMap(step, duration) {
+    const focus = step.grammarFocus || {};
+    const patterns = (focus.patterns || []).slice(0, 6);
+    const map = [];
+    patterns.forEach((sentence) => {
+      const match = String(sentence).match(/^(I|You|He|She|It|We|They|There|These|Those)\s+(am|are|is|do|does|can|have|has|like|likes)\b/i);
+      if (match && !map.some((item) => item[0].toLowerCase() === match[1].toLowerCase())) map.push([match[1], match[2]]);
+    });
+    return `<article class="step-card grammar-map-card" data-step-type="grammar">
+      <div class="step-meta"><span class="phase-badge">Grammar Focus · Step 1–2</span>${duration}</div>
+      <p class="step-kicker">CONCEPT → PATTERN</p><h2>${escapeHtml(focus.concept || step.title)}</h2>
+      ${map.length ? `<div class="grammar-map">${map.map(([subject, verb]) => `<span><strong>${escapeHtml(subject)}</strong><i>→</i><b>${escapeHtml(verb)}</b></span>`).join("")}</div>` : ""}
+      <div class="grammar-pattern-board"><h3>Sentence patterns</h3>${patterns.map((pattern) => `<p>${escapeHtml(pattern)}</p>`).join("")}</div>
+      <p class="question-rule">先確認概念與句型骨架，再進入 Guided Practice 和 Passport Sentences。</p>
+    </article>`;
+  }
+
+  function renderBookResource(step, duration) {
+    const page = Math.max(1, Number(step.bookPage) || 1);
+    const source = step.embedUrl ? `${step.embedUrl}${String(step.embedUrl).includes("#") ? "&" : "#"}page=${page}` : "";
+    return `<article class="step-card show-book-card" data-step-type="showbook">
+      <div class="step-meta"><span class="phase-badge">Show Book</span>${duration}</div>
+      <div class="show-book-heading"><div><p class="step-kicker">ORIGINAL LIVE MATERIAL</p><h2>${escapeHtml(step.title || "Show Book")}</h2></div><strong>Page ${page}</strong></div>
+      ${source ? `<iframe class="show-book-frame" src="${escapeHtml(source)}" title="Show Book material"></iframe>` : `<div class="show-book-empty"><span>📖</span><h3>Show Book</h3><p>尚未提供本 Unit 的電子教材網址。</p></div>`}
+      <div class="show-book-controls"><button class="button button-secondary" type="button" data-book-prev>← Previous Page</button><button class="button button-secondary" type="button" data-book-next>Next Page →</button><button class="button button-primary" type="button" data-book-back>Back to Lesson</button></div>
+    </article>`;
+  }
+
   function renderTopicConversation(step, duration) {
     const labels = { intro: "主題導入", "teacher-question": "教師提問", pair: "Pair Practice", challenge: "綜合口說活動" };
     return `
@@ -480,6 +508,7 @@
   function renderPassportSentenceStep(step, duration) {
     const sentence = step.passportSentence;
     const picture = renderPictureAsset(sentence, "passport-sentence-image", "passport-sentence-visual");
+    const hidden = Boolean(step.passportHidden);
     return `
       <article class="step-card passport-sentence-card" data-step-type="grammar">
         <div class="quiz-topline">
@@ -492,9 +521,13 @@
         <div class="passport-sentence-layout">
           <div class="passport-sentence-picture">${picture}</div>
           <div class="passport-sentence-copy">
-            <p class="passport-sentence-kicker">READ ALOUD</p>
-            <h2>${escapeHtml(sentence.text)}</h2>
-            <p class="passport-sentence-translation">${escapeHtml(sentence.translation)}</p>
+            <p class="passport-sentence-kicker">PASSPORT ${escapeHtml(step.questionIndex)} / ${escapeHtml(step.questionTotal)}</p>
+            <h2 class="${hidden ? "is-passport-hidden" : ""}">${hidden ? "Tap Show to reveal the sentence" : escapeHtml(sentence.text)}</h2>
+            <p class="passport-sentence-translation">${hidden ? "先自己朗讀，再檢查。" : escapeHtml(sentence.translation)}</p>
+            <div class="passport-controls">
+              <button class="button button-secondary" type="button" data-passport-toggle>${hidden ? "Show" : "Hide"}</button>
+              <button class="button button-primary" type="button" data-passport-read>▶ Read Aloud</button>
+            </div>
           </div>
         </div>
       </article>
@@ -586,6 +619,8 @@
 
     if (step.activity === "flow-games") return renderFlowGamesStep(step, duration);
     if (step.activity === "grammar-check") return renderGrammarCheck(step, duration);
+    if (step.activity === "grammar-map") return renderGrammarMap(step, duration);
+    if (step.activity === "book-resource") return renderBookResource(step, duration);
     if (step.activity === "topic-conversation") return renderTopicConversation(step, duration);
     if (step.activity === "sentence-transformer") return renderSentenceTransformer(step, duration);
     if (step.activity === "practice-loop") return renderPracticeLoop(step, duration);
@@ -619,6 +654,17 @@
       return renderPassportSentenceStep(step, duration);
     }
 
+    if (step.activity === "book-resource") {
+      container.onclick = (event) => {
+        if (event.target.closest("[data-book-prev]")) step.bookPage = Math.max(1, (Number(step.bookPage) || 1) - 1);
+        else if (event.target.closest("[data-book-next]")) step.bookPage = (Number(step.bookPage) || 1) + 1;
+        else if (event.target.closest("[data-book-back]")) { document.dispatchEvent(new CustomEvent("lesson:next")); return; }
+        else return;
+        container.innerHTML = renderStep(step); activateStep(container, step);
+      };
+      return;
+    }
+
     if (step.type === "embed") {
       return renderEmbedStep(step, duration);
     }
@@ -646,6 +692,25 @@
         const audio = new Audio(audioButton.dataset.audioSrc);
         audio.play().catch(() => { audioButton.textContent = "Audio unavailable"; });
       });
+    }
+
+    if (step.passportSentence) {
+      container.onclick = (event) => {
+        if (event.target.closest("[data-passport-toggle]")) {
+          step.passportHidden = !step.passportHidden;
+          container.innerHTML = renderStep(step);
+          activateStep(container, step);
+          return;
+        }
+        if (event.target.closest("[data-passport-read]")) {
+          if (step.passportSentence.audio) new Audio(step.passportSentence.audio).play().catch(() => {});
+          else if ("speechSynthesis" in window) {
+            window.speechSynthesis.cancel();
+            window.speechSynthesis.speak(new SpeechSynthesisUtterance(step.passportSentence.text));
+          }
+        }
+      };
+      return;
     }
 
     if (step.activity === "flow-games") {

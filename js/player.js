@@ -25,6 +25,7 @@
     elements.toolbox = document.getElementById("toolbox-button");
     elements.phaseTrail = document.getElementById("phase-trail");
     elements.practiceJump = document.getElementById("practice-jump-button");
+    elements.copyLink = document.getElementById("copy-lesson-link");
     elements.dailyHandout = document.getElementById("daily-handout-button");
     elements.worksheet = document.getElementById("worksheet-button");
     elements.flowButton = document.getElementById("flow-button");
@@ -159,6 +160,21 @@
     render();
   }
 
+  async function copyLessonLink() {
+    if (!currentLesson) return;
+    const day = Number(String(currentLesson.day || "").match(/\d+/)?.[0]) || 1;
+    const url = new URL(window.LessonRoutes.pathFor(currentLesson.bookId, currentLesson.unitId, day), window.location.origin).href;
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch (_error) {
+      const input = document.createElement("textarea");
+      input.value = url; document.body.appendChild(input); input.select(); document.execCommand("copy"); input.remove();
+    }
+    const original = elements.copyLink.textContent;
+    elements.copyLink.textContent = "✓ Link Copied";
+    window.setTimeout(() => { elements.copyLink.textContent = original; }, 1600);
+  }
+
   function close() {
     if (!currentLesson) return;
     saveProgress();
@@ -218,6 +234,7 @@
       const index = currentLesson?.steps.findIndex((step) => step.activity === "practice-loop") ?? -1;
       if (index >= 0) goTo(index);
     });
+    elements.copyLink.addEventListener("click", copyLessonLink);
     elements.flowButton.addEventListener("click", openFlow);
     elements.flowClose.addEventListener("click", closeFlow);
     elements.flowReturn.addEventListener("click", closeFlow);
@@ -236,6 +253,7 @@
       const step = currentLesson?.steps[currentIndex];
       if (step) elements.phaseTrail.textContent = trailFor(step, activeGameTitle);
     });
+    document.addEventListener("lesson:next", () => goTo(currentIndex + 1));
     document.addEventListener("fullscreenchange", updateFullscreenButton);
     document.addEventListener("keydown", handleKeydown);
   }
@@ -248,5 +266,5 @@
     }
   }
 
-  window.LessonPlayer = { init, open, getSavedProgress };
+  window.LessonPlayer = { init, open, close, getSavedProgress };
 })();

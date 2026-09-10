@@ -2,6 +2,83 @@
 
 A static, projection-friendly lesson player for English teachers. It includes a phase-based teaching flow, Book → Unit → Lesson navigation, one-step-at-a-time playback, Previous / Next controls, keyboard navigation, progress, fullscreen, saved local progress, Wordwall, picture quizzes, in-flow review games, and a no-prep classroom toolbox.
 
+## Current architecture
+
+This remains one static single-page application. Existing Player, Wordwall, Show Book, Passport, classroom tools, Test Bank, progress and fullscreen code is retained. The September 2026 refactor adds a route layer and a reusable workbook layer around those working modules.
+
+- `data/book1.js`, `data/book2.js`, and `data/book3.js` remain the curriculum sources.
+- `data/course-schema.js` normalizes every Unit to the same data contract: `title`, `vocabulary`, `phonics`, `grammarFocus`, `passportSentences`, `days`, `activities`, `showBook`, and `worksheet`.
+- `js/teaching-flow.js` converts curriculum data into four Day lessons without duplicating Player HTML.
+- `data/worksheet-data.js` assigns four skill-focused workbook pages to each Day.
+- `js/worksheet-components.js` contains reusable workbook components and renderers.
+- `css/worksheet.css` is the fixed A4 elementary workbook design system.
+- `js/routes.js` owns permanent Book / Unit / Day URLs.
+
+Book 1 and Book 2 each contain 9 Units and every Unit exposes Day 1–4. The Day progression is fixed: guided introduction, fluency practice, spiral extension, then independent application.
+
+## Permanent lesson URLs
+
+Every level can be opened directly and survives refresh:
+
+```text
+/book1/
+/book1/unit1/
+/book1/unit1/day1/
+/book1/unit1/day2/
+/book1/unit1/day3/
+/book1/unit1/day4/
+```
+
+The Player header includes **Copy Lesson Link**. `404.html` redirects GitHub Pages deep links back to the single Player without creating duplicate HTML files.
+
+## Workbook design system
+
+HTML worksheets are real selectable DOM text, not flattened worksheet images. Illustrations may be PNG, JPG, or sprite crops; titles, instructions, questions, answer lines, and teacher answers remain editable HTML.
+
+Supported page types:
+
+```text
+picture_sentence
+matching
+fix_mistakes
+unscramble
+write_question
+write_answer
+big_picture
+sentence_transform
+```
+
+Every page has one primary skill. Day 1 uses more pictures and grammar cues; Day 2 reduces support; Day 3 adds transformation; Day 4 uses correction, reordering, question writing, and a picture-board challenge. Student mode never renders `expectedAnswer`; Teacher Mode renders a separate key.
+
+To add or override a worksheet, add page data with this shape and attach it to the lesson's `worksheet.pages` array:
+
+```js
+{
+  type: "picture_sentence",
+  title: "Picture Sentence Practice",
+  instruction: "Look at the picture and write a complete sentence.",
+  skill: "subject + be verb",
+  items: [{
+    asset: { image: "assets/images/book1/unit1/boy.png" },
+    subjectCue: "Use “He”.",
+    starter: "He ",
+    expectedAnswer: "He is a boy."
+  }]
+}
+```
+
+Do not put the target noun beside a sentence-production picture. `subjectCue` and `grammarCue` should provide only the grammar support needed for that Day. Add new page renderers to `js/worksheet-components.js`, then style them in `css/worksheet.css`; do not create a new standalone worksheet HTML file.
+
+## Add a Book, Unit, or Day
+
+1. Add a curriculum data file under `data/` and push one book object into `window.CURRICULUM_BOOKS`.
+2. Load the file before `data/course-schema.js` in `index.html`.
+3. Give every Book and Unit a stable ID such as `book-4` and `unit-1`.
+4. Supply the official Passport sentence pairs exactly as printed. Do not generate or rewrite them in the renderer.
+5. Add illustration paths to vocabulary records. The common Player, route layer, four-Day generator, and worksheet system will handle the rest.
+
+The remaining content dependency is original publisher material: add each Unit's e-book/PDF/PPT URL to `materials.bookUrl` for Show Book, Wordwall embed URL to the appropriate material field, and consistent ESL illustration assets where a vocabulary item currently has only text or an emoji.
+
 The home screen also includes a Test Bank / Exam Builder. Teachers can select a Book, one or more Units, difficulty, spiral review, and counts for picture vocabulary, picture sentences, multiple choice, fill-in, error correction, sentence order, transformation, and dialogue questions. The generated exam supports per-question replacement, deletion, shuffling, scoring, four-line handwriting guides, a teacher answer key, A4 PDF printing, and editable `.docx` export for both student and answer modes. Builder settings are saved locally on the device.
 
 ## Project structure
@@ -31,17 +108,17 @@ The home screen also includes a Test Bank / Exam Builder. Teachers can select a 
 
 ## Open locally
 
-Because the site is static, it can be served by any simple local web server. From the project folder, use one of these options:
+Use the included SPA-aware preview server so direct Book / Unit / Day paths work locally:
 
 ```powershell
-# Python
-python -m http.server 8080
-
-# Or, if Node.js is installed
-npx serve .
+python tools\serve_site.py
 ```
 
-Then open `http://localhost:8080` (Python) or the URL shown by `serve`.
+Then open `http://127.0.0.1:8765/`. Run the automated structural checks with:
+
+```powershell
+node tests\smoke.test.js
+```
 
 ## Deploy to GitHub Pages
 

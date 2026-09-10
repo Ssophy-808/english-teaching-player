@@ -802,10 +802,15 @@
     const pages = unit.sentenceCards?.length
       ? sentencePatternSteps(unit, 0, unit.mainSentences)
       : sentenceReviewSteps(unit, 0);
-    return pages.length ? pages : [step("grammar-pattern", "grammar", "Grammar Teaching", null, unit.mainSentences.join("\n"), {
+    const concept = step("grammar-concept", "grammar", "Grammar Focus - Concept & Pattern", null, "Teach the rule before asking students to produce sentences.", {
+      activity: "grammar-map",
+      grammarFocus: unit.grammarFocus || { concept: unit.topic, patterns: unit.mainSentences.slice(0, 6) }
+    });
+    const practicePages = pages.length ? pages : [step("grammar-pattern", "grammar", "Grammar Teaching", null, unit.mainSentences.join("\n"), {
       activity: "sentence-pattern",
       mainSentences: unit.mainSentences
     })];
+    return [concept, ...practicePages];
   }
 
   function grammarCheckPage(unit) {
@@ -3512,7 +3517,7 @@
                         ? book1Unit8Lessons(unit)
                         : book.id === "book-1" && unit.id === "unit-9"
                           ? book1Unit9Lessons(unit)
-                          : (book.id === "book-3" || (book.id === "book-2" && unit.id === "unit-2") ? [1, 2, 3, 4] : [1, 2]).map((day) => sharedLessonFromUnit(unit, unitIndex, book.id, day));
+                          : [1, 2, 3, 4].map((day) => sharedLessonFromUnit(unit, unitIndex, book.id, day));
     return lessons.map((lesson, index) => {
       const day = index + 1;
       const upgraded = extendWorksheetToFourPages(upgradeToSpiralReview(lesson, book, unit, unitIndex, day), book, unit, day);
@@ -3537,7 +3542,9 @@
     return books.map((book) => ({
       ...book,
       units: book.units.map((unit, unitIndex) => ({
+        ...unit,
         id: unit.id,
+        curriculumTitle: unit.title,
         title: `Unit ${unitIndex + 1}`,
         topic: unit.title,
         lessons: lessonsForUnit(book, unit, unitIndex)

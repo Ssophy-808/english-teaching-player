@@ -27,11 +27,11 @@
   }
 
   function standardItem(item, index) {
-    return `<li class="wb-question-card"><span class="wb-number">${index + 1}</span><div><p>${escapeHtml(item.prompt)}</p>${answerLines(item.lines || 1)}</div></li>`;
+    return `<li class="wb-question-card"><span class="wb-number">${index + 1}</span>${assetMarkup(item.asset)}<div><p>${escapeHtml(item.prompt)}</p>${answerLines(item.lines || 1)}</div></li>`;
   }
 
   function matching(page) {
-    return `<div class="wb-matching"><ol>${page.items.map((item, index) => `<li><span>${index + 1}</span>${escapeHtml(item.left)}</li>`).join("")}</ol><ol>${page.items.map((item, index) => `<li><span>${String.fromCharCode(65 + index)}</span>${escapeHtml(item.right)}</li>`).join("")}</ol></div>`;
+    return `<div class="wb-matching"><ol>${page.items.map((item, index) => `<li><span>${index + 1}</span>${assetMarkup(item.asset)}<b>${escapeHtml(item.left)}</b></li>`).join("")}</ol><ol>${page.items.map((item, index) => `<li><span>${String.fromCharCode(65 + index)}</span><b>${escapeHtml(item.right)}</b></li>`).join("")}</ol></div>`;
   }
 
   function bigPicture(page) {

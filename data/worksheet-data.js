@@ -29,7 +29,8 @@
   };
 
   function vocabularyItems(unit) {
-    return (unit.vocabulary || []).map((item) => typeof item === "string" ? { word: item, visual: item } : item);
+    if (window.TeachingFlow?.vocabularyItems) return window.TeachingFlow.vocabularyItems(unit.vocabulary || []);
+    return (unit.vocabulary || []).map((item) => typeof item === "string" ? { word: item, visual: "🖼️" } : item);
   }
 
   function passportLines(unit) {
@@ -113,14 +114,14 @@
     if (type === "matching") {
       const chosen = qa.slice(0, 6);
       const rotated = chosen.map((item) => item.answer).slice(1).concat(chosen.length ? chosen[0].answer : []);
-      return chosen.map((item, index) => ({ left: item.question, right: rotated[index], expectedAnswer: `${item.question} → ${item.answer}` }));
+      return chosen.map((item, index) => ({ asset: assetFor(item.answer, vocabulary, index), left: item.question, right: rotated[index], expectedAnswer: `${item.question} → ${item.answer}` }));
     }
-    if (type === "write_question") return qa.slice(0, 6).map((item) => ({ prompt: `Answer: ${item.answer}`, expectedAnswer: item.question, lines: 2 }));
+    if (type === "write_question") return qa.slice(0, 6).map((item, index) => ({ asset: assetFor(item.answer, vocabulary, index), prompt: `Answer: ${item.answer}`, expectedAnswer: item.question, lines: 2 }));
     if (type === "write_answer") return qa.slice(0, 6).map((item, index) => ({ asset: assetFor(item.answer, vocabulary, index), subjectCue: item.question, starter: "", expectedAnswer: item.answer, lines: 1 }));
-    if (type === "fix_mistakes") return sentenceValues.slice(0, 6).map((sentence) => ({ prompt: wrongSentence(sentence), expectedAnswer: sentence, lines: 2 }));
-    if (type === "unscramble") return sentencePool(unit).slice(0, 6).map((sentence) => ({ prompt: scramble(sentence), expectedAnswer: sentence, lines: 2 }));
-    if (type === "sentence_transform") return sentenceValues.slice(0, 6).map((sentence) => ({ prompt: `${sentence}  →  Change to negative.`, expectedAnswer: negative(sentence), lines: 2 }));
-    return qa.slice(0, 6).map((item) => ({ prompt: item.question, expectedAnswer: item.answer, lines: 1 }));
+    if (type === "fix_mistakes") return sentenceValues.slice(0, 6).map((sentence, index) => ({ asset: assetFor(sentence, vocabulary, index), prompt: wrongSentence(sentence), expectedAnswer: sentence, lines: 2 }));
+    if (type === "unscramble") return sentencePool(unit).slice(0, 6).map((sentence, index) => ({ asset: assetFor(sentence, vocabulary, index), prompt: scramble(sentence), expectedAnswer: sentence, lines: 2 }));
+    if (type === "sentence_transform") return sentenceValues.slice(0, 6).map((sentence, index) => ({ asset: assetFor(sentence, vocabulary, index), prompt: `${sentence}  →  Change to negative.`, expectedAnswer: negative(sentence), lines: 2 }));
+    return qa.slice(0, 6).map((item, index) => ({ asset: assetFor(item.answer, vocabulary, index), prompt: item.question, expectedAnswer: item.answer, lines: 1 }));
   }
 
   function buildPages(unit, day) {

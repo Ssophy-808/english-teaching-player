@@ -25,7 +25,10 @@ books.forEach((book) => {
     assert.equal(unit.lessons.length, 4, `${book.id}/${unit.id} must have four days`);
     unit.lessons.forEach((lesson, index) => {
       assert.equal(lesson.worksheet.pages.length, 4, `${lesson.id} must have four worksheet pages`);
-      lesson.worksheet.pages.forEach((page) => assert.ok(page.items.length > 0, `${lesson.id}/${page.type} must contain questions`));
+      lesson.worksheet.pages.forEach((page) => {
+        assert.ok(page.items.length > 0, `${lesson.id}/${page.type} must contain questions`);
+        assert.ok((page.sceneAssets || []).length > 0 || page.items.some((item) => item.asset?.image || item.asset?.sprite?.src || item.asset?.visual), `${lesson.id}/${page.type} must contain visible picture assets`);
+      });
       assert.ok(lesson.steps.length > 0, `${lesson.id} must have player steps`);
       assert.ok(lesson.steps.some((step) => step.activity === "flow-games" || step.activity === "guided-practice" || step.activity === "practice-loop" || step.activity === "picture-flash" || step.activity === "boss-battle"), `${lesson.id} must include an activity`);
       assert.equal(Number(String(lesson.day).match(/\d+/)[0]), index + 1);

@@ -54,6 +54,7 @@
   const GENERATED_WORD_SPRITES = {};
   const SCHOOL_ATLAS = "assets/images/vocabulary-people-school-clothes.png";
   const ANIMAL_ATLAS = "assets/images/vocabulary-colors-animals-feelings.png";
+  const FAMILY_ATLAS = "assets/images/family-sprite.png";
 
   [
     ["sad", 0, 0], ["happy", 1, 0], ["chubby", 2, 0], ["thin", 3, 0], ["young", 4, 0],
@@ -74,13 +75,17 @@
   function vocabularyItems(words) {
     return words.map((entry) => {
       const item = typeof entry === "string" ? { word: entry } : entry;
+      const key = item.word.toLowerCase();
+      const suppliedSprite = item.sprite
+        ? { src: FAMILY_ATLAS, cols: 5, rows: 2, ...item.sprite }
+        : null;
       return {
         meaning: "",
         image: "",
         audio: "",
-        visual: WORD_VISUALS[item.word.toLowerCase()] || "🖼️",
-        sprite: GENERATED_WORD_SPRITES[item.word.toLowerCase()],
-        ...item
+        visual: WORD_VISUALS[key] || "🖼️",
+        ...item,
+        sprite: suppliedSprite || GENERATED_WORD_SPRITES[key]
       };
     });
   }
@@ -3552,6 +3557,6 @@
     }));
   }
 
-  window.TeachingFlow = { FLOW_TEMPLATE: CLASSROOM_FLOW, buildCatalog };
+  window.TeachingFlow = { FLOW_TEMPLATE: CLASSROOM_FLOW, buildCatalog, vocabularyItems };
   window.COURSE_CATALOG = buildCatalog(window.CURRICULUM_BOOKS || []);
 })();

@@ -16,9 +16,10 @@ const passportSnapshot = JSON.stringify(global.CURRICULUM_BOOKS.map((book) =>
 require(path.join(root, "data/course-schema.js"));
 require(path.join(root, "js/teaching-flow.js"));
 require(path.join(root, "data/worksheet-data.js"));
+require(path.join(root, "js/worksheet-components.js"));
 
-const books = global.COURSE_CATALOG.filter((book) => ["book-1", "book-2"].includes(book.id));
-assert.equal(books.length, 2, "Book 1 and Book 2 must exist");
+const books = global.COURSE_CATALOG.filter((book) => ["book-1", "book-2", "book-3"].includes(book.id));
+assert.equal(books.length, 3, "Book 1, Book 2, and Book 3 must exist");
 books.forEach((book) => {
   assert.equal(book.units.length, 9, `${book.id} must have 9 units`);
   book.units.forEach((unit) => {
@@ -34,6 +35,8 @@ books.forEach((book) => {
           assert.equal(item.prompt.includes("Change to affirmative."), sourceIsNegative, `${lesson.id} transform direction must match source polarity`);
           assert.notEqual(item.expectedAnswer, source, `${lesson.id} sentence transformation must change the sentence`);
         });
+        const studentMarkup = global.WorksheetComponents.studentPage(lesson, page, 0, 1);
+        assert.match(studentMarkup, /wb-handwriting-row/, `${lesson.id}/${page.type} must include four-line handwriting guides`);
       });
       assert.ok(lesson.steps.length > 0, `${lesson.id} must have player steps`);
       assert.ok(lesson.steps.some((step) => step.activity === "flow-games" || step.activity === "guided-practice" || step.activity === "practice-loop" || step.activity === "picture-flash" || step.activity === "boss-battle"), `${lesson.id} must include an activity`);

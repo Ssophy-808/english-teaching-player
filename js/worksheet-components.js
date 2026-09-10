@@ -32,7 +32,7 @@
   }
 
   function matching(page) {
-    return `<div class="wb-matching"><ol>${page.items.map((item, index) => `<li><span>${index + 1}</span>${assetMarkup(item.asset)}<b>${escapeHtml(item.left)}</b></li>`).join("")}</ol><ol>${page.items.map((item, index) => `<li><span>${String.fromCharCode(65 + index)}</span><b>${escapeHtml(item.right)}</b></li>`).join("")}</ol></div>`;
+    return `<div class="wb-matching-section"><div class="wb-matching"><ol>${page.items.map((item, index) => `<li><span>${index + 1}</span>${assetMarkup(item.asset)}<b>${escapeHtml(item.left)}</b></li>`).join("")}</ol><ol>${page.items.map((item, index) => `<li><span>${String.fromCharCode(65 + index)}</span><b>${escapeHtml(item.right)}</b></li>`).join("")}</ol></div><div class="wb-matching-write"><strong>✎ Choose one pair. Write the complete answer.</strong>${answerLines(1)}</div></div>`;
   }
 
   function bigPicture(page) {

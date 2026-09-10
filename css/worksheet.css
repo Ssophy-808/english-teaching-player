@@ -67,11 +67,14 @@
 .wb-question-card > div { flex: 1; }
 .wb-question-card > .wb-picture, .wb-question-card > .wb-visual { width: 24mm; height: 24mm; flex: 0 0 24mm; border: 1.5px solid color-mix(in srgb, var(--wb-accent) 24%, white); }
 .wb-matching { display: grid; grid-template-columns: 1fr 1fr; gap: 18mm; padding: 6mm 4mm; border-radius: 20px; background: color-mix(in srgb, var(--wb-accent) 7%, white); }
+.wb-matching-section { display: grid; gap: 5mm; }
 .wb-matching ol { display: grid; gap: 8mm; margin: 0; padding: 0; list-style: none; }
 .wb-matching li { display: flex; min-height: 22mm; align-items: center; gap: 4mm; padding: 4mm; border: 2px solid color-mix(in srgb, var(--wb-accent) 34%, white); border-radius: 15px; background: white; font-size: 12pt; font-weight: 800; }
 .wb-matching li > span:first-child { display: grid; width: 8mm; height: 8mm; flex: 0 0 8mm; place-items: center; color: white; border-radius: 50%; background: var(--wb-accent); }
 .wb-matching li b { flex: 1; font: inherit; }
 .wb-matching li > .wb-picture, .wb-matching li > .wb-visual { width: 22mm; height: 22mm; flex: 0 0 22mm; border: 1.5px solid color-mix(in srgb, var(--wb-accent) 24%, white); }
+.wb-matching-write { padding: 4mm 5mm; border: 2px solid color-mix(in srgb, var(--wb-accent) 30%, white); border-radius: 16px; background: white; }
+.wb-matching-write strong { color: var(--wb-accent); font-size: 10.5pt; }
 .wb-big-picture { display: grid; gap: 6mm; }
 .wb-scene-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3mm; padding: 5mm; border: 3px solid var(--wb-yellow); border-radius: 22px; background: #fff9e9; }
 .wb-scene-grid .wb-picture, .wb-scene-grid .wb-visual { width: 100%; height: 35mm; background-color: white; }

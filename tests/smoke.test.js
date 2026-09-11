@@ -37,6 +37,10 @@ books.forEach((book) => {
         });
         const studentMarkup = global.WorksheetComponents.studentPage(lesson, page, 0, 1);
         assert.match(studentMarkup, /wb-handwriting-row/, `${lesson.id}/${page.type} must include four-line handwriting guides`);
+        assert.ok(page.items.length <= 4, `${lesson.id}/${page.type} must leave one full-width writing row per sentence`);
+        if (page.type === "unscramble") page.items.forEach((item) => {
+          assert.doesNotMatch(item.expectedAnswer, /[.!?]\s+[A-Z]/, `${lesson.id} unscramble items must contain only one sentence`);
+        });
       });
       assert.ok(lesson.steps.length > 0, `${lesson.id} must have player steps`);
       assert.ok(lesson.steps.some((step) => step.activity === "flow-games" || step.activity === "guided-practice" || step.activity === "practice-loop" || step.activity === "picture-flash" || step.activity === "boss-battle"), `${lesson.id} must include an activity`);

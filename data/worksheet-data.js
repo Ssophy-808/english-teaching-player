@@ -39,7 +39,13 @@
   }
 
   function sentencePool(unit) {
-    return [...new Set([...(unit.mainSentences || []), ...passportLines(unit)])].filter(Boolean);
+    const lines = [...(unit.mainSentences || []), ...passportLines(unit)];
+    const sentences = lines.flatMap((line) => String(line)
+      .replace(/([.!?])\s+(?=[A-Z])/g, "$1|||WORKSHEET_SENTENCE|||")
+      .split("|||WORKSHEET_SENTENCE|||")
+      .map((sentence) => sentence.trim())
+      .filter(Boolean));
+    return [...new Set(sentences)];
   }
 
   function pairs(unit) {
@@ -135,21 +141,22 @@
     const vocabulary = vocabularyItems(unit);
     const sentenceValues = statements(unit);
     const qa = pairs(unit);
-    if (type === "picture_sentence") return sentenceValues.slice(0, 6).map((sentence, index) => ({ asset: assetFor(sentence, vocabulary, index), subjectCue: cueFor(sentence), starter: `${sentence.match(/^(I|You|He|She|It|We|They|There|These|Those)\b/i)?.[0] || ""} `, expectedAnswer: sentence }));
+    if (type === "picture_sentence") return sentenceValues.slice(0, 4).map((sentence, index) => ({ asset: assetFor(sentence, vocabulary, index), subjectCue: cueFor(sentence), starter: `${sentence.match(/^(I|You|He|She|It|We|They|There|These|Those)\b/i)?.[0] || ""} `, expectedAnswer: sentence }));
     if (type === "matching") {
-      const chosen = qa.slice(0, 6);
+      const chosen = qa.slice(0, 4);
       const rotated = chosen.map((item) => item.answer).slice(1).concat(chosen.length ? chosen[0].answer : []);
       return chosen.map((item, index) => ({ asset: assetFor(item.answer, vocabulary, index), left: item.question, right: rotated[index], expectedAnswer: `${item.question} → ${item.answer}` }));
     }
-    if (type === "write_question") return qa.slice(0, 6).map((item, index) => ({ asset: assetFor(item.answer, vocabulary, index), prompt: `Answer: ${item.answer}`, expectedAnswer: item.question, lines: 2 }));
-    if (type === "write_answer") return qa.slice(0, 6).map((item, index) => ({ asset: assetFor(item.answer, vocabulary, index), subjectCue: item.question, starter: "", expectedAnswer: item.answer, lines: 1 }));
-    if (type === "fix_mistakes") return sentenceValues.slice(0, 6).map((sentence, index) => ({ asset: assetFor(sentence, vocabulary, index), prompt: wrongSentence(sentence), expectedAnswer: sentence, lines: 2 }));
-    if (type === "unscramble") return sentencePool(unit).slice(0, 6).map((sentence, index) => ({ asset: assetFor(sentence, vocabulary, index), prompt: scramble(sentence), expectedAnswer: sentence, lines: 2 }));
-    if (type === "sentence_transform") return sentenceValues.filter(canTransform).slice(0, 6).map((sentence, index) => {
+    if (type === "write_question") return qa.slice(0, 4).map((item, index) => ({ asset: assetFor(item.answer, vocabulary, index), prompt: `Answer: ${item.answer}`, expectedAnswer: item.question, lines: 2 }));
+    if (type === "write_answer") return qa.slice(0, 4).map((item, index) => ({ asset: assetFor(item.answer, vocabulary, index), subjectCue: item.question, starter: "", expectedAnswer: item.answer, lines: 1 }));
+    if (type === "fix_mistakes") return sentenceValues.slice(0, 4).map((sentence, index) => ({ asset: assetFor(sentence, vocabulary, index), prompt: wrongSentence(sentence), expectedAnswer: sentence, lines: 2 }));
+    if (type === "unscramble") return sentencePool(unit).slice(0, 4).map((sentence, index) => ({ asset: assetFor(sentence, vocabulary, index), prompt: scramble(sentence), expectedAnswer: sentence, lines: 2 }));
+    if (type === "sentence_transform") return sentenceValues.filter(canTransform).slice(0, 4).map((sentence, index) => {
       const direction = isNegative(sentence) ? "affirmative" : "negative";
       return { asset: assetFor(sentence, vocabulary, index), prompt: `${sentence}  →  Change to ${direction}.`, expectedAnswer: direction === "negative" ? negative(sentence) : positive(sentence), lines: 2 };
     });
-    return qa.slice(0, 6).map((item, index) => ({ asset: assetFor(item.answer, vocabulary, index), prompt: item.question, expectedAnswer: item.answer, lines: 1 }));
+    if (type === "big_picture") return qa.slice(0, 4).map((item, index) => ({ asset: assetFor(item.answer, vocabulary, index), prompt: item.question, expectedAnswer: item.answer, lines: 1 }));
+    return qa.slice(0, 4).map((item, index) => ({ asset: assetFor(item.answer, vocabulary, index), prompt: item.question, expectedAnswer: item.answer, lines: 1 }));
   }
 
   function buildPages(unit, day) {

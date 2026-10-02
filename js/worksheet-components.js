@@ -35,13 +35,45 @@
     return `<div class="wb-matching-section"><div class="wb-matching"><ol>${page.items.map((item, index) => `<li><span>${index + 1}</span>${assetMarkup(item.asset)}<b>${escapeHtml(item.left)}</b></li>`).join("")}</ol><ol>${page.items.map((item, index) => `<li><span>${String.fromCharCode(65 + index)}</span><b>${escapeHtml(item.right)}</b></li>`).join("")}</ol></div><div class="wb-matching-write"><strong>✎ Choose one pair. Write the complete answer.</strong>${answerLines(1)}</div></div>`;
   }
 
+  function multipleChoice(page) {
+    const cards = page.items.map((item, index) => `<li class="wb-choice-card"><span class="wb-number">${index + 1}</span>${assetMarkup(item.asset, item.prompt)}<div><p>${escapeHtml(item.prompt)}</p><ol>${item.choices.map((choice, choiceIndex) => `<li><span>${String.fromCharCode(65 + choiceIndex)}</span>${escapeHtml(choice)}</li>`).join("")}</ol></div></li>`).join("");
+    return `<div class="wb-choice-section"><ol class="wb-choice-list">${cards}</ol><div class="wb-matching-write"><strong>✎ Choose one answer. Write the complete sentence.</strong>${answerLines(1)}</div></div>`;
+  }
+
   function bigPicture(page) {
     return `<div class="wb-big-picture"><div class="wb-scene-grid">${(page.sceneAssets || []).map((asset) => assetMarkup(asset)).join("")}</div><ol>${page.items.map(standardItem).join("")}</ol></div>`;
   }
 
+  function storyCloze(page) {
+    const hero = (page.heroAssets || []).map((asset) => assetMarkup(asset, "Story picture")).join("");
+    const intro = (page.introLines || []).map((line) => `<p>${escapeHtml(line)}</p>`).join("");
+    const prompts = page.items.map((item) => `<section class="wb-passage-prompt"><div><p>${escapeHtml(item.question)}</p>${answerLines(1)}</div>${assetMarkup(item.asset, item.expectedAnswer)}</section>`).join("");
+    const ending = (page.endingLines || []).map((line) => `<p>${escapeHtml(line)}</p>`).join("");
+    return `<section class="wb-story-cloze wb-passage-page"><div class="wb-passage-hero">${hero}</div><div class="wb-passage-copy">${intro}</div>${prompts}<div class="wb-passage-copy wb-passage-ending">${ending}</div></section>`;
+  }
+
+  function chainQuestions(page) {
+    const lines = page.items.map((item, index) => `<li><span class="wb-chain-step">${index + 1}</span><div><small>${escapeHtml(item.lead)}</small><p>${escapeHtml(item.prompt)}</p>${answerLines(1)}</div>${assetMarkup(item.asset, item.expectedAnswer)}</li>`).join("");
+    return `<section class="wb-chain"><p class="wb-story-intro">${escapeHtml(page.intro)}</p><ol>${lines}</ol><div class="wb-chain-new"><strong>My next question:</strong>${answerLines(1)}</div></section>`;
+  }
+
+  function lockedTemplateItem(item, index, showPictures) {
+    const picture = showPictures ? assetMarkup(item.asset, item.alt || item.expectedAnswer || "Picture prompt") : "";
+    return `<li class="wb-template-item${showPictures ? " has-picture" : ""}"><span class="wb-template-number">${index + 1}.</span><p>${escapeHtml(item.prompt)}</p>${picture}${answerLines(1)}</li>`;
+  }
+
+  function lockedTemplateBody(page) {
+    const showPictures = page.showPictures ?? page.type === "template_picture_answer";
+    return `<ol class="wb-template-list">${page.items.map((item, index) => lockedTemplateItem(item, index, showPictures)).join("")}</ol>`;
+  }
+
   function pageBody(page) {
+    if (page.type === "story_cloze") return storyCloze(page);
+    if (page.type === "chain_questions") return chainQuestions(page);
+    if (page.layout === "locked_template") return lockedTemplateBody(page);
     if (page.type === "picture_sentence" || page.type === "write_answer") return `<ol class="wb-picture-list">${page.items.map(pictureSentence).join("")}</ol>`;
     if (page.type === "matching") return matching(page);
+    if (page.type === "multiple_choice") return multipleChoice(page);
     if (page.type === "big_picture") return bigPicture(page);
     return `<ol class="wb-question-list">${page.items.map(standardItem).join("")}</ol>`;
   }
@@ -50,8 +82,14 @@
     return `<header class="wb-header"><div class="wb-name"><span>Name: ____________________</span><span>Date: ______________</span></div><div class="wb-title-row"><span class="wb-day">DAY ${escapeHtml(lesson.worksheet.day)}</span><div><p>${escapeHtml(lesson.bookTitle)} · ${escapeHtml(lesson.unitTitle)}</p><h1>${escapeHtml(page.title)}</h1></div><span class="wb-page-count">${index + 1} / ${total}</span></div><p class="wb-instruction">★ ${escapeHtml(page.instruction)}</p></header>`;
   }
 
+  function lockedTemplateHeader(lesson, page, index, total) {
+    const unitLabel = lesson.isReview && lesson.reviewRange ? `Review ${lesson.reviewRange}` : lesson.unitTitle;
+    return `<header class="wb-template-header"><h1>${escapeHtml(page.title)}</h1><div class="wb-template-name"><span>Name:</span><i></i></div><p>${escapeHtml(page.instruction)}</p><small>${escapeHtml(lesson.bookTitle)} · ${escapeHtml(unitLabel)} · Day ${escapeHtml(lesson.worksheet.day)} · ${index + 1}/${total}</small></header>`;
+  }
+
   function studentPage(lesson, page, index, total) {
-    return `<section class="workbook-page" data-worksheet-type="${escapeHtml(page.type)}">${worksheetHeader(lesson, page, index, total)}<main>${pageBody(page)}</main><footer><span>English Teaching Player Workbook</span><span>${escapeHtml(page.skill || "Think · Write · Check")}</span></footer></section>`;
+    const locked = page.layout === "locked_template";
+    return `<section class="workbook-page${locked ? " wb-locked-template" : ""}${lesson.isReview ? " wb-review-template" : ""}" data-worksheet-type="${escapeHtml(page.type)}">${locked ? lockedTemplateHeader(lesson, page, index, total) : worksheetHeader(lesson, page, index, total)}<main>${pageBody(page)}</main><footer><span>English Teaching Player Workbook</span><span>${escapeHtml(page.skill || "Think · Write · Check")}</span></footer></section>`;
   }
 
   function answerPage(lesson, pages) {

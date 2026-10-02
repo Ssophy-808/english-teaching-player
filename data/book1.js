@@ -1,6 +1,8 @@
 (function () {
   "use strict";
 
+  const FAMILY_IMAGE = (name) => `assets/images/book1/unit2/${name}.png`;
+
   const units = [
     {
       id: "unit-1",
@@ -55,28 +57,28 @@
         "She is my sister."
       ],
       vocabulary: [
-        { word: "grandfather", sprite: { col: 0, row: 0 } },
-        { word: "grandmother", sprite: { col: 1, row: 0 } },
-        { word: "father", sprite: { col: 2, row: 0 } },
-        { word: "mother", sprite: { col: 3, row: 0 } },
-        { word: "aunt", sprite: { col: 4, row: 0 } },
-        { word: "uncle", sprite: { col: 0, row: 1 } },
-        { word: "sister", sprite: { col: 1, row: 1 } },
-        { word: "me", sprite: { col: 4, row: 1 } },
-        { word: "brother", sprite: { col: 2, row: 1 } },
-        { word: "cousin(s)", sprite: { col: 3, row: 1 } }
+        { word: "grandfather", image: FAMILY_IMAGE("grandfather") },
+        { word: "grandmother", image: FAMILY_IMAGE("grandmother") },
+        { word: "father", image: FAMILY_IMAGE("father") },
+        { word: "mother", image: FAMILY_IMAGE("mother") },
+        { word: "aunt", image: FAMILY_IMAGE("aunt") },
+        { word: "uncle", image: FAMILY_IMAGE("uncle") },
+        { word: "sister", image: FAMILY_IMAGE("sister") },
+        { word: "me", image: FAMILY_IMAGE("me") },
+        { word: "brother", image: FAMILY_IMAGE("brother") },
+        { word: "cousin(s)", image: FAMILY_IMAGE("cousins") }
       ],
       quiz: [
-        { prompt: "She’s my ____.", answer: "grandmother", choices: ["sister", "grandmother", "aunt"], sprite: { col: 1, row: 0 }, image: "" },
-        { prompt: "He’s my ____.", answer: "grandfather", choices: ["father", "uncle", "grandfather"], sprite: { col: 0, row: 0 }, image: "" },
-        { prompt: "He’s my ____.", answer: "father", choices: ["brother", "father", "uncle"], sprite: { col: 2, row: 0 }, image: "" },
-        { prompt: "She’s my ____.", answer: "mother", choices: ["mother", "sister", "grandmother"], sprite: { col: 3, row: 0 }, image: "" },
-        { prompt: "She’s my ____.", answer: "aunt", choices: ["cousin(s)", "mother", "aunt"], sprite: { col: 4, row: 0 }, image: "" },
-        { prompt: "He’s my ____.", answer: "uncle", choices: ["grandfather", "uncle", "brother"], sprite: { col: 0, row: 1 }, image: "" }
+        { prompt: "She’s my ____.", answer: "grandmother", choices: ["sister", "grandmother", "aunt"], image: FAMILY_IMAGE("grandmother") },
+        { prompt: "He’s my ____.", answer: "grandfather", choices: ["father", "uncle", "grandfather"], image: FAMILY_IMAGE("grandfather") },
+        { prompt: "He’s my ____.", answer: "father", choices: ["brother", "father", "uncle"], image: FAMILY_IMAGE("father") },
+        { prompt: "She’s my ____.", answer: "mother", choices: ["mother", "sister", "grandmother"], image: FAMILY_IMAGE("mother") },
+        { prompt: "She’s my ____.", answer: "aunt", choices: ["cousin(s)", "mother", "aunt"], image: FAMILY_IMAGE("aunt") },
+        { prompt: "He’s my ____.", answer: "uncle", choices: ["grandfather", "uncle", "brother"], image: FAMILY_IMAGE("uncle") }
       ],
       dialogueChoices: [
         {
-          instruction: "Make a question:", prompt: "Is she your mom?", sprite: { col: 1, row: 1 }, image: "", answer: "C",
+          instruction: "Make a question:", prompt: "Is she your mom?", image: "", answer: "C",
           choices: [
             { label: "A", lines: ["No, she isn’t.", "She’s my aunt."] },
             { label: "B", lines: ["No, she isn’t.", "She’s my grandma."] },
@@ -84,7 +86,7 @@
           ]
         },
         {
-          instruction: "Make a question:", prompt: "Is he your dad?", sprite: { col: 2, row: 0 }, image: "", answer: "A",
+          instruction: "Make a question:", prompt: "Is he your dad?", image: "", answer: "A",
           choices: [
             { label: "A", lines: ["Yes, he is.", "He’s my father."] },
             { label: "B", lines: ["No, he isn’t.", "He’s my brother."] },
@@ -92,7 +94,7 @@
           ]
         },
         {
-          instruction: "Make a question:", prompt: "Is she your grandma?", sprite: { col: 1, row: 0 }, image: "", answer: "B",
+          instruction: "Make a question:", prompt: "Is she your grandma?", image: "", answer: "B",
           choices: [
             { label: "A", lines: ["No, she isn’t.", "She’s my mom."] },
             { label: "B", lines: ["Yes, she is.", "She’s my grandmother."] },
@@ -100,7 +102,7 @@
           ]
         },
         {
-          instruction: "Make a question:", prompt: "Is he your brother?", sprite: { col: 2, row: 1 }, image: "", answer: "C",
+          instruction: "Make a question:", prompt: "Is he your brother?", image: "", answer: "C",
           choices: [
             { label: "A", lines: ["No, he isn’t.", "He’s my uncle."] },
             { label: "B", lines: ["No, he isn’t.", "He’s my father."] },
@@ -108,7 +110,7 @@
           ]
         },
         {
-          instruction: "Make a question:", prompt: "Is she your aunt?", sprite: { col: 4, row: 0 }, image: "", answer: "A",
+          instruction: "Make a question:", prompt: "Is she your aunt?", image: "", answer: "A",
           choices: [
             { label: "A", lines: ["Yes, she is.", "She’s my aunt."] },
             { label: "B", lines: ["No, she isn’t.", "She’s my sister."] },

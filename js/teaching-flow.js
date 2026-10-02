@@ -3031,6 +3031,80 @@
     };
   }
 
+  function rotatedReviewSlice(values, day, count) {
+    if (!values.length) return [];
+    const offset = ((day - 1) * count) % values.length;
+    return [...values.slice(offset), ...values.slice(0, offset)].slice(0, Math.min(count, values.length));
+  }
+
+  function reviewUnitLessons(unit, bookId) {
+    const dayGoals = [
+      "Vocabulary recognition and complete answers",
+      "Question and answer building",
+      "Grammar correction and mixed practice",
+      "Independent cumulative application"
+    ];
+    return [1, 2, 3, 4].map((day) => {
+      const allVocabulary = vocabularyItems(unit.vocabulary || []);
+      const vocabulary = rotatedReviewSlice(allVocabulary, day, 12);
+      const sentences = rotatedReviewSlice(unit.mainSentences || [], day, 9);
+      const loopQuestions = sentences.slice(0, 8).map((sentence, index) => {
+        const asset = vocabulary[index % Math.max(vocabulary.length, 1)] || {};
+        const prompts = [
+          `Read and complete the sentence: ${sentence}`,
+          `Build the matching question or answer: ${sentence}`,
+          `Check the grammar and rewrite: ${sentence}`,
+          `Use the pattern independently: ${sentence}`
+        ];
+        return {
+          prompt: prompts[day - 1],
+          answer: sentence,
+          modelAnswer: sentence,
+          type: "rewrite",
+          image: asset.image || "",
+          sprite: asset.sprite || null,
+          visual: asset.visual || ""
+        };
+      });
+      const phases = [
+        customPhase(`review-${day}-warmup`, "warm-up", "Warm Up", `Review ${unit.reviewRange}`, 5, "review", [
+          step(`review-${day}-warmup-step`, "warmup", "Quick Review", null, `Recall one word and one sentence from each lesson group in Review ${unit.reviewRange}.`, { activity: "review" })
+        ]),
+        customPhase(`review-${day}-vocabulary`, "vocabulary-review", "Vocabulary Review", `Mixed Vocabulary · Day ${day}`, 10, "teaching", [
+          step(`review-${day}-vocabulary-step`, "vocabulary", "Picture and Word Review", null, "Review the mixed words. Say each word, then use one in a sentence.", { activity: "vocabulary-check", vocabulary })
+        ], { vocabulary }),
+        customPhase(`review-${day}-games`, "vocabulary-games", "Vocabulary Games", "Mixed Team Game", 8, "game", [
+          step(`review-${day}-games-step`, "game", "Mixed Vocabulary Game", null, "Mix all the review words. Complete or skip the game when the class is ready.", { activity: "flow-games", gameScope: "vocabulary", vocabulary, suggestedGames: VOCABULARY_GAMES, skippable: true })
+        ], { vocabulary, skippable: true }),
+        customPhase(`review-${day}-grammar`, "grammar-review", "Grammar Review", dayGoals[day - 1], 10, "teaching", [
+          step(`review-${day}-grammar-step`, "grammar", "Mixed Sentence Patterns", null, sentences.join("\n"), { activity: "sentence-pattern", mainSentences: sentences })
+        ], { grammar: sentences }),
+        customPhase(`review-${day}-practice`, "mixed-practice", "Mixed Practice", `Day ${day} Practice Loop`, 10, "check", [
+          practiceLoopStep(`review-${day}-practice-loop`, "Cumulative Practice Loop", loopQuestions, { instruction: "Answer in a complete sentence. Check the model answer after every item." })
+        ]),
+        customPhase(`review-${day}-worksheet`, "worksheet", "Worksheet", `Review ${unit.reviewRange} · Day ${day}`, 12, "writing", [
+          practiceStep(`review-${day}-worksheet-step`, "Four-Page Review Worksheet", "Open 可調整練習 and complete today’s four review pages.", { modelAnswer: "Complete all four pages and check the teacher answer mode." })
+        ]),
+        customPhase(`review-${day}-wrapup`, "homework", "Wrap Up", "Review and Preview", 5, "homework", [
+          step(`review-${day}-homework`, "homework", "Homework", null, day === 4 ? "Correct the cumulative review and record the patterns that still need practice." : "Finish today’s review page and preview the next review day.", { activity: "homework" })
+        ])
+      ];
+      const steps = phases.flatMap((phase) => phase.steps);
+      const duration = phases.reduce((sum, phase) => sum + (Number(phase.duration) || 0), 0);
+      return {
+        id: `day-${day}`,
+        title: `${unit.title} · Day ${day}｜${dayGoals[day - 1]}`,
+        day: `Day ${day}`,
+        dayGoal: dayGoals[day - 1],
+        curriculum: curriculumFor(unit),
+        phases,
+        duration,
+        durationMinutes: duration,
+        steps
+      };
+    });
+  }
+
   function spiralWorksheetQuestion(step, id, fallbackSkill) {
     const practice = step.practice || {};
     const prompt = practice.prompt || step.prompt || step.instruction || step.title || "";
@@ -3500,7 +3574,9 @@
   }
 
   function lessonsForUnit(book, unit, unitIndex) {
-    const lessons = book.id === "book-3" && unit.id === "unit-1"
+    const lessons = unit.isReview
+      ? reviewUnitLessons(unit, book.id)
+      : book.id === "book-3" && unit.id === "unit-1"
       ? book3Unit1Lessons(unit)
       : book.id === "book-2" && unit.id === "unit-1"
         ? book2Unit1Lessons(unit)
@@ -3525,6 +3601,7 @@
                           : [1, 2, 3, 4].map((day) => sharedLessonFromUnit(unit, unitIndex, book.id, day));
     return lessons.map((lesson, index) => {
       const day = index + 1;
+      if (unit.isReview) return lesson;
       const upgraded = extendWorksheetToFourPages(upgradeToSpiralReview(lesson, book, unit, unitIndex, day), book, unit, day);
       if (unit.id === "unit-2" && (book.id === "book-1" || book.id === "book-2")) {
         const bookNumber = book.id === "book-1" ? 1 : 2;
@@ -3550,8 +3627,8 @@
         ...unit,
         id: unit.id,
         curriculumTitle: unit.title,
-        title: `Unit ${unitIndex + 1}`,
-        topic: unit.title,
+        title: unit.isReview ? unit.title : `Unit ${unitIndex + 1}`,
+        topic: unit.isReview ? unit.topic : unit.title,
         lessons: lessonsForUnit(book, unit, unitIndex)
       }))
     }));

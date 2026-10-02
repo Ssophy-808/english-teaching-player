@@ -1,12 +1,52 @@
 (function () {
   "use strict";
 
+  const WORD_IMAGES = {
+    birds: "assets/images/book3/unit1/bird.png",
+    frogs: "assets/images/book3/unit1/frog.png",
+    puppies: "assets/images/book3/unit1/dog.png",
+    fish: "assets/images/book3/unit1/fish.png",
+    bunnies: "assets/images/book3/unit1/bunny.png",
+    turtles: "assets/images/book3/unit1/turtle.png",
+    hamsters: "assets/images/book3/unit1/hamster.png",
+    spiders: "assets/images/book3/unit1/spider.png",
+    hamburger: "assets/images/book3/unit2/hamburger.png",
+    "french fries": "assets/images/book3/unit2/french-fries.png",
+    "chicken nuggets": "assets/images/book3/unit2/chicken-nuggets.png",
+    "onion rings": "assets/images/book3/unit2/onion-rings.png",
+    "fried chicken": "assets/images/book3/unit2/fried-chicken.png",
+    salad: "assets/images/book3/unit2/salad.png",
+    "hot dog": "assets/images/book3/unit2/hot-dog.png",
+    soda: "assets/images/book3/unit2/soda.png",
+    cola: "assets/images/book3/unit2/soda.png",
+    pizza: "assets/images/book3/unit2/pizza.png",
+    milk: "assets/images/book3/unit3/milk.png",
+    bread: "assets/images/book3/unit3/bread.png",
+    cake: "assets/images/book3/unit3/cake.jpg",
+    popcorn: "assets/images/book3/unit3/popcorn.png",
+    cookies: "assets/images/book3/unit3/cookies.jpg",
+    "ice cream": "assets/images/book3/unit3/ice-cream.png",
+    juice: "assets/images/book3/unit3/juice.png",
+    "potato chips": "assets/images/book3/unit3/potato-chips.png",
+    tea: "assets/images/book3/unit3/tea.png",
+    coffee: "assets/images/book3/unit3/coffee.png",
+    skateboard: "assets/images/book3/unit4/skateboard.png",
+    "action figure": "assets/images/book3/unit4/action-figure.png",
+    puzzle: "assets/images/book3/unit4/puzzle.png",
+    computer: "assets/images/book3/unit4/computer.png",
+    kite: "assets/images/book3/unit4/kite.png",
+    "stuffed animal": "assets/images/book3/unit4/stuffed-animal.png",
+    "jump rope": "assets/images/book3/unit4/jump-rope.png",
+    "model car": "assets/images/book3/unit4/model-car.png",
+    bicycle: "assets/images/book3/unit4/bicycle.png"
+  };
+
   const vocabulary = (word, meaning, visual, aliases = []) => ({
     word,
     meaning,
     visual,
     aliases,
-    image: "",
+    image: WORD_IMAGES[word] || "",
     audio: ""
   });
 

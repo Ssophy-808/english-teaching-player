@@ -46,7 +46,7 @@
     libraryGrid.innerHTML = catalog.map((book, index) => cardMarkup({
       number: index + 1,
       title: book.title,
-      subtitle: book.units.length ? `${book.subtitle} · ${book.units.length} units` : `${book.subtitle} · Coming soon`,
+      subtitle: book.units.length ? `${book.subtitle} · ${book.units.filter((unit) => !unit.isReview).length} units + ${book.units.filter((unit) => unit.isReview).length} reviews` : `${book.subtitle} · Coming soon`,
       action: `book:${book.id}`,
       comingSoon: !book.units.length
     })).join("");
@@ -62,8 +62,10 @@
     selectedUnit = null;
     libraryTitle.textContent = "Choose a unit";
     libraryPath.textContent = book.title;
-    libraryGrid.innerHTML = backCard("books", "All books") + book.units.map((unit, index) => cardMarkup({
-      number: index + 1,
+    const displayUnits = book.units.map((unit, index) => ({ unit, index }))
+      .sort((a, b) => (a.unit.displayOrder ?? (a.index + 1)) - (b.unit.displayOrder ?? (b.index + 1)));
+    libraryGrid.innerHTML = backCard("books", "All books") + displayUnits.map(({ unit, index }) => cardMarkup({
+      number: unit.isReview ? unit.reviewLabel : index + 1,
       title: `${unit.title} · ${unit.topic}`,
       subtitle: `${unit.lessons.length} lesson${unit.lessons.length === 1 ? "" : "s"}`,
       action: `unit:${unit.id}`,
@@ -97,7 +99,9 @@
       bookTitle: book.title,
       unitId: unit.id,
       unitTitle: unit.title,
-      unitTopic: unit.topic
+      unitTopic: unit.topic,
+      isReview: Boolean(unit.isReview),
+      reviewRange: unit.reviewRange || ""
     };
   }
 

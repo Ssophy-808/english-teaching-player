@@ -75,6 +75,15 @@
 .wb-matching li > .wb-picture, .wb-matching li > .wb-visual { width: 22mm; height: 22mm; flex: 0 0 22mm; border: 1.5px solid color-mix(in srgb, var(--wb-accent) 24%, white); }
 .wb-matching-write { padding: 4mm 5mm; border: 2px solid color-mix(in srgb, var(--wb-accent) 30%, white); border-radius: 16px; background: white; }
 .wb-matching-write strong { color: var(--wb-accent); font-size: 10.5pt; }
+.wb-choice-section { display: grid; gap: 5mm; }
+.wb-choice-list { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; margin: 0; padding: 0; list-style: none; }
+.wb-choice-card { position: relative; display: grid; grid-template-columns: 22mm 1fr; min-height: 51mm; align-items: center; gap: 4mm; padding: 4mm; border: 2px solid color-mix(in srgb, var(--wb-accent) 30%, white); border-radius: 16px; background: white; }
+.wb-choice-card > .wb-number { position: absolute; top: 3mm; left: 3mm; }
+.wb-choice-card > .wb-picture, .wb-choice-card > .wb-visual { width: 22mm; height: 22mm; border: 0; background: transparent; }
+.wb-choice-card p { margin: 0 0 2mm; font-size: 10.5pt; font-weight: 800; }
+.wb-choice-card ol { display: grid; gap: 1mm; margin: 0; padding: 0; list-style: none; }
+.wb-choice-card ol li { display: grid; grid-template-columns: 6mm 1fr; font-size: 9pt; line-height: 1.25; }
+.wb-choice-card ol li span { font-weight: 900; }
 .wb-big-picture { display: grid; gap: 6mm; }
 .wb-scene-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3mm; padding: 4mm; border: 3px solid var(--wb-yellow); border-radius: 22px; background: #fff9e9; }
 .wb-scene-grid .wb-picture, .wb-scene-grid .wb-visual { width: 100%; height: 26mm; background-color: white; }
@@ -90,6 +99,94 @@
 .wb-key-grid h2 { margin: 0 0 4mm; color: var(--wb-purple); font-size: 14pt; }
 .wb-key-grid ol { margin: 0; padding-left: 6mm; }
 .wb-key-grid li { margin: 0 0 3mm; font-size: 10pt; line-height: 1.4; }
+
+/* Locked worksheet template: font face always inherits from the Player. */
+.wb-locked-template {
+  padding: 12mm 13mm 10mm;
+  color: #111;
+  border: 0;
+  border-radius: 0;
+  background: #fff;
+  box-shadow: 0 16px 42px rgba(28, 56, 93, .14);
+  font-family: inherit;
+}
+.wb-locked-template::before,
+.wb-locked-template::after { content: none; }
+.wb-template-header { position: relative; min-height: 30mm; margin-bottom: 4mm; text-align: center; }
+.wb-template-header h1 { margin: 5mm 50mm 1mm 18mm; font: inherit; font-size: 17pt; font-weight: 700; line-height: 1.2; }
+.wb-template-name { position: absolute; top: 4mm; right: 0; display: grid; grid-template-columns: auto 46mm; align-items: end; gap: 2mm; font-size: 12pt; font-weight: 600; }
+.wb-template-name i { height: 7mm; border-bottom: 1.4px solid currentColor; }
+.wb-template-header p { margin: 5mm 0 0; text-align: left; font-size: 10.5pt; font-weight: 600; }
+.wb-template-header small { position: absolute; top: 0; left: 0; font-size: 7.5pt; font-weight: 500; }
+.wb-review-template .wb-template-header h1 { margin-left: 44mm; }
+.wb-review-template .wb-template-header small { max-width: 40mm; text-align: left; line-height: 1.2; }
+.wb-template-list { display: grid; margin: 0; padding: 0; list-style: none; gap: 0; }
+.wb-template-item { position: relative; box-sizing: border-box; min-height: 29mm; padding: 1mm 4mm 2mm 9mm; }
+.wb-template-item.has-picture { padding-right: 30mm; }
+.wb-template-number { position: absolute; top: 1mm; left: 0; font-size: 13pt; font-weight: 650; }
+.wb-template-item p { min-height: 8mm; margin: 0 0 1.5mm; font: inherit; font-size: 13pt; font-weight: 600; line-height: 1.25; white-space: nowrap; }
+.wb-template-item > .wb-picture,
+.wb-template-item > .wb-visual {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 23mm;
+  height: 23mm;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  object-fit: contain;
+}
+.wb-template-item > .wb-answer-lines { width: 100%; margin: 0; }
+.wb-template-item.has-picture > .wb-answer-lines { width: calc(100% + 24mm); }
+.wb-template-item .wb-handwriting-row { height: 10mm; }
+.wb-template-item .wb-handwriting-row b { border-top-color: #222; border-top-width: 1px; }
+.wb-template-item .wb-handwriting-row b:nth-child(2),
+.wb-template-item .wb-handwriting-row b:nth-child(3) { border-top-color: #777; }
+.wb-story-intro { margin: 0 0 3mm; padding: 3mm 4mm; border-left: 3px solid #111; background: #f5f5f5; font: inherit; font-size: 11.5pt; font-weight: 600; line-height: 1.35; }
+.wb-word-bank { display: flex; flex-wrap: wrap; align-items: center; gap: 2mm 5mm; margin-bottom: 3mm; padding: 2.5mm 4mm; border: 1px solid #555; font: inherit; font-size: 10.5pt; }
+.wb-word-bank strong { margin-right: 2mm; }
+.wb-word-bank span { padding: 1mm 3mm; border-bottom: 1px solid #777; }
+.wb-story-cloze ol,
+.wb-chain ol { display: grid; gap: 1mm; margin: 0; padding: 0; list-style: none; }
+.wb-story-cloze li,
+.wb-chain li { position: relative; display: grid; grid-template-columns: 20mm 1fr 24mm; min-height: 30mm; align-items: center; gap: 3mm; padding: 2mm 0; border-bottom: 1px solid #bbb; font: inherit; }
+.wb-story-speaker { align-self: start; margin-top: 1mm; font-size: 11pt; font-weight: 700; }
+.wb-story-speaker::after { content: ":"; }
+.wb-story-question,
+.wb-story-answer,
+.wb-chain li p { margin: 0; font: inherit; font-size: 11.5pt; font-weight: 600; line-height: 1.3; }
+.wb-story-answer { margin-top: 1.5mm; }
+.wb-story-cloze li > .wb-picture,
+.wb-story-cloze li > .wb-visual,
+.wb-chain li > .wb-picture,
+.wb-chain li > .wb-visual { width: 24mm; height: 24mm; border: 0; border-radius: 0; background: transparent; object-fit: contain; }
+.wb-story-cloze .wb-answer-lines,
+.wb-chain .wb-answer-lines { margin-top: 1.5mm; }
+.wb-story-cloze .wb-handwriting-row,
+.wb-chain .wb-handwriting-row { height: 8mm; }
+.wb-chain-step { display: grid; width: 9mm; height: 9mm; place-items: center; color: white; border-radius: 50%; background: #222; font-size: 10pt; font-weight: 700; }
+.wb-chain li small { display: block; margin-bottom: 1mm; color: #555; font: inherit; font-size: 8.5pt; }
+.wb-chain-new { margin-top: 3mm; padding: 3mm 4mm; border: 1.5px solid #333; }
+.wb-chain-new strong { font-size: 10.5pt; }
+.wb-passage-page { padding: 0 4mm; font: inherit; }
+.wb-passage-hero { display: flex; width: 132mm; min-height: 46mm; align-items: center; justify-content: center; gap: 6mm; margin: 0 auto 5mm; padding: 4mm 8mm; border: 1px solid #aaa; background: #f3f7fb; box-shadow: 4px 5px 0 #ddd; transform: rotate(-.35deg); }
+.wb-passage-hero .wb-picture,
+.wb-passage-hero .wb-visual { width: 38mm; height: 38mm; border: 0; border-radius: 0; background: transparent; object-fit: contain; }
+.wb-passage-copy { margin: 0 0 3mm; }
+.wb-passage-copy p { margin: 0 0 1mm; font: inherit; font-size: 12.5pt; font-weight: 600; line-height: 1.35; }
+.wb-passage-prompt { position: relative; display: grid; grid-template-columns: 1fr 32mm; min-height: 37mm; align-items: end; gap: 4mm; margin: 0 0 3mm; font: inherit; }
+.wb-passage-prompt > div { min-width: 0; }
+.wb-passage-prompt p { margin: 0 0 2mm; font: inherit; font-size: 13pt; font-weight: 600; line-height: 1.35; }
+.wb-passage-prompt > .wb-picture,
+.wb-passage-prompt > .wb-visual { width: 32mm; height: 32mm; align-self: center; border: 0; border-radius: 0; background: transparent; object-fit: contain; }
+.wb-passage-prompt .wb-answer-lines { margin: 0; }
+.wb-passage-prompt .wb-handwriting-row { height: 13mm; }
+.wb-passage-prompt .wb-handwriting-row b { border-top-color: #5f9ed1; }
+.wb-passage-prompt .wb-handwriting-row b:nth-child(2),
+.wb-passage-prompt .wb-handwriting-row b:nth-child(3) { border-top-color: #9fc4e3; }
+.wb-passage-ending { margin-top: 1mm; }
+.wb-locked-template footer { right: 13mm; bottom: 5mm; left: 13mm; color: #555; font-size: 7.5pt; font-weight: 500; }
 
 @media screen and (max-width: 900px) {
   .workbook-page { width: 100%; min-height: auto; border-radius: 18px; }

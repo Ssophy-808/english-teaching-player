@@ -171,10 +171,558 @@
     }));
   }
 
+  function book3Unit4Day1Pages() {
+    const image = (name) => ({ image: `assets/images/book3/unit4/${name}.png` });
+    const toys = {
+      car: image("model-car"),
+      rope: image("jump-rope"),
+      animal: image("stuffed-animal"),
+      computer: image("computer"),
+      figure: image("action-figure"),
+      skateboard: image("skateboard"),
+      puzzle: image("puzzle"),
+      kite: image("kite"),
+      bicycle: image("bicycle")
+    };
+    const page = (type, title, instruction, skill, items) => ({
+      type,
+      layout: "locked_template",
+      title,
+      instruction,
+      skill,
+      items
+    });
+    return [
+      page("template_picture_answer", "Look and Answer", "Look at each picture. Write a complete answer.", "Do / Does ... want?", [
+        { prompt: "What do you want?", asset: toys.car, expectedAnswer: "I want a model car." },
+        { prompt: "What does he want?", asset: toys.rope, expectedAnswer: "He wants a jump rope." },
+        { prompt: "What does she want?", asset: toys.animal, expectedAnswer: "She wants a stuffed animal." },
+        { prompt: "What do they want?", asset: toys.computer, expectedAnswer: "They want a computer." },
+        { prompt: "What does Lumi want?", asset: toys.figure, expectedAnswer: "She wants an action figure." },
+        { prompt: "Does she want a skateboard?", asset: toys.skateboard, expectedAnswer: "Yes, she does." },
+        { prompt: "Do they want a kite?", asset: toys.kite, expectedAnswer: "Yes, they do." },
+        { prompt: "Does Lumi want a bicycle?", asset: toys.bicycle, expectedAnswer: "No, she doesn't." }
+      ]),
+      {
+        type: "matching",
+        title: "Look and Match",
+        instruction: "Draw a line from each question to the correct answer.",
+        skill: "question and answer matching",
+        items: [
+          { left: "What does he want?", right: "They want a computer.", asset: toys.rope, expectedAnswer: "What does he want? → He wants a jump rope." },
+          { left: "What does she want?", right: "He wants a jump rope.", asset: toys.animal, expectedAnswer: "What does she want? → She wants a stuffed animal." },
+          { left: "What do they want?", right: "Lumi wants an action figure.", asset: toys.computer, expectedAnswer: "What do they want? → They want a computer." },
+          { left: "What does Lumi want?", right: "She wants a stuffed animal.", asset: toys.figure, expectedAnswer: "What does Lumi want? → Lumi wants an action figure." }
+        ]
+      },
+      {
+        type: "multiple_choice",
+        title: "Choose the Answer",
+        instruction: "Look at each picture. Circle the correct answer.",
+        skill: "do / does · want / wants",
+        items: [
+          { prompt: "What does he want?", choices: ["He want a jump rope.", "He wants a jump rope.", "He wants jump rope."], asset: toys.rope, expectedAnswer: "He wants a jump rope." },
+          { prompt: "What does she want?", choices: ["She wants a stuffed animal.", "She want a stuffed animal.", "She wants an stuffed animal."], asset: toys.animal, expectedAnswer: "She wants a stuffed animal." },
+          { prompt: "What do they want?", choices: ["They wants a computer.", "They want a computer.", "They want computer."], asset: toys.computer, expectedAnswer: "They want a computer." },
+          { prompt: "What does Lumi want?", choices: ["Lumi want an action figure.", "Lumi wants a action figure.", "Lumi wants an action figure."], asset: toys.figure, expectedAnswer: "Lumi wants an action figure." },
+          { prompt: "Does she want a skateboard?", choices: ["Yes, she does.", "Yes, she do.", "Yes, she wants."], asset: toys.skateboard, expectedAnswer: "Yes, she does." },
+          { prompt: "Do they want a model car?", choices: ["No, they doesn't.", "No, they don't.", "No, they do not wants."], asset: toys.car, expectedAnswer: "No, they don't." }
+        ]
+      },
+      page("template_fix_mistakes", "Fix the Mistakes", "Find the mistake. Rewrite the whole sentence correctly.", "do / does · want / wants", [
+        { prompt: "What does you want?", asset: toys.car, expectedAnswer: "What do you want?" },
+        { prompt: "What do he want?", asset: toys.rope, expectedAnswer: "What does he want?" },
+        { prompt: "He want a jump rope.", asset: toys.rope, expectedAnswer: "He wants a jump rope." },
+        { prompt: "She wants an stuffed animal.", asset: toys.animal, expectedAnswer: "She wants a stuffed animal." },
+        { prompt: "Does he wants an action figure?", asset: toys.figure, expectedAnswer: "Does he want an action figure?" },
+        { prompt: "Do Lumi want a skateboard?", asset: toys.skateboard, expectedAnswer: "Does Lumi want a skateboard?" },
+        { prompt: "They wants a computer.", asset: toys.computer, expectedAnswer: "They want a computer." },
+        { prompt: "Does they want a model car?", asset: toys.car, expectedAnswer: "Do they want a model car?" }
+      ])
+    ];
+  }
+
+  function book3Unit4Assets() {
+    const image = (name) => ({ image: `assets/images/book3/unit4/${name}.png` });
+    return {
+      car: image("model-car"), rope: image("jump-rope"), animal: image("stuffed-animal"),
+      computer: image("computer"), figure: image("action-figure"), skateboard: image("skateboard"),
+      puzzle: image("puzzle"), kite: image("kite"), bicycle: image("bicycle")
+    };
+  }
+
+  function lockedUnit4Page(type, title, instruction, skill, items, showPictures = false) {
+    return { type, layout: "locked_template", title, instruction, skill, items, showPictures };
+  }
+
+  function book3Unit4Day2Pages() {
+    const toys = book3Unit4Assets();
+    return [
+      lockedUnit4Page("template_picture_question", "Make the Question", "Look at the picture and answer cue. Write the matching question.", "What do / does ... want?", [
+        { prompt: "Answer: I want a kite.", asset: toys.kite, expectedAnswer: "What do you want?" },
+        { prompt: "Answer: He wants a puzzle.", asset: toys.puzzle, expectedAnswer: "What does he want?" },
+        { prompt: "Answer: Lumi wants a bicycle.", asset: toys.bicycle, expectedAnswer: "What does Lumi want?" },
+        { prompt: "Answer: They want a computer.", asset: toys.computer, expectedAnswer: "What do they want?" },
+        { prompt: "Answer: Ludi wants a model car.", asset: toys.car, expectedAnswer: "What does Ludi want?" },
+        { prompt: "Answer: She wants a stuffed animal.", asset: toys.animal, expectedAnswer: "What does she want?" },
+        { prompt: "Answer: Yes, Lumi does.", asset: toys.skateboard, expectedAnswer: "Does Lumi want a skateboard?" },
+        { prompt: "Answer: No, Ludi doesn't.", asset: toys.computer, expectedAnswer: "Does Ludi want a computer?" }
+      ], true),
+      {
+        type: "matching", title: "Match Questions and Answers", instruction: "Draw a line from each answer to its matching question.", skill: "question building",
+        items: [
+          { left: "I want a puzzle.", right: "What does Lumi want?", asset: toys.puzzle, expectedAnswer: "What do you want? → I want a puzzle." },
+          { left: "He wants a kite.", right: "What do they want?", asset: toys.kite, expectedAnswer: "What does he want? → He wants a kite." },
+          { left: "Lumi wants a bicycle.", right: "What do you want?", asset: toys.bicycle, expectedAnswer: "What does Lumi want? → Lumi wants a bicycle." },
+          { left: "They want jump ropes.", right: "What does he want?", asset: toys.rope, expectedAnswer: "What do they want? → They want jump ropes." }
+        ]
+      },
+      {
+        type: "multiple_choice", title: "Choose the Question", instruction: "Read the answer. Circle the question that matches.", skill: "do / does questions",
+        items: [
+          { prompt: "Lumi wants a model car.", choices: ["What do Lumi want?", "What does Lumi want?", "Does Lumi wants?"], asset: toys.car, expectedAnswer: "What does Lumi want?" },
+          { prompt: "Ludi wants a skateboard.", choices: ["What does Ludi want?", "What do Ludi wants?", "What Ludi want?"], asset: toys.skateboard, expectedAnswer: "What does Ludi want?" },
+          { prompt: "They want an action figure.", choices: ["What does they want?", "What do they want?", "Do they wants?"], asset: toys.figure, expectedAnswer: "What do they want?" },
+          { prompt: "Yes, she does. She wants a computer.", choices: ["Do she want a computer?", "Does she want a computer?", "Does she wants a computer?"], asset: toys.computer, expectedAnswer: "Does she want a computer?" },
+          { prompt: "No, he doesn't. He wants a jump rope.", choices: ["Does he want a stuffed animal?", "Do he want a stuffed animal?", "Does he wants a stuffed animal?"], asset: toys.animal, expectedAnswer: "Does he want a stuffed animal?" },
+          { prompt: "I want an action figure.", choices: ["What do you want?", "What does you want?", "Do you wants?"], asset: toys.figure, expectedAnswer: "What do you want?" }
+        ]
+      },
+      lockedUnit4Page("template_question_order", "Build the Question", "Put the words in order. Write the complete question.", "question word order", [
+        { prompt: "you / do / What / want / ?", asset: toys.car, expectedAnswer: "What do you want?" },
+        { prompt: "want / does / What / Lumi / ?", asset: toys.rope, expectedAnswer: "What does Lumi want?" },
+        { prompt: "Ludi / a skateboard / want / Does / ?", asset: toys.skateboard, expectedAnswer: "Does Ludi want a skateboard?" },
+        { prompt: "they / Do / a computer / want / ?", asset: toys.computer, expectedAnswer: "Do they want a computer?" },
+        { prompt: "does / he / want / What / ?", asset: toys.figure, expectedAnswer: "What does he want?" },
+        { prompt: "a stuffed animal / she / Does / want / ?", asset: toys.animal, expectedAnswer: "Does she want a stuffed animal?" },
+        { prompt: "want / the children / What / do / ?", asset: toys.rope, expectedAnswer: "What do the children want?" },
+        { prompt: "Lumi / an action figure / Does / want / ?", asset: toys.figure, expectedAnswer: "Does Lumi want an action figure?" }
+      ])
+    ];
+  }
+
+  function book3Unit4Day3Pages() {
+    const toys = book3Unit4Assets();
+    return [
+      lockedUnit4Page("template_guided_question", "Write Your Question", "Use the cue and picture. Write a complete question.", "What / Do / Does", [
+        { prompt: "Ask Ludi what he wants.", asset: toys.computer, expectedAnswer: "What does Ludi want?" },
+        { prompt: "Ask Lumi what she wants.", asset: toys.car, expectedAnswer: "What does Lumi want?" },
+        { prompt: "Ask your friends what they want.", asset: toys.rope, expectedAnswer: "What do you want?" },
+        { prompt: "Ask if Ludi wants a computer.", asset: toys.computer, expectedAnswer: "Does Ludi want a computer?" },
+        { prompt: "Ask if Lumi wants a model car.", asset: toys.car, expectedAnswer: "Does Lumi want a model car?" },
+        { prompt: "Ask if they want jump ropes.", asset: toys.rope, expectedAnswer: "Do they want jump ropes?" },
+        { prompt: "Ask what the girl wants.", asset: toys.animal, expectedAnswer: "What does the girl want?" },
+        { prompt: "Ask what the boys want.", asset: toys.figure, expectedAnswer: "What do the boys want?" }
+      ], true),
+      {
+        type: "matching", title: "Match the Helpers", instruction: "Match each question beginning to the correct ending.", skill: "do / does agreement",
+        items: [
+          { left: "What does Lumi", right: "want a skateboard?", asset: toys.animal, expectedAnswer: "What does Lumi want?" },
+          { left: "What do the boys", right: "want?", asset: toys.figure, expectedAnswer: "What do the boys want?" },
+          { left: "Does Ludi", right: "want a computer?", asset: toys.computer, expectedAnswer: "Does Ludi want a computer?" },
+          { left: "Do the girls", right: "want model cars?", asset: toys.car, expectedAnswer: "Do the girls want model cars?" }
+        ]
+      },
+      {
+        type: "multiple_choice", title: "Choose Do or Does", instruction: "Circle the correct complete sentence.", skill: "subject + do / does",
+        items: [
+          { prompt: "Lumi / stuffed animal", choices: ["What do Lumi want?", "What does Lumi want?", "What does Lumi wants?"], asset: toys.animal, expectedAnswer: "What does Lumi want?" },
+          { prompt: "Ludi / action figure", choices: ["Does Ludi want an action figure?", "Do Ludi want an action figure?", "Does Ludi wants an action figure?"], asset: toys.figure, expectedAnswer: "Does Ludi want an action figure?" },
+          { prompt: "the children / computer", choices: ["What does the children want?", "What do the children want?", "What the children do want?"], asset: toys.computer, expectedAnswer: "What do the children want?" },
+          { prompt: "the girl / jump rope", choices: ["Do the girl want a jump rope?", "Does the girl want a jump rope?", "Does the girl wants a jump rope?"], asset: toys.rope, expectedAnswer: "Does the girl want a jump rope?" },
+          { prompt: "you / skateboard", choices: ["What do you want?", "What does you want?", "What do you wants?"], asset: toys.skateboard, expectedAnswer: "What do you want?" },
+          { prompt: "they / model car", choices: ["Does they want a model car?", "Do they want a model car?", "Do they wants a model car?"], asset: toys.car, expectedAnswer: "Do they want a model car?" }
+        ]
+      },
+      lockedUnit4Page("template_mixed_correction", "Fix the Questions", "Find the mistake. Rewrite each question correctly.", "mixed question correction", [
+        { prompt: "What do Lumi wants?", asset: toys.animal, expectedAnswer: "What does Lumi want?" },
+        { prompt: "Does Ludi wants a model car?", asset: toys.car, expectedAnswer: "Does Ludi want a model car?" },
+        { prompt: "What does the boys want?", asset: toys.figure, expectedAnswer: "What do the boys want?" },
+        { prompt: "Do the girl want a computer?", asset: toys.computer, expectedAnswer: "Does the girl want a computer?" },
+        { prompt: "What they do want?", asset: toys.rope, expectedAnswer: "What do they want?" },
+        { prompt: "Does you want a skateboard?", asset: toys.skateboard, expectedAnswer: "Do you want a skateboard?" },
+        { prompt: "What does Ludi wants?", asset: toys.figure, expectedAnswer: "What does Ludi want?" },
+        { prompt: "Do Lumi want an action figure?", asset: toys.figure, expectedAnswer: "Does Lumi want an action figure?" }
+      ])
+    ];
+  }
+
+  function book3Unit4Day4Pages() {
+    const toys = book3Unit4Assets();
+    return [
+      lockedUnit4Page("template_independent_picture", "Picture Question Challenge", "Use each picture and cue. Write the question independently.", "independent question writing", [
+        { prompt: "Lumi / ask what", asset: toys.skateboard, expectedAnswer: "What does Lumi want?" },
+        { prompt: "Ludi / ask what", asset: toys.animal, expectedAnswer: "What does Ludi want?" },
+        { prompt: "the twins / ask what", asset: toys.computer, expectedAnswer: "What do the twins want?" },
+        { prompt: "your friend / ask if", asset: toys.car, expectedAnswer: "Does your friend want a model car?" },
+        { prompt: "the girls / ask if", asset: toys.rope, expectedAnswer: "Do the girls want jump ropes?" },
+        { prompt: "Ludi / ask if", asset: toys.figure, expectedAnswer: "Does Ludi want an action figure?" },
+        { prompt: "your classmates / ask what", asset: toys.skateboard, expectedAnswer: "What do your classmates want?" },
+        { prompt: "Lumi / ask if", asset: toys.computer, expectedAnswer: "Does Lumi want a computer?" }
+      ], true),
+      {
+        type: "matching", title: "Complete the Dialogue", instruction: "Match each new question to the best complete answer.", skill: "question and answer fluency",
+        items: [
+          { left: "Does Lumi want a jump rope?", right: "They want two model cars.", asset: toys.rope, expectedAnswer: "Does Lumi want a jump rope? → Yes, she does." },
+          { left: "What does Ludi want today?", right: "Yes, she does.", asset: toys.skateboard, expectedAnswer: "What does Ludi want today? → He wants a skateboard." },
+          { left: "Do the twins want a computer?", right: "He wants a skateboard.", asset: toys.computer, expectedAnswer: "Do the twins want a computer? → No, they don't." },
+          { left: "What do the children want?", right: "No, they don't.", asset: toys.car, expectedAnswer: "What do the children want? → They want two model cars." }
+        ]
+      },
+      {
+        type: "multiple_choice", title: "Final Grammar Check", instruction: "Circle the only correct question or answer.", skill: "cumulative do / does review",
+        items: [
+          { prompt: "Ask about Lumi and the computer.", choices: ["Does Lumi want a computer?", "Do Lumi wants a computer?", "What Lumi does want?"], asset: toys.computer, expectedAnswer: "Does Lumi want a computer?" },
+          { prompt: "Ask what Ludi wants today.", choices: ["What do Ludi want today?", "What does Ludi want today?", "Does Ludi wants today?"], asset: toys.skateboard, expectedAnswer: "What does Ludi want today?" },
+          { prompt: "Answer: The twins want model cars.", choices: ["What do the twins want?", "What does the twins want?", "Do the twins wants?"], asset: toys.car, expectedAnswer: "What do the twins want?" },
+          { prompt: "Answer: No, the girl doesn't.", choices: ["Do the girl want a jump rope?", "Does the girl want a jump rope?", "Does the girl wants a jump rope?"], asset: toys.rope, expectedAnswer: "Does the girl want a jump rope?" },
+          { prompt: "Choose the complete answer for an action figure.", choices: ["He want an action figure.", "He wants an action figure.", "He does wants an action figure."], asset: toys.figure, expectedAnswer: "He wants an action figure." },
+          { prompt: "Choose the complete negative answer.", choices: ["No, they doesn't.", "No, they don't.", "No, they not."], asset: toys.animal, expectedAnswer: "No, they don't." }
+        ]
+      },
+      lockedUnit4Page("template_final_output", "Independent Question Writing", "Write a complete question for every cue. Check do, does, and want.", "independent cumulative output", [
+        { prompt: "Lumi + model car + What", asset: toys.car, expectedAnswer: "What does Lumi want?" },
+        { prompt: "Ludi + skateboard + Does", asset: toys.skateboard, expectedAnswer: "Does Ludi want a skateboard?" },
+        { prompt: "the children + jump ropes + What", asset: toys.rope, expectedAnswer: "What do the children want?" },
+        { prompt: "the twins + computer + Do", asset: toys.computer, expectedAnswer: "Do the twins want a computer?" },
+        { prompt: "the girl + stuffed animal + Does", asset: toys.animal, expectedAnswer: "Does the girl want a stuffed animal?" },
+        { prompt: "the boy + action figure + What", asset: toys.figure, expectedAnswer: "What does the boy want?" },
+        { prompt: "your friends + model cars + Do", asset: toys.car, expectedAnswer: "Do your friends want model cars?" },
+        { prompt: "you + computer + What", asset: toys.computer, expectedAnswer: "What do you want?" }
+      ])
+    ];
+  }
+
+  const BOOK3_PROGRESSIVE_PROFILES = {
+    "unit-1": {
+      words: ["birds", "frogs", "puppies", "fish", "bunnies", "turtles", "hamsters", "spiders"],
+      contexts: ["", " today", " in the pet shop", " on the class poster"],
+      pair(word, index, context, day) {
+        const slot = index + day - 1;
+        const variant = index >= 4;
+        const patterns = [
+          [`What do you like${variant ? " best" : ""}${context}?`, `I like ${word}.`, `you + ${word} + What${context}`],
+          [`What do they like${variant ? " best" : ""}${context}?`, `They like ${word}.`, `they + ${word} + What${context}`],
+          [`Do your friends like ${word}${variant ? " too" : ""}${context}?`, "Yes, they do.", `your friends + ${word} + Do${context}`],
+          [`Do the children like ${word}${variant ? " too" : ""}${context}?`, "No, they don't.", `the children + ${word} + Do${context}`]
+        ];
+        return patterns[slot % patterns.length];
+      },
+      skill: "do + like"
+    },
+    "unit-2": {
+      words: ["hamburger", "french fries", "chicken nuggets", "onion rings", "fried chicken", "salad", "hot dog", "soda", "cola", "pizza"],
+      contexts: ["", " today", " for lunch", " at the party"],
+      pair(word, index, context, day) {
+        const slot = index + day - 1;
+        const variant = index >= 4;
+        const patterns = [
+          [`What does Lumi like${variant ? " best" : ""}${context}?`, `Lumi likes ${word}.`, `Lumi + ${word} + What${context}`],
+          [`Does Ludi ${variant ? "also " : ""}like ${word}${context}?`, "Yes, he does.", `Ludi + ${word} + Does${context}`],
+          [`What does she like${variant ? " best" : ""}${context}?`, `She likes ${word}.`, `she + ${word} + What${context}`],
+          [`Does he ${variant ? "also " : ""}like ${word}${context}?`, "No, he doesn't.", `he + ${word} + Does${context}`]
+        ];
+        return patterns[slot % patterns.length];
+      },
+      skill: "does + like · likes"
+    },
+    "unit-3": {
+      words: ["milk", "bread", "cake", "popcorn", "cookies", "ice cream", "juice", "potato chips", "tea", "coffee"],
+      contexts: ["", " today", " for a snack", " at the picnic"],
+      pair(word, index, context, day) {
+        const slot = index + day - 1;
+        const variant = index >= 4;
+        const patterns = [
+          [`Do you ${variant ? "also " : ""}want some ${word}${context}?`, "Yes, I do.", `you + ${word} + Do${context}`],
+          [`What${variant ? " else" : ""} do they want${context}?`, `They want some ${word}.`, `they + ${word} + What${context}`],
+          [`Does Lumi ${variant ? "also " : ""}want some ${word}${context}?`, "No, she doesn't.", `Lumi + ${word} + Does${context}`],
+          [`What${variant ? " else" : ""} does Ludi want${context}?`, `He wants some ${word}.`, `Ludi + ${word} + What${context}`]
+        ];
+        return patterns[slot % patterns.length];
+      },
+      skill: "some / any · want / wants"
+    }
+  };
+
+  function book3ProgressivePairs(unit, day) {
+    const profile = BOOK3_PROGRESSIVE_PROFILES[unit.id];
+    const vocabulary = vocabularyItems(unit);
+    const context = profile.contexts[day - 1];
+    return profile.words.slice(0, 8).map((word, index) => {
+      const rotatedWord = profile.words[(index + ((day - 1) * 2)) % profile.words.length];
+      const [question, answer, cue] = profile.pair(rotatedWord, index, context, day);
+      const asset = vocabulary.find((item) => item.word === rotatedWord) || {};
+      return { word: rotatedWord, question, answer, cue, asset };
+    });
+  }
+
+  function grammarError(text) {
+    const shortAnswer = text.match(/^(Yes|No),\s+(I|you|he|she|we|they)\s+(do|does|don't|doesn't)\.$/i);
+    if (shortAnswer) {
+      const [, yesNo, subject, helper] = shortAnswer;
+      const wrongHelper = /does/i.test(helper) ? (helper.includes("n't") ? "don't" : "do") : (helper.includes("n't") ? "doesn't" : "does");
+      return `${yesNo}, ${subject} ${wrongHelper}.`;
+    }
+    const rules = [
+      [/\bI am\b/i, "I is"], [/\bI'm\b/i, "I is"], [/\bam I\b/i, "is I"],
+      [/\bare (you|we|they|these|those)\b/i, "is $1"],
+      [/\bis (he|she|it|this|that|my|your|the)\b/i, "are $1"],
+      [/\b(You|We|They|These|Those) are\b/i, "$1 is"],
+      [/\b(He|She|It|This|That) is\b/i, "$1 are"],
+      [/\bThere is\b/i, "There are"], [/\bThere are\b/i, "There is"],
+      [/\bdoes\b/i, "do"], [/\bdo\b/i, "does"],
+      [/\blikes\b/i, "like"], [/\blike\b/i, "likes"],
+      [/\bwants\b/i, "want"], [/\bwant\b/i, "wants"],
+      [/\bsome\b/i, "any"]
+    ];
+    const rule = rules.find(([pattern]) => pattern.test(text));
+    return rule ? text.replace(rule[0], rule[1]) : text.replace(/[?.!]$/, " ?");
+  }
+
+  function secondGrammarError(text) {
+    if (/\bI am\b/i.test(text)) return text.replace(/\bI am\b/i, "I are");
+    if (/\bI'm\b/i.test(text)) return text.replace(/\bI'm\b/i, "I are");
+    if (/\bam I\b/i.test(text)) return text.replace(/\bam I\b/i, "are I");
+    if (/\bare (you|we|they|these|those)\b/i.test(text)) return text.replace(/\bare (you|we|they|these|those)\b/i, "am $1");
+    if (/\bis (he|she|it|this|that|my|your|the)\b/i.test(text)) return text.replace(/\bis (he|she|it|this|that|my|your|the)\b/i, "am $1");
+    if (/\b(You|We|They|These|Those) are\b/i.test(text)) return text.replace(/\b(You|We|They|These|Those) are\b/i, "$1 am");
+    if (/\b(He|She|It|This|That) is\b/i.test(text)) return text.replace(/\b(He|She|It|This|That) is\b/i, "$1 am");
+    if (/\bdoes\b/i.test(text)) return text.replace(/\bdoes\b/i, "do").replace(/\b(like|want)\b/i, "$1s");
+    if (/\bdo\b/i.test(text)) return text.replace(/\bdo\b/i, "does").replace(/\b(like|want)\b/i, "$1s");
+    if (/\blikes\b/i.test(text)) return text.replace(/\blikes\b/i, "does like");
+    if (/\bwants\b/i.test(text)) return text.replace(/\bwants\b/i, "does want");
+    return text.replace(/[?.!]$/, "");
+  }
+
+  function choicesFor(correct) {
+    const shortAnswer = correct.match(/^(Yes|No),\s+(I|you|he|she|we|they)\s+(do|does|don't|doesn't)\.$/i);
+    if (shortAnswer) {
+      const [, yesNo, subject, helper] = shortAnswer;
+      const wrongHelper = /does/i.test(helper) ? (helper.includes("n't") ? "don't" : "do") : (helper.includes("n't") ? "doesn't" : "does");
+      return [correct, `${yesNo}, ${subject} ${wrongHelper}.`, `${yesNo}, ${subject} not.`];
+    }
+    const values = [correct, grammarError(correct), secondGrammarError(correct)];
+    const unique = [...new Set(values)];
+    if (unique.length < 3) unique.push(correct.replace(/[?.!]$/, "s."));
+    return unique.slice(0, 3);
+  }
+
+  function rotateAnswers(pairsToMatch) {
+    const answers = pairsToMatch.map((pair) => pair.answer);
+    return answers.slice(1).concat(answers[0]);
+  }
+
+  function progressivePage(type, title, instruction, skill, items, options = {}) {
+    return { type, title, instruction, skill, items, ...options };
+  }
+
+  function book3ProgressivePages(unit, day) {
+    const profile = BOOK3_PROGRESSIVE_PROFILES[unit.id];
+    const pairsForDay = book3ProgressivePairs(unit, day);
+    const matchPairs = pairsForDay.slice(0, 4);
+    const rotated = rotateAnswers(matchPairs);
+    const matchingItems = matchPairs.map((pair, index) => ({
+      left: pair.question,
+      right: rotated[index],
+      asset: pair.asset,
+      expectedAnswer: `${pair.question} → ${pair.answer}`
+    }));
+    const questionChoices = pairsForDay.slice(0, 6).map((pair) => ({
+      prompt: `Answer: ${pair.answer}`,
+      choices: choicesFor(pair.question),
+      asset: pair.asset,
+      expectedAnswer: pair.question
+    }));
+    const answerChoices = pairsForDay.slice(0, 6).map((pair) => ({
+      prompt: pair.question,
+      choices: choicesFor(pair.answer),
+      asset: pair.asset,
+      expectedAnswer: pair.answer
+    }));
+    const locked = (type, title, instruction, items, showPictures = false) => progressivePage(
+      type, title, instruction, profile.skill, items,
+      { layout: "locked_template", showPictures }
+    );
+
+    if (day === 1) return [
+      locked("template_picture_answer", "Look and Answer", "Look at each picture. Write a complete answer.", pairsForDay.map((pair) => ({ prompt: pair.question, asset: pair.asset, expectedAnswer: pair.answer })), true),
+      progressivePage("matching", "Look and Match", "Draw a line from each question to the correct answer.", profile.skill, matchingItems),
+      progressivePage("multiple_choice", "Choose the Answer", "Look at the picture. Circle the correct complete answer.", profile.skill, answerChoices),
+      locked("template_fix_mistakes", "Fix the Mistakes", "Find the mistake. Rewrite the whole sentence correctly.", pairsForDay.map((pair) => ({ prompt: grammarError(pair.answer), asset: pair.asset, expectedAnswer: pair.answer })))
+    ];
+
+    if (day === 2) return [
+      locked("template_picture_question", "Make the Question", "Look at the picture and answer cue. Write the matching question.", pairsForDay.map((pair) => ({ prompt: `Answer: ${pair.answer}`, asset: pair.asset, expectedAnswer: pair.question })), true),
+      progressivePage("matching", "Match Questions and Answers", "Draw a line from each answer to its matching question.", profile.skill, matchingItems),
+      progressivePage("multiple_choice", "Choose the Question", "Read the answer. Circle the question that matches.", profile.skill, questionChoices),
+      locked("template_question_order", "Build the Question", "Put the words in order. Write the complete question.", pairsForDay.map((pair) => ({ prompt: scramble(pair.question), asset: pair.asset, expectedAnswer: pair.question })))
+    ];
+
+    if (day === 3) return [
+      locked("template_guided_question", "Write Your Question", "Use the cue and picture. Write a complete question.", pairsForDay.map((pair) => ({ prompt: pair.cue, asset: pair.asset, expectedAnswer: pair.question })), true),
+      progressivePage("matching", "Match the Dialogue", "Match each question to the best complete answer.", profile.skill, matchingItems),
+      progressivePage("multiple_choice", "Choose Do or Does", "Circle the only correct complete question.", profile.skill, questionChoices),
+      locked("template_mixed_correction", "Fix the Questions", "Find the mistake. Rewrite each question correctly.", pairsForDay.map((pair) => ({ prompt: grammarError(pair.question), asset: pair.asset, expectedAnswer: pair.question })))
+    ];
+
+    return [
+      locked("template_independent_picture", "Picture Question Challenge", "Use each picture and cue. Write the question independently.", pairsForDay.map((pair) => ({ prompt: pair.cue, asset: pair.asset, expectedAnswer: pair.question })), true),
+      progressivePage("matching", "Complete the Dialogue", "Match each question to the best complete answer.", profile.skill, matchingItems),
+      progressivePage("multiple_choice", "Final Grammar Check", "Circle the only correct question.", profile.skill, questionChoices),
+      locked("template_final_output", "Independent Question Writing", "Write one complete question for every cue.", pairsForDay.map((pair) => ({ prompt: `${pair.cue} + complete question`, asset: pair.asset, expectedAnswer: pair.question })))
+    ];
+  }
+
+  function reviewWorksheetPairs(unit, day) {
+    const sections = unit.reviewSections || [];
+    const pools = sections.map((section) => {
+      const vocabulary = vocabularyItems(section);
+      const qa = pairs(section).filter((item) => {
+        if (unit.bookId !== "book-1" || unit.reviewRange !== "1–3") return true;
+        return !/\b(?:we|they|them|their|these|those|parents|cousins)\b/i.test(`${item.question} ${item.answer}`);
+      });
+      return qa.map((item, index) => ({
+        question: item.question,
+        answer: item.answer,
+        asset: assetFor(`${item.question} ${item.answer}`, vocabulary, index),
+        section: section.title
+      }));
+    });
+    return Array.from({ length: 8 }, (_, index) => {
+      const sectionIndex = index % Math.max(sections.length, 1);
+      const pool = pools[sectionIndex] || [];
+      const item = pool[(Math.floor(index / Math.max(sections.length, 1)) + ((day - 1) * 2)) % Math.max(pool.length, 1)] || {
+        question: `What did you learn in ${sections[sectionIndex]?.title || "this unit"}?`,
+        answer: "Answer in a complete sentence.",
+        asset: vocabularyItems(sections[sectionIndex] || { vocabulary: [] })[index] || {},
+        section: sections[sectionIndex]?.title || "Review"
+      };
+      return { ...item, cue: `${item.asset?.word || "Picture cue"} + complete question` };
+    });
+  }
+
+  function clozeItem(item, index) {
+    const answer = String(item.answer || "");
+    const preferred = String(item.asset?.word || "").replace(/\(s\)|\(es\)/gi, "").trim();
+    const escaped = preferred.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const preferredMatch = preferred && answer.match(new RegExp(`\\b${escaped}`, "i"));
+    const stopWords = new Set(["a", "an", "am", "are", "at", "can", "do", "does", "he", "her", "his", "i", "in", "is", "it", "my", "no", "not", "on", "she", "the", "they", "to", "we", "yes", "you", "your"]);
+    const words = answer.match(/[A-Za-z]+(?:'[A-Za-z]+)?/g) || [];
+    const candidates = words.filter((word) => !stopWords.has(word.toLowerCase()));
+    const missing = preferredMatch?.[0] || candidates[index % Math.max(candidates.length, 1)] || words.at(-1) || "word";
+    const prompt = answer.replace(new RegExp(`\\b${missing.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i"), "________");
+    return { question: item.question, prompt, asset: item.asset, missing, expectedAnswer: `${missing} — ${answer}` };
+  }
+
+  function connectedClozePage(reviewPairs, day) {
+    const items = reviewPairs.slice(0, 3).map(clozeItem);
+    return {
+      type: "story_cloze",
+      layout: "locked_template",
+      title: day === 4 ? "Lumi and Ludi's Review Story" : "A Connected Review Story",
+      instruction: day === 1
+        ? "Read the story. Look at the pictures and answer each question in a complete sentence."
+        : "Follow the whole story. Answer every question, then read the passage aloud.",
+      skill: "connected reading and complete answers",
+      introLines: day === 4
+        ? ["Hi, I'm Lumi.", "Today is the final review challenge.", "Look at the pictures and answer the questions."]
+        : ["Hi, I'm Lumi.", "Today is review day.", "Look at the pictures and answer the questions."],
+      endingLines: ["Check every complete sentence.", "Great job today!"],
+      heroAssets: items.slice(0, 3).map((item) => item.asset),
+      wordBank: [...new Set(items.map((item) => item.missing))],
+      items
+    };
+  }
+
+  function connectedChainPage(reviewPairs, day) {
+    const items = reviewPairs.slice(day === 4 ? 0 : 2, day === 4 ? 6 : 6).map((item, index) => ({
+      prompt: item.question,
+      lead: index === 0 ? "Start the conversation." : "Use the last answer and continue.",
+      asset: item.asset,
+      expectedAnswer: item.answer
+    }));
+    return {
+      type: "chain_questions",
+      layout: "locked_template",
+      title: day === 4 ? "Independent Chain Challenge" : "Follow the Question Chain",
+      instruction: day === 4
+        ? "Answer in complete sentences. Then write one new question that keeps the conversation going."
+        : "Read from top to bottom. Each answer helps the conversation continue.",
+      skill: "connected questions and complete answers",
+      intro: "Lumi asks the first question. Ludi answers, then they keep the same conversation going.",
+      items
+    };
+  }
+
+  function bookReviewPages(unit, day) {
+    const reviewPairs = reviewWorksheetPairs(unit, day);
+    const matchingSource = reviewPairs.slice(0, 4);
+    const rotatedAnswers = matchingSource.map((item) => item.answer).slice(1).concat(matchingSource[0]?.answer || []);
+    const matchingItems = matchingSource.map((item, index) => ({
+      left: item.question,
+      right: rotatedAnswers[index],
+      asset: item.asset,
+      expectedAnswer: `${item.question} → ${item.answer}`
+    }));
+    const questionChoices = reviewPairs.slice(0, 6).map((item) => ({
+      prompt: `Answer: ${item.answer}`,
+      choices: choicesFor(item.question),
+      asset: item.asset,
+      expectedAnswer: item.question
+    }));
+    const answerChoices = reviewPairs.slice(0, 6).map((item) => ({
+      prompt: item.question,
+      choices: choicesFor(item.answer),
+      asset: item.asset,
+      expectedAnswer: item.answer
+    }));
+    const skill = "cumulative connected review";
+    const standard = (type, title, instruction, items) => progressivePage(type, title, instruction, skill, items);
+    const locked = (type, title, instruction, items, showPictures = false) => progressivePage(
+      type, title, instruction, skill, items,
+      { layout: "locked_template", showPictures }
+    );
+
+    if (day === 1) return [
+      connectedClozePage(reviewPairs, day),
+      standard("matching", "Review Matching", "Match each question to the answer that keeps the conversation correct.", matchingItems),
+      standard("multiple_choice", "Review Choice Check", "Circle the correct complete answer.", answerChoices),
+      connectedChainPage(reviewPairs, day)
+    ];
+
+    if (day === 2) return [
+      locked("template_picture_question", "Review: Make the Question", "Read each answer and write its question.", reviewPairs.map((item) => ({ prompt: `Answer: ${item.answer}`, asset: item.asset, expectedAnswer: item.question })), true),
+      standard("matching", "Review Question Match", "Match each question to its complete answer.", matchingItems),
+      standard("multiple_choice", "Choose the Review Question", "Circle the question that matches the answer.", questionChoices),
+      connectedClozePage(reviewPairs, day)
+    ];
+
+    if (day === 3) return [
+      connectedChainPage(reviewPairs, day),
+      standard("matching", "Mixed Review Dialogue", "Match questions and answers to complete the dialogue.", matchingItems),
+      standard("multiple_choice", "Mixed Grammar Check", "Circle the only correct complete question.", questionChoices),
+      connectedClozePage(reviewPairs, day)
+    ];
+
+    return [
+      connectedClozePage(reviewPairs, day),
+      standard("matching", "Cumulative Dialogue", "Match each question to the best complete answer.", matchingItems),
+      standard("multiple_choice", "Final Cumulative Check", "Circle the only correct question.", questionChoices),
+      connectedChainPage(reviewPairs, day)
+    ];
+  }
+
   function attach(catalog) {
     (catalog || []).forEach((book) => book.units.forEach((unit) => unit.lessons.forEach((lesson, lessonIndex) => {
       const day = Number(String(lesson.day || lessonIndex + 1).match(/\d+/)?.[0]) || lessonIndex + 1;
-      lesson.worksheet = { ...(lesson.worksheet || {}), day, unitTitle: unit.title, pages: buildPages(unit, day) };
+      const pages = unit.isReview
+        ? bookReviewPages(unit, day)
+        : book.id === "book-3" && unit.id === "unit-4"
+        ? [book3Unit4Day1Pages, book3Unit4Day2Pages, book3Unit4Day3Pages, book3Unit4Day4Pages][day - 1]()
+        : book.id === "book-3" && BOOK3_PROGRESSIVE_PROFILES[unit.id]
+          ? book3ProgressivePages(unit, day)
+          : buildPages(unit, day);
+      lesson.worksheet = { ...(lesson.worksheet || {}), day, unitTitle: unit.title, pages };
     })));
   }
 

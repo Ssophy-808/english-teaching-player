@@ -573,31 +573,125 @@
     ];
   }
 
-  function reviewWorksheetPairs(unit, day) {
-    const sections = unit.reviewSections || [];
-    const pools = sections.map((section) => {
-      const vocabulary = vocabularyItems(section);
-      const qa = pairs(section).filter((item) => {
-        if (unit.bookId !== "book-1" || unit.reviewRange !== "1–3") return true;
-        return !/\b(?:we|they|them|their|these|those|parents|cousins)\b/i.test(`${item.question} ${item.answer}`);
-      });
-      return qa.map((item, index) => ({
-        question: item.question,
-        answer: item.answer,
-        asset: assetFor(`${item.question} ${item.answer}`, vocabulary, index),
-        section: section.title
-      }));
+  function reviewWord(asset) {
+    return String(asset?.word || "").replace(/\(s\)|\(es\)/gi, "").trim();
+  }
+
+  function reviewWordLength(asset) {
+    return reviewWord(asset).replace(/[^A-Za-z]/g, "").length;
+  }
+
+  function pluralReviewWord(word) {
+    if (/s$/i.test(word)) return word;
+    if (/[^aeiou]y$/i.test(word)) return `${word.slice(0, -1)}ies`;
+    if (/(?:ch|sh|x|z)$/i.test(word)) return `${word}es`;
+    return `${word}s`;
+  }
+
+  function reviewArticle(word) {
+    return /^[aeiou]/i.test(word) ? "an" : "a";
+  }
+
+  function reviewVocabularyTerms(asset) {
+    return [...new Set([reviewWord(asset), ...(asset?.aliases || [])].map((term) => String(term).trim()).filter(Boolean))]
+      .sort((a, b) => b.length - a.length);
+  }
+
+  function replaceReviewTerm(text, term, target) {
+    if (!term) return text;
+    const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return String(text).replace(new RegExp(`\\b${escaped}\\b`, "gi"), (matched) => {
+      const value = /s$/i.test(matched) ? pluralReviewWord(target) : target;
+      return /^[A-Z]/.test(matched) ? `${value.charAt(0).toUpperCase()}${value.slice(1)}` : value;
     });
-    return Array.from({ length: 8 }, (_, index) => {
-      const sectionIndex = index % Math.max(sections.length, 1);
-      const pool = pools[sectionIndex] || [];
-      const item = pool[(Math.floor(index / Math.max(sections.length, 1)) + ((day - 1) * 2)) % Math.max(pool.length, 1)] || {
-        question: `What did you learn in ${sections[sectionIndex]?.title || "this unit"}?`,
-        answer: "Answer in a complete sentence.",
-        asset: vocabularyItems(sections[sectionIndex] || { vocabulary: [] })[index] || {},
-        section: sections[sectionIndex]?.title || "Review"
-      };
-      return { ...item, cue: `${item.asset?.word || "Picture cue"} + complete question` };
+  }
+
+  function fixReviewArticles(text) {
+    return String(text).replace(/\ba\s+([aeiou])/gi, "an $1").replace(/\ban\s+([^aeiou\W])/gi, "a $1");
+  }
+
+  function reviewPairForVocabulary(unit, section, asset, index) {
+    const vocabulary = vocabularyItems(section);
+    const allowedPairs = pairs(section).filter((item) => {
+      if (unit.bookId !== "book-1" || unit.reviewRange !== "1–3") return true;
+      return !/\b(?:we|they|them|their|these|those|parents|cousins)\b/i.test(`${item.question} ${item.answer}`);
+    });
+    const template = allowedPairs[index % Math.max(allowedPairs.length, 1)] || {};
+    const source = `${template.question || ""} ${template.answer || ""}`;
+    const anchor = vocabulary.flatMap((item) => reviewVocabularyTerms(item).map((term) => ({ item, term })))
+      .sort((a, b) => b.term.length - a.term.length)
+      .find(({ term }) => new RegExp(`\\b${term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i").test(source));
+    const word = reviewWord(asset) || "picture";
+    let question = template.question || "";
+    let answer = template.answer || "";
+
+    if (anchor) {
+      question = replaceReviewTerm(question, anchor.term, word);
+      answer = replaceReviewTerm(answer, anchor.term, word);
+    } else if (/^Is there\b/i.test(question)) {
+      question = `Is there ${reviewArticle(word)} ${word}?`;
+      answer = `Yes, there is. There is ${reviewArticle(word)} ${word}.`;
+    } else if (/^Are there\b/i.test(question)) {
+      if (/^(?:eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|\d+)$/i.test(word)) {
+        question = `Are there ${word} books?`;
+        answer = `Yes, there are. There are ${word} books.`;
+      } else {
+        question = `Are there ${pluralReviewWord(word)}?`;
+        answer = `Yes, there are. There are ${pluralReviewWord(word)}.`;
+      }
+    } else if (/^How many\b/i.test(question)) {
+      const count = (index % 9) + 2;
+      question = `How many ${pluralReviewWord(word)} are there?`;
+      answer = `There are ${count} ${pluralReviewWord(word)}.`;
+    } else if (/^What are (?:these|those)\b/i.test(question)) {
+      const pointer = index % 2 ? "those" : "these";
+      question = `What are ${pointer}?`;
+      answer = `${pointer === "these" ? "These" : "Those"} are ${pluralReviewWord(word)}.`;
+    } else if (/^Are (?:these|those)\b/i.test(question)) {
+      const pointer = index % 2 ? "those" : "these";
+      question = `Are ${pointer} ${pluralReviewWord(word)}?`;
+      answer = `Yes, they are. They are ${pluralReviewWord(word)}.`;
+    } else if (/^Who is\b/i.test(question)) {
+      const female = /^(?:mother|grandmother|aunt|sister|girl|woman|teacher)$/i.test(word);
+      question = `Who is ${female ? "she" : "he"}?`;
+      answer = `${female ? "She" : "He"} is my ${word}.`;
+    } else if (/^How old\b/i.test(question) && /^(?:one|two|three|four|five|six|seven|eight|nine|ten|\d+)$/i.test(word)) {
+      const subject = index % 2 ? "she" : "he";
+      question = `How old is ${subject}?`;
+      answer = `${subject === "she" ? "She" : "He"} is ${word} years old.`;
+    } else {
+      question = "What is in the picture?";
+      answer = `It is ${reviewArticle(word)} ${word}.`;
+    }
+
+    return {
+      question: fixReviewArticles(question),
+      answer: fixReviewArticles(answer),
+      asset,
+      section: section.title,
+      cue: `${asset?.word || "Picture cue"} + complete question`
+    };
+  }
+
+  function reviewWorksheetPairs(unit, day, count = 24) {
+    const sections = unit.reviewSections || [];
+    const sectionWords = sections.map((section) => vocabularyItems(section)
+      .filter((asset) => !(unit.bookId === "book-1" && unit.reviewRange === "1–3" && /\(s\)|\b(?:parents|cousins)\b/i.test(String(asset.word || ""))))
+      .sort((a, b) => reviewWordLength(b) - reviewWordLength(a) || reviewWord(a).localeCompare(reviewWord(b))));
+    const schedule = [];
+    const maxWords = Math.max(0, ...sectionWords.map((items) => items.length));
+    for (let rank = 0; rank < maxWords; rank += 1) {
+      sections.forEach((section, sectionIndex) => {
+        const asset = sectionWords[sectionIndex]?.[rank];
+        if (asset) schedule.push({ section, asset });
+      });
+    }
+    if (!schedule.length) return [];
+    const dayStride = Math.max(1, Math.ceil(schedule.length / 4));
+    const start = ((day - 1) * dayStride) % schedule.length;
+    return Array.from({ length: count }, (_, index) => {
+      const scheduled = schedule[(start + index) % schedule.length];
+      return reviewPairForVocabulary(unit, scheduled.section, scheduled.asset, start + index);
     });
   }
 
@@ -635,7 +729,7 @@
   }
 
   function connectedChainPage(reviewPairs, day) {
-    const items = reviewPairs.slice(day === 4 ? 0 : 2, day === 4 ? 6 : 6).map((item, index) => ({
+    const items = reviewPairs.slice(0, day === 4 ? 6 : 4).map((item, index) => ({
       prompt: item.question,
       lead: index === 0 ? "Start the conversation." : "Use the last answer and continue.",
       asset: item.asset,
@@ -655,8 +749,12 @@
   }
 
   function bookReviewPages(unit, day) {
-    const reviewPairs = reviewWorksheetPairs(unit, day);
-    const matchingSource = reviewPairs.slice(0, 4);
+    const reviewPairs = reviewWorksheetPairs(unit, day, 24);
+    const storySource = day === 2 ? reviewPairs.slice(18, 21) : day === 3 ? reviewPairs.slice(14, 17) : reviewPairs.slice(0, 3);
+    const matchingSource = day === 2 ? reviewPairs.slice(8, 12) : day === 3 ? reviewPairs.slice(4, 8) : reviewPairs.slice(3, 7);
+    const choiceSource = day === 2 ? reviewPairs.slice(12, 18) : day === 3 ? reviewPairs.slice(8, 14) : reviewPairs.slice(7, 13);
+    const chainSource = day === 2 ? reviewPairs.slice(18, 22) : day === 3 ? reviewPairs.slice(0, 4) : reviewPairs.slice(13, 19);
+    const writingSource = reviewPairs.slice(0, 8);
     const rotatedAnswers = matchingSource.map((item) => item.answer).slice(1).concat(matchingSource[0]?.answer || []);
     const matchingItems = matchingSource.map((item, index) => ({
       left: item.question,
@@ -664,13 +762,13 @@
       asset: item.asset,
       expectedAnswer: `${item.question} → ${item.answer}`
     }));
-    const questionChoices = reviewPairs.slice(0, 6).map((item) => ({
+    const questionChoices = choiceSource.map((item) => ({
       prompt: `Answer: ${item.answer}`,
       choices: choicesFor(item.question),
       asset: item.asset,
       expectedAnswer: item.question
     }));
-    const answerChoices = reviewPairs.slice(0, 6).map((item) => ({
+    const answerChoices = choiceSource.map((item) => ({
       prompt: item.question,
       choices: choicesFor(item.answer),
       asset: item.asset,
@@ -684,31 +782,31 @@
     );
 
     if (day === 1) return [
-      connectedClozePage(reviewPairs, day),
+      connectedClozePage(storySource, day),
       standard("matching", "Review Matching", "Match each question to the answer that keeps the conversation correct.", matchingItems),
       standard("multiple_choice", "Review Choice Check", "Circle the correct complete answer.", answerChoices),
-      connectedChainPage(reviewPairs, day)
+      connectedChainPage(chainSource, day)
     ];
 
     if (day === 2) return [
-      locked("template_picture_question", "Review: Make the Question", "Read each answer and write its question.", reviewPairs.map((item) => ({ prompt: `Answer: ${item.answer}`, asset: item.asset, expectedAnswer: item.question })), true),
+      locked("template_picture_question", "Review: Make the Question", "Read each answer and write its question.", writingSource.map((item) => ({ prompt: `Answer: ${item.answer}`, asset: item.asset, expectedAnswer: item.question })), true),
       standard("matching", "Review Question Match", "Match each question to its complete answer.", matchingItems),
       standard("multiple_choice", "Choose the Review Question", "Circle the question that matches the answer.", questionChoices),
-      connectedClozePage(reviewPairs, day)
+      connectedClozePage(storySource, day)
     ];
 
     if (day === 3) return [
-      connectedChainPage(reviewPairs, day),
+      connectedChainPage(chainSource, day),
       standard("matching", "Mixed Review Dialogue", "Match questions and answers to complete the dialogue.", matchingItems),
       standard("multiple_choice", "Mixed Grammar Check", "Circle the only correct complete question.", questionChoices),
-      connectedClozePage(reviewPairs, day)
+      connectedClozePage(storySource, day)
     ];
 
     return [
-      connectedClozePage(reviewPairs, day),
+      connectedClozePage(storySource, day),
       standard("matching", "Cumulative Dialogue", "Match each question to the best complete answer.", matchingItems),
       standard("multiple_choice", "Final Cumulative Check", "Circle the only correct question.", questionChoices),
-      connectedChainPage(reviewPairs, day)
+      connectedChainPage(chainSource, day)
     ];
   }
 

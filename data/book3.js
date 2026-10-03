@@ -38,7 +38,41 @@
     "stuffed animal": "assets/images/book3/unit4/stuffed-animal.png",
     "jump rope": "assets/images/book3/unit4/jump-rope.png",
     "model car": "assets/images/book3/unit4/model-car.png",
-    bicycle: "assets/images/book3/unit4/bicycle.png"
+    bicycle: "assets/images/book3/unit4/bicycle.png",
+    head: "assets/images/book3/unit5/head.jpg",
+    "eye(s)": "assets/images/book3/unit5/eye.png",
+    "ear(s)": "assets/images/book3/unit5/ear.jpg",
+    nose: "assets/images/book3/unit5/nose.png",
+    "leg(s)": "assets/images/book3/unit5/leg.png",
+    "hand(s)": "assets/images/book3/unit5/hand.png",
+    "arm(s)": "assets/images/book3/unit5/arm.png",
+    "tooth / teeth": "assets/images/book3/unit5/tooth.png",
+    mouth: "assets/images/book3/unit5/mouth.png",
+    "foot / feet": "assets/images/book3/unit5/foot.png",
+    basketball: "assets/images/book3/unit7/basketball.png",
+    "ping-pong": "assets/images/book3/unit7/ping-pong.png",
+    volleyball: "assets/images/book3/unit7/volleyball.png",
+    golf: "assets/images/book3/unit7/golf.png",
+    soccer: "assets/images/book3/unit7/soccer.png",
+    badminton: "assets/images/book3/unit7/badminton.png",
+    football: "assets/images/book3/unit7/football.png",
+    dodgeball: "assets/images/book3/unit7/dodgeball.png",
+    tennis: "assets/images/book3/unit7/tennis.png",
+    baseball: "assets/images/book3/unit7/baseball.png",
+    "fly a kite": "assets/images/book3/unit8/fly-a-kite.png",
+    "read a book": "assets/images/book3/unit8/read-a-book.png",
+    "listen to music": "assets/images/book3/unit8/listen-to-music.png",
+    "watch TV": "assets/images/book3/unit8/watch-tv.png",
+    "ride a bike": "assets/images/book3/unit8/ride-a-bike.png",
+    sunny: "assets/images/book3/unit9/sunny.png",
+    rainy: "assets/images/book3/unit9/rainy.png",
+    snowy: "assets/images/book3/unit9/snowy.png",
+    windy: "assets/images/book3/unit9/windy.png",
+    cloudy: "assets/images/book3/unit9/cloudy.png",
+    "go swimming": "assets/images/book3/unit9/go-swimming.png",
+    "go shopping": "assets/images/book3/unit9/go-shopping.png",
+    "go jogging": "assets/images/book3/unit9/go-jogging.png",
+    "go hiking": "assets/images/book3/unit9/go-hiking.png"
   };
 
   const vocabulary = (word, meaning, visual, aliases = []) => ({
@@ -182,9 +216,9 @@
     ], "like / likes + to play + sport"),
     makeUnit("unit-8", "What day is today?", "Days and Activities", [
       ["fly a kite", "放風箏", "🪁"], ["read a book", "看書", "📖"], ["listen to music", "聽音樂", "🎧"],
-      ["watch TV", "看電視", "📺"], ["ride a bike", "騎腳踏車", "🚲"], ["Sunday", "星期日", "☀️"],
-      ["Monday", "星期一", "1️⃣"], ["Tuesday", "星期二", "2️⃣"], ["Wednesday", "星期三", "3️⃣"],
-      ["Thursday", "星期四", "4️⃣"], ["Friday", "星期五", "5️⃣"], ["Saturday", "星期六", "6️⃣"]
+      ["watch TV", "看電視", "📺"], ["ride a bike", "騎腳踏車", "🚲"], ["Sunday", "星期日", "星期日"],
+      ["Monday", "星期一", "星期一"], ["Tuesday", "星期二", "星期二"], ["Wednesday", "星期三", "星期三"],
+      ["Thursday", "星期四", "星期四"], ["Friday", "星期五", "星期五"], ["Saturday", "星期六", "星期六"]
     ], [["Long a", ["cake", "rain"]], ["Long e", ["leaf", "bee"]], ["Long i", ["pie", "light"]], ["Long o", ["boat", "row"]]], [
       [["What day is today?", "今天星期幾？"], ["It's Saturday.", "今天是星期六。"]],
       [["I like to watch TV on Mondays.", "我喜歡星期一看電視。"]],

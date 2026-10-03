@@ -18,25 +18,47 @@
     return asset.visual ? `<span class="wb-visual" role="img" aria-label="${escapeHtml(alt)}">${escapeHtml(asset.visual)}</span>` : "";
   }
 
+  const NUMBER_WORDS = {
+    one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
+    eleven: 11, twelve: 12, thirteen: 13, fourteen: 14, fifteen: 15, sixteen: 16,
+    seventeen: 17, eighteen: 18, nineteen: 19, twenty: 20
+  };
+
+  function countCue(item) {
+    const text = [item?.expectedAnswer, item?.answer, item?.prompt, item?.question, item?.left].filter(Boolean).join(" ");
+    const match = text.match(/There are\s+(\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty)\b/i)
+      || text.match(/Are there\s+(\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty)\b/i);
+    if (!match) return "";
+    return String(NUMBER_WORDS[match[1].toLowerCase()] || match[1]);
+  }
+
+  function itemPicture(item, alt = "Picture prompt") {
+    const picture = assetMarkup(item?.asset, alt);
+    if (!picture) return "";
+    const count = countCue(item);
+    if (!count || (!item.asset?.image && !item.asset?.sprite && String(item.asset?.visual || "") === count)) return picture;
+    return `<span class="wb-picture-cue">${picture}<b class="wb-picture-count">${escapeHtml(count)}</b></span>`;
+  }
+
   function answerLines(count = 1) {
     const guide = '<i class="wb-handwriting-row" aria-hidden="true"><b></b><b></b><b></b><b></b></i>';
     return `<span class="wb-answer-lines" aria-label="Four-line English handwriting guide">${Array.from({ length: count }, () => guide).join("")}</span>`;
   }
 
   function pictureSentence(item, index) {
-    return `<li class="wb-picture-prompt"><span class="wb-number">${index + 1}</span>${assetMarkup(item.asset)}<div><small>${escapeHtml(item.subjectCue || "Look at the picture.")}</small><p>${escapeHtml(item.starter || "")} ${answerLines(item.lines || 1)}</p></div></li>`;
+    return `<li class="wb-picture-prompt"><span class="wb-number">${index + 1}</span>${itemPicture(item)}<div><small>${escapeHtml(item.subjectCue || "Look at the picture.")}</small><p>${escapeHtml(item.starter || "")} ${answerLines(item.lines || 1)}</p></div></li>`;
   }
 
   function standardItem(item, index) {
-    return `<li class="wb-question-card"><span class="wb-number">${index + 1}</span>${assetMarkup(item.asset)}<div><p>${escapeHtml(item.prompt)}</p>${answerLines(item.lines || 1)}</div></li>`;
+    return `<li class="wb-question-card"><span class="wb-number">${index + 1}</span>${itemPicture(item)}<div><p>${escapeHtml(item.prompt)}</p>${answerLines(item.lines || 1)}</div></li>`;
   }
 
   function matching(page) {
-    return `<div class="wb-matching-section"><div class="wb-matching"><ol>${page.items.map((item, index) => `<li><span>${index + 1}</span>${assetMarkup(item.asset)}<b>${escapeHtml(item.left)}</b></li>`).join("")}</ol><ol>${page.items.map((item, index) => `<li><span>${String.fromCharCode(65 + index)}</span><b>${escapeHtml(item.right)}</b></li>`).join("")}</ol></div><div class="wb-matching-write"><strong>✎ Choose one pair. Write the complete answer.</strong>${answerLines(1)}</div></div>`;
+    return `<div class="wb-matching-section"><div class="wb-matching"><ol>${page.items.map((item, index) => `<li><span>${index + 1}</span>${itemPicture(item)}<b>${escapeHtml(item.left)}</b></li>`).join("")}</ol><ol>${page.items.map((item, index) => `<li><span>${String.fromCharCode(65 + index)}</span><b>${escapeHtml(item.right)}</b></li>`).join("")}</ol></div><div class="wb-matching-write"><strong>✎ Choose one pair. Write the complete answer.</strong>${answerLines(1)}</div></div>`;
   }
 
   function multipleChoice(page) {
-    const cards = page.items.map((item, index) => `<li class="wb-choice-card"><span class="wb-number">${index + 1}</span>${assetMarkup(item.asset, item.prompt)}<div><p>${escapeHtml(item.prompt)}</p><ol>${item.choices.map((choice, choiceIndex) => `<li><span>${String.fromCharCode(65 + choiceIndex)}</span>${escapeHtml(choice)}</li>`).join("")}</ol></div></li>`).join("");
+    const cards = page.items.map((item, index) => `<li class="wb-choice-card"><span class="wb-number">${index + 1}</span>${itemPicture(item, item.prompt)}<div><p>${escapeHtml(item.prompt)}</p><ol>${item.choices.map((choice, choiceIndex) => `<li><span>${String.fromCharCode(65 + choiceIndex)}</span>${escapeHtml(choice)}</li>`).join("")}</ol></div></li>`).join("");
     return `<div class="wb-choice-section"><ol class="wb-choice-list">${cards}</ol><div class="wb-matching-write"><strong>✎ Choose one answer. Write the complete sentence.</strong>${answerLines(1)}</div></div>`;
   }
 
@@ -47,18 +69,18 @@
   function storyCloze(page) {
     const hero = (page.heroAssets || []).map((asset) => assetMarkup(asset, "Story picture")).join("");
     const intro = (page.introLines || []).map((line) => `<p>${escapeHtml(line)}</p>`).join("");
-    const prompts = page.items.map((item) => `<section class="wb-passage-prompt"><div><p>${escapeHtml(item.question)}</p>${answerLines(1)}</div>${assetMarkup(item.asset, item.expectedAnswer)}</section>`).join("");
+    const prompts = page.items.map((item) => `<section class="wb-passage-prompt"><div><p>${escapeHtml(item.question)}</p>${answerLines(1)}</div>${itemPicture(item, item.expectedAnswer)}</section>`).join("");
     const ending = (page.endingLines || []).map((line) => `<p>${escapeHtml(line)}</p>`).join("");
     return `<section class="wb-story-cloze wb-passage-page"><div class="wb-passage-hero">${hero}</div><div class="wb-passage-copy">${intro}</div>${prompts}<div class="wb-passage-copy wb-passage-ending">${ending}</div></section>`;
   }
 
   function chainQuestions(page) {
-    const lines = page.items.map((item, index) => `<li><span class="wb-chain-step">${index + 1}</span><div><small>${escapeHtml(item.lead)}</small><p>${escapeHtml(item.prompt)}</p>${answerLines(1)}</div>${assetMarkup(item.asset, item.expectedAnswer)}</li>`).join("");
+    const lines = page.items.map((item, index) => `<li><span class="wb-chain-step">${index + 1}</span><div><small>${escapeHtml(item.lead)}</small><p>${escapeHtml(item.prompt)}</p>${answerLines(1)}</div>${itemPicture(item, item.expectedAnswer)}</li>`).join("");
     return `<section class="wb-chain"><p class="wb-story-intro">${escapeHtml(page.intro)}</p><ol>${lines}</ol><div class="wb-chain-new"><strong>My next question:</strong>${answerLines(1)}</div></section>`;
   }
 
   function lockedTemplateItem(item, index, showPictures) {
-    const picture = showPictures ? assetMarkup(item.asset, item.alt || item.expectedAnswer || "Picture prompt") : "";
+    const picture = showPictures ? itemPicture(item, item.alt || item.expectedAnswer || "Picture prompt") : "";
     return `<li class="wb-template-item${showPictures ? " has-picture" : ""}"><span class="wb-template-number">${index + 1}.</span><p>${escapeHtml(item.prompt)}</p>${picture}${answerLines(1)}</li>`;
   }
 

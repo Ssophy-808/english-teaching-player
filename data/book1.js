@@ -2,6 +2,12 @@
   "use strict";
 
   const FAMILY_IMAGE = (name) => `assets/images/book1/unit2/${name}.png`;
+  const ICON_IMAGE = (unit, name, extension = "png") => `assets/images/book1/${unit}/${name}.${extension}`;
+  const iconWord = (word, unit, name = word, extension = "png", extra = {}) => ({
+    word,
+    image: ICON_IMAGE(unit, name, extension),
+    ...extra
+  });
 
   const units = [
     {
@@ -143,7 +149,12 @@
         "How old is she?",
         "She is six years old."
       ],
-      vocabulary: ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"],
+      vocabulary: [
+        { word: "one", visual: "1" }, { word: "two", visual: "2" }, { word: "three", visual: "3" },
+        { word: "four", visual: "4" }, { word: "five", visual: "5" }, { word: "six", visual: "6" },
+        { word: "seven", visual: "7" }, { word: "eight", visual: "8" }, { word: "nine", visual: "9" },
+        { word: "ten", visual: "10" }
+      ],
       quiz: [{ prompt: "She is ____ years old.", answer: "six", choices: ["four", "six", "eight"], visual: "6️⃣", image: "" }],
       phonics: {
         groups: [
@@ -170,7 +181,17 @@
         "Is she tall?",
         "No, she is not."
       ],
-      vocabulary: ["sad", "happy", "chubby", "thin", "young", "old", "short", "tall", "cute"],
+      vocabulary: [
+        iconWord("sad", "unit4"),
+        { word: "happy", visual: "😄" },
+        iconWord("chubby", "unit4"),
+        iconWord("thin", "unit4"),
+        iconWord("young", "unit4"),
+        iconWord("old", "unit4"),
+        iconWord("short", "unit4"),
+        iconWord("tall", "unit4"),
+        { word: "cute", visual: "🥰" }
+      ],
       quiz: [{ prompt: "She is ____.", answer: "happy", choices: ["sad", "happy", "tall"], visual: "😄", image: "" }],
       phonics: {
         groups: [
@@ -193,7 +214,12 @@
         "Is it an eraser?",
         "Yes, it is."
       ],
-      vocabulary: ["school bag", "ruler", "book", "pencil case", "pencil", "pen", "eraser", "desk", "chair"],
+      vocabulary: [
+        iconWord("school bag", "unit5", "school-bag"), iconWord("ruler", "unit5"),
+        iconWord("book", "unit5"), iconWord("pencil case", "unit5", "pencil-case"),
+        iconWord("pencil", "unit5"), iconWord("pen", "unit5"), iconWord("eraser", "unit5"),
+        iconWord("desk", "unit5"), iconWord("chair", "unit5")
+      ],
       quiz: [{ prompt: "It is a ____.", answer: "pen", choices: ["book", "pen", "eraser"], visual: "🖊️", image: "" }],
       phonics: {
         groups: [
@@ -238,7 +264,11 @@
         "What is that?",
         "It is a hat."
       ],
-      vocabulary: ["coat", "dress", "jacket", "T-shirt", "shirt", "cap", "hat", "skirt"],
+      vocabulary: [
+        iconWord("coat", "unit7"), iconWord("dress", "unit7"), iconWord("jacket", "unit7"),
+        iconWord("T-shirt", "unit7", "t-shirt"), { word: "shirt", visual: "👔" },
+        iconWord("cap", "unit7"), iconWord("hat", "unit7"), iconWord("skirt", "unit7")
+      ],
       quiz: [{ prompt: "This is a ____.", answer: "hat", choices: ["coat", "hat", "skirt"], visual: "🎩", image: "" }],
       phonics: {
         groups: [
@@ -258,7 +288,12 @@
         "Is that your dog?",
         "No, it is not."
       ],
-      vocabulary: ["cat", "horse", "rat", "pig", "sheep", "rabbit", "chicken", "cow", "duck", "dog"],
+      vocabulary: [
+        { word: "cat", image: "assets/images/book3/extras/cat.png" }, iconWord("horse", "unit8"),
+        { word: "rat", visual: "🐀" }, iconWord("pig", "unit8"), iconWord("sheep", "unit8"),
+        iconWord("rabbit", "unit8"), iconWord("chicken", "unit8"), iconWord("cow", "unit8"),
+        iconWord("duck", "unit8"), { word: "dog", image: "assets/images/book3/unit1/dog.png" }
+      ],
       quiz: [{ prompt: "Is that a ____?", answer: "rabbit", choices: ["cat", "rabbit", "dog"], visual: "🐇", image: "" }],
       phonics: {
         groups: [
@@ -280,7 +315,12 @@
         "Are they noisy?",
         "No, they are not."
       ],
-      vocabulary: ["hungry", "thirsty", "angry", "lazy", "noisy", "quiet", "sleepy", "tired"],
+      vocabulary: [
+        iconWord("hungry", "unit9"), iconWord("thirsty", "unit9", "thirsty", "jpg"),
+        iconWord("angry", "unit9", "angry", "jpg"), iconWord("lazy", "unit9"),
+        iconWord("noisy", "unit9"), iconWord("quiet", "unit9"), iconWord("sleepy", "unit9"),
+        iconWord("tired", "unit9", "tired", "jpg")
+      ],
       quiz: [{ prompt: "She is ____.", answer: "sleepy", choices: ["hungry", "sleepy", "noisy"], visual: "😴", image: "" }],
       phonics: { review: true, groups: [] }
     }

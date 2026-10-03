@@ -52,6 +52,9 @@
 .wb-number { display: grid; width: 8mm; height: 8mm; place-items: center; flex: 0 0 auto; color: white; border-radius: 50%; background: var(--wb-accent); font-size: 10pt; font-weight: 900; }
 .wb-picture-prompt > .wb-number { position: absolute; top: 3mm; left: 3mm; }
 .wb-picture, .wb-visual { display: block; width: 32mm; height: 32mm; object-fit: contain; border-radius: 14px; background-color: #f3f9ff; }
+.wb-picture-cue { position: relative; display: grid; width: 32mm; height: 32mm; flex: 0 0 32mm; place-items: center; }
+.wb-picture-cue > .wb-picture, .wb-picture-cue > .wb-visual { width: 100%; height: 100%; }
+.wb-picture-count { position: absolute; right: -1mm; bottom: -1mm; display: grid; min-width: 10mm; height: 10mm; padding: 0 1.5mm; place-items: center; color: white; border: 1.5px solid white; border-radius: 6mm; background: #17325c; font-size: 13pt; font-weight: 900; line-height: 1; }
 .wb-sprite { background-repeat: no-repeat; }
 .wb-visual { display: grid; place-items: center; font-size: 28pt; font-weight: 900; }
 .wb-picture-prompt small { display: block; margin-bottom: 4mm; color: var(--wb-accent); font-size: 10pt; font-weight: 900; }
@@ -66,6 +69,7 @@
 .wb-question-card { display: flex; min-height: 30mm; gap: 4mm; padding: 4mm 5mm; border: 2px solid color-mix(in srgb, var(--wb-accent) 30%, white); border-radius: 16px; background: white; }
 .wb-question-card > div { flex: 1; }
 .wb-question-card > .wb-picture, .wb-question-card > .wb-visual { width: 24mm; height: 24mm; flex: 0 0 24mm; border: 1.5px solid color-mix(in srgb, var(--wb-accent) 24%, white); }
+.wb-question-card > .wb-picture-cue { width: 24mm; height: 24mm; flex-basis: 24mm; }
 .wb-matching { display: grid; grid-template-columns: 1fr 1fr; gap: 18mm; padding: 6mm 4mm; border-radius: 20px; background: color-mix(in srgb, var(--wb-accent) 7%, white); }
 .wb-matching-section { display: grid; gap: 5mm; }
 .wb-matching ol { display: grid; gap: 8mm; margin: 0; padding: 0; list-style: none; }
@@ -73,6 +77,7 @@
 .wb-matching li > span:first-child { display: grid; width: 8mm; height: 8mm; flex: 0 0 8mm; place-items: center; color: white; border-radius: 50%; background: var(--wb-accent); }
 .wb-matching li b { flex: 1; font: inherit; }
 .wb-matching li > .wb-picture, .wb-matching li > .wb-visual { width: 22mm; height: 22mm; flex: 0 0 22mm; border: 1.5px solid color-mix(in srgb, var(--wb-accent) 24%, white); }
+.wb-matching li > .wb-picture-cue { width: 22mm; height: 22mm; flex-basis: 22mm; }
 .wb-matching-write { padding: 4mm 5mm; border: 2px solid color-mix(in srgb, var(--wb-accent) 30%, white); border-radius: 16px; background: white; }
 .wb-matching-write strong { color: var(--wb-accent); font-size: 10.5pt; }
 .wb-choice-section { display: grid; gap: 5mm; }
@@ -80,6 +85,7 @@
 .wb-choice-card { position: relative; display: grid; grid-template-columns: 22mm 1fr; min-height: 51mm; align-items: center; gap: 4mm; padding: 4mm; border: 2px solid color-mix(in srgb, var(--wb-accent) 30%, white); border-radius: 16px; background: white; }
 .wb-choice-card > .wb-number { position: absolute; top: 3mm; left: 3mm; }
 .wb-choice-card > .wb-picture, .wb-choice-card > .wb-visual { width: 22mm; height: 22mm; border: 0; background: transparent; }
+.wb-choice-card > .wb-picture-cue { width: 22mm; height: 22mm; }
 .wb-choice-card p { margin: 0 0 2mm; font-size: 10.5pt; font-weight: 800; }
 .wb-choice-card ol { display: grid; gap: 1mm; margin: 0; padding: 0; list-style: none; }
 .wb-choice-card ol li { display: grid; grid-template-columns: 6mm 1fr; font-size: 9pt; line-height: 1.25; }
@@ -161,6 +167,8 @@
 .wb-story-cloze li > .wb-visual,
 .wb-chain li > .wb-picture,
 .wb-chain li > .wb-visual { width: 24mm; height: 24mm; border: 0; border-radius: 0; background: transparent; object-fit: contain; }
+.wb-story-cloze li > .wb-picture-cue,
+.wb-chain li > .wb-picture-cue { width: 24mm; height: 24mm; }
 .wb-story-cloze .wb-answer-lines,
 .wb-chain .wb-answer-lines { margin-top: 1.5mm; }
 .wb-story-cloze .wb-handwriting-row,
@@ -180,6 +188,7 @@
 .wb-passage-prompt p { margin: 0 0 2mm; font: inherit; font-size: 13pt; font-weight: 600; line-height: 1.35; }
 .wb-passage-prompt > .wb-picture,
 .wb-passage-prompt > .wb-visual { width: 32mm; height: 32mm; align-self: center; border: 0; border-radius: 0; background: transparent; object-fit: contain; }
+.wb-passage-prompt > .wb-picture-cue { width: 32mm; height: 32mm; align-self: center; }
 .wb-passage-prompt .wb-answer-lines { margin: 0; }
 .wb-passage-prompt .wb-handwriting-row { height: 13mm; }
 .wb-passage-prompt .wb-handwriting-row b { border-top-color: #5f9ed1; }

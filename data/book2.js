@@ -28,11 +28,11 @@
       ["There is a speaker in the classroom.", "There is not a telephone on the desk.", "Is there a door?", "Yes, there is.", "Is there a fan?", "No, there is not."],
       [["-ake", ["bake", "cake", "lake"]], ["-ape", ["cape", "nape", "tape"]], ["-ave", ["cave", "save", "wave"]]],
       [
-        ["There is a dog in the classroom.", "教室裡有一隻狗。"], ["There is a cat on the desk.", "桌上有一隻貓。"],
+        ["There is a television in the classroom.", "教室裡有一台電視。"], ["There is a speaker on the desk.", "桌上有一個喇叭。"],
         ["There is a speaker in the classroom.", "教室裡有一個喇叭。"], ["There is not a telephone on the desk.", "桌上沒有電話。"],
         ["Is there a door?", "有一扇門嗎？"], ["Yes, there is.", "是的，有。"], ["Is there a fan?", "有一台電風扇嗎？"],
-        ["No, there is not.", "不，沒有。"], ["Is there a dog?", "有一隻狗嗎？"], ["Yes, there is. There is a dog!", "是的，有。有一隻狗！"],
-        ["There is a cat, too.", "也有一隻貓。"]
+        ["No, there is not.", "不，沒有。"], ["Is there a television?", "有一台電視嗎？"], ["Yes, there is. There is a television!", "是的，有。有一台電視！"],
+        ["There is a speaker, too.", "也有一個喇叭。"]
       ]
     ),
     unit(

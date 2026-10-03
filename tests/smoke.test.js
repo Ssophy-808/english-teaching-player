@@ -78,6 +78,20 @@ book1FirstReview.lessons.forEach((lesson) => lesson.worksheet.pages.forEach((pag
   );
 })));
 
+const book2Unit1 = books.find((book) => book.id === "book-2").units.find((unit) => unit.id === "unit-1");
+assert.doesNotMatch(JSON.stringify(book2Unit1.passportSentences), /\b(?:dog|cat)\b/i, "Book 2 Unit 1 classroom pictures must not use unrelated animal prompts");
+assert.match(JSON.stringify(book2Unit1.passportSentences), /Is there a television\?/, "Book 2 Unit 1 television picture must use a television question");
+
+const book2FirstReview = books.find((book) => book.id === "book-2")
+  .units.find((unit) => unit.isReview && unit.reviewRange === "1–3");
+const book2ReviewWords = new Set(book2FirstReview.vocabulary.map((item) => String(item.word || item)));
+const book2UsedReviewWords = new Set(book2FirstReview.lessons.flatMap((lesson) => lesson.worksheet.pages)
+  .flatMap((page) => page.items).map((item) => item.asset?.word).filter(Boolean));
+book2ReviewWords.forEach((word) => assert.ok(book2UsedReviewWords.has(word), `Book 2 Review 1–3 must use vocabulary word: ${word}`));
+const book2Day4Words = book2FirstReview.lessons[3].worksheet.pages.flatMap((page) => page.items)
+  .map((item) => item.asset?.word).filter(Boolean);
+assert.equal(new Set(book2Day4Words).size, book2Day4Words.length, "Book 2 Review 1–3 Day 4 must not repeat vocabulary across worksheet pages");
+
 const book3Unit4Day1 = books.find((book) => book.id === "book-3")
   .units.find((unit) => unit.id === "unit-4").lessons[0];
 assert.equal(book3Unit4Day1.worksheet.pages.length, 4, "Book 3 Unit 4 Day 1 must keep four one-topic pages");
@@ -128,6 +142,30 @@ promptsByDay.forEach((prompts, dayIndex) => {
   });
 });
 assert.doesNotMatch(JSON.stringify(book3Unit4Lessons), /Ava/, "Book 3 Unit 4 must use Lumi for the girl name across all days");
+
+const book1 = books.find((book) => book.id === "book-1");
+const book1Numbers = book1.units.find((unit) => unit.id === "unit-3").vocabulary;
+assert.deepEqual(book1Numbers.map((item) => item.visual), ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"], "Book 1 numbers must display as plain numerals");
+book1.units.filter((unit) => ["unit-4", "unit-5", "unit-7", "unit-8", "unit-9"].includes(unit.id))
+  .flatMap((unit) => unit.vocabulary).filter((item) => item.image).forEach((item) => {
+    assert.ok(require("node:fs").existsSync(path.join(root, item.image)), `Book 1 icon for ${item.word} must exist`);
+  });
+
+const book3 = books.find((book) => book.id === "book-3");
+book3.units.filter((unit) => ["unit-5", "unit-7", "unit-8", "unit-9"].includes(unit.id))
+  .flatMap((unit) => unit.vocabulary).filter((item) => item.image).forEach((item) => {
+    assert.ok(require("node:fs").existsSync(path.join(root, item.image)), `Book 3 icon for ${item.word} must exist`);
+  });
+const book3Days = book3.units.find((unit) => unit.id === "unit-8").vocabulary.filter((item) => /day$/i.test(item.word));
+assert.deepEqual(book3Days.map((item) => item.visual), ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"], "Weekday prompts must show the Chinese weekday beside the question");
+
+const indexHtml = require("node:fs").readFileSync(path.join(root, "index.html"), "utf8");
+assert.match(indexHtml, /id="worksheet-word"/, "Worksheet toolbar must include Word export");
+assert.match(indexHtml, /worksheet-word-export\.js/, "Worksheet Word exporter must be loaded");
+const worksheetComponents = require("node:fs").readFileSync(path.join(root, "js", "worksheet-components.js"), "utf8");
+const worksheetWordExporter = require("node:fs").readFileSync(path.join(root, "js", "worksheet-word-export.js"), "utf8");
+assert.match(worksheetComponents, /wb-picture-count/, "Worksheet picture questions must display a quantity cue when the answer depends on a count");
+assert.match(worksheetWordExporter, /countCue\(item\)/, "Word export must include quantity cues with object pictures");
 assert.equal(JSON.stringify(global.CURRICULUM_BOOKS.map((book) =>
   book.units.map((unit) => unit.passportSentences || []))), passportSnapshot, "Passport sentences must remain unchanged");
 

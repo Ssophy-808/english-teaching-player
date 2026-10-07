@@ -573,6 +573,79 @@
     ];
   }
 
+  function standardProgressivePairs(unit, day, bookId) {
+    const vocabulary = vocabularyItems(unit);
+    const offset = (day - 1) * 2;
+    const sourceUnit = { ...unit, bookId };
+    return Array.from({ length: 8 }, (_, index) => {
+      const asset = vocabulary[(index + offset) % Math.max(vocabulary.length, 1)] || {};
+      const pair = reviewPairForVocabulary(sourceUnit, unit, asset, index + offset);
+      return {
+        ...pair,
+        cue: `${asset.word || asset.meaning || "Picture"} + complete question`
+      };
+    });
+  }
+
+  function standardProgressivePages(unit, day, bookId) {
+    const pairsForDay = standardProgressivePairs(unit, day, bookId);
+    const matchPairs = pairsForDay.slice(0, 4);
+    const rotated = rotateAnswers(matchPairs);
+    const skill = unit.grammarFocus || unit.topic || unit.title;
+    const matchingItems = matchPairs.map((pair, index) => ({
+      left: pair.question,
+      right: rotated[index],
+      asset: pair.asset,
+      expectedAnswer: `${pair.question} → ${pair.answer}`
+    }));
+    const questionChoices = pairsForDay.slice(0, 6).map((pair) => ({
+      prompt: `Answer: ${pair.answer}`,
+      choices: choicesFor(pair.question),
+      asset: pair.asset,
+      expectedAnswer: pair.question
+    }));
+    const answerChoices = pairsForDay.slice(0, 6).map((pair) => ({
+      prompt: pair.question,
+      choices: choicesFor(pair.answer),
+      asset: pair.asset,
+      expectedAnswer: pair.answer
+    }));
+    const page = (type, title, instruction, items, options = {}) => progressivePage(
+      type, title, instruction, skill, items, options
+    );
+    const locked = (type, title, instruction, items, showPictures = false) => page(
+      type, title, instruction, items, { layout: "locked_template", showPictures }
+    );
+
+    if (day === 1) return [
+      locked("template_picture_answer", "Look and Answer", "Look at each picture. Write a complete answer.", pairsForDay.map((pair) => ({ prompt: pair.question, asset: pair.asset, expectedAnswer: pair.answer })), true),
+      page("matching", "Look and Match", "Draw a line from each question to the correct answer.", matchingItems),
+      page("multiple_choice", "Choose the Answer", "Look at the picture. Circle the correct complete answer.", answerChoices),
+      locked("template_fix_mistakes", "Fix the Mistakes", "Find the mistake. Rewrite the whole sentence correctly.", pairsForDay.map((pair) => ({ prompt: grammarError(pair.answer), asset: pair.asset, expectedAnswer: pair.answer })))
+    ];
+
+    if (day === 2) return [
+      locked("template_picture_question", "Make the Question", "Look at the picture and answer cue. Write the matching question.", pairsForDay.map((pair) => ({ prompt: `Answer: ${pair.answer}`, asset: pair.asset, expectedAnswer: pair.question })), true),
+      page("matching", "Match Questions and Answers", "Draw a line from each answer to its matching question.", matchingItems),
+      page("multiple_choice", "Choose the Question", "Read the answer. Circle the question that matches.", questionChoices),
+      locked("template_question_order", "Build the Question", "Put the words in order. Write the complete question.", pairsForDay.map((pair) => ({ prompt: scramble(pair.question), asset: pair.asset, expectedAnswer: pair.question })))
+    ];
+
+    if (day === 3) return [
+      locked("template_guided_question", "Write Your Question", "Use the cue and picture. Write a complete question.", pairsForDay.map((pair) => ({ prompt: pair.cue, asset: pair.asset, expectedAnswer: pair.question })), true),
+      page("matching", "Match the Dialogue", "Match each question to the best complete answer.", matchingItems),
+      page("multiple_choice", "Choose the Question", "Circle the only correct complete question.", questionChoices),
+      locked("template_mixed_correction", "Fix the Questions", "Find the mistake. Rewrite each question correctly.", pairsForDay.map((pair) => ({ prompt: grammarError(pair.question), asset: pair.asset, expectedAnswer: pair.question })))
+    ];
+
+    return [
+      locked("template_independent_picture", "Picture Question Challenge", "Use each picture and cue. Write the question independently.", pairsForDay.map((pair) => ({ prompt: pair.cue, asset: pair.asset, expectedAnswer: pair.question })), true),
+      page("matching", "Complete the Dialogue", "Match each question to the best complete answer.", matchingItems),
+      page("multiple_choice", "Final Grammar Check", "Circle the only correct question.", questionChoices),
+      locked("template_final_output", "Independent Question Writing", "Write one complete question for every cue.", pairsForDay.map((pair) => ({ prompt: `${pair.cue} + check the grammar`, asset: pair.asset, expectedAnswer: pair.question })))
+    ];
+  }
+
   function reviewWord(asset) {
     return String(asset?.word || "").replace(/\(s\)|\(es\)/gi, "").trim();
   }
@@ -613,7 +686,9 @@
   function reviewPairForVocabulary(unit, section, asset, index) {
     const vocabulary = vocabularyItems(section);
     const allowedPairs = pairs(section).filter((item) => {
-      if (unit.bookId !== "book-1" || unit.reviewRange !== "1–3") return true;
+      const earlyBook1 = unit.bookId === "book-1"
+        && (unit.reviewRange === "1–3" || ["unit-1", "unit-2", "unit-3"].includes(unit.id));
+      if (!earlyBook1) return true;
       return !/\b(?:we|they|them|their|these|those|parents|cousins)\b/i.test(`${item.question} ${item.answer}`);
     });
     const template = allowedPairs[index % Math.max(allowedPairs.length, 1)] || {};
@@ -819,7 +894,7 @@
         ? [book3Unit4Day1Pages, book3Unit4Day2Pages, book3Unit4Day3Pages, book3Unit4Day4Pages][day - 1]()
         : book.id === "book-3" && BOOK3_PROGRESSIVE_PROFILES[unit.id]
           ? book3ProgressivePages(unit, day)
-          : buildPages(unit, day);
+          : standardProgressivePages(unit, day, book.id);
       lesson.worksheet = { ...(lesson.worksheet || {}), day, unitTitle: unit.title, pages };
     })));
   }

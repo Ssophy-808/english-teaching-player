@@ -14,7 +14,6 @@
   const answerButton = document.getElementById("worksheet-answer-mode");
   const shuffleButton = document.getElementById("worksheet-shuffle");
   const resetButton = document.getElementById("worksheet-reset");
-  const wordButton = document.getElementById("worksheet-word");
   const printButton = document.getElementById("worksheet-print");
 
   function currentPages() {
@@ -201,31 +200,6 @@
     hiddenQuestions = new Set();
     orders = {};
     render();
-  });
-  wordButton.addEventListener("click", async () => {
-    if (!lesson?.worksheet || !window.WorksheetWordExporter) return;
-    wordButton.disabled = true;
-    const originalLabel = wordButton.textContent;
-    wordButton.textContent = "製作 Word 中…";
-    try {
-      const pages = currentPages();
-      if (!pages.length) throw new Error("This worksheet format is not available for Word export yet.");
-      const blob = await window.WorksheetWordExporter.createBlob(lesson, pages);
-      const url = URL.createObjectURL(blob);
-      const anchor = document.createElement("a");
-      const safeName = `${lesson.bookTitle}-${lesson.unitTitle}-Day-${lesson.worksheet.day}`.replace(/[^A-Za-z0-9-]+/g, "-").replace(/-+/g, "-");
-      anchor.href = url;
-      anchor.download = `${safeName}.docx`;
-      document.body.append(anchor);
-      anchor.click();
-      anchor.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 2000);
-    } catch (error) {
-      window.alert(error?.message || "Word export failed.");
-    } finally {
-      wordButton.disabled = false;
-      wordButton.textContent = originalLabel;
-    }
   });
   printButton.addEventListener("click", () => {
     document.body.classList.add("printing-worksheet");

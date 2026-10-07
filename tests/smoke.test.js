@@ -52,6 +52,31 @@ books.forEach((book) => {
   });
 });
 
+const progressiveFirstPageTitles = [
+  "Look and Answer", "Make the Question", "Write Your Question", "Picture Question Challenge"
+];
+books.forEach((book) => book.units.filter((unit) => !unit.isReview).forEach((unit) => {
+  assert.deepEqual(
+    unit.lessons.map((lesson) => lesson.worksheet.pages[0].title),
+    progressiveFirstPageTitles,
+    `${book.id}/${unit.id} must build independent question writing from Day 1 to Day 4`
+  );
+  unit.lessons.forEach((lesson) => {
+    assert.deepEqual(
+      lesson.worksheet.pages.map((page) => page.items.length),
+      [8, 4, 6, 8],
+      `${book.id}/${unit.id}/${lesson.id} must use the standard four-page workload`
+    );
+    assert.equal(lesson.worksheet.pages[0].layout, "locked_template", `${book.id}/${unit.id}/${lesson.id} first page must use the locked template`);
+    assert.equal(lesson.worksheet.pages[1].type, "matching", `${book.id}/${unit.id}/${lesson.id} second page must be matching`);
+    assert.equal(lesson.worksheet.pages[2].type, "multiple_choice", `${book.id}/${unit.id}/${lesson.id} third page must be multiple choice`);
+    assert.equal(lesson.worksheet.pages[3].layout, "locked_template", `${book.id}/${unit.id}/${lesson.id} fourth page must use the locked template`);
+  });
+}));
+
+const book1Unit4 = books.find((book) => book.id === "book-1").units.find((unit) => unit.id === "unit-4");
+assert.deepEqual(book1Unit4.lessons[0].worksheet.pages.map((page) => page.items.length), [8, 4, 6, 8], "Book 1 Unit 4 must use the full standard worksheet format");
+
 books.forEach((book) => {
   const reviews = book.units.filter((unit) => unit.isReview);
   assert.deepEqual(reviews.map((unit) => unit.reviewRange), ["1–3", "4–6", "7–9"], `${book.id} review ranges must cover every three units`);
@@ -160,12 +185,12 @@ const book3Days = book3.units.find((unit) => unit.id === "unit-8").vocabulary.fi
 assert.deepEqual(book3Days.map((item) => item.visual), ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"], "Weekday prompts must show the Chinese weekday beside the question");
 
 const indexHtml = require("node:fs").readFileSync(path.join(root, "index.html"), "utf8");
-assert.match(indexHtml, /id="worksheet-word"/, "Worksheet toolbar must include Word export");
-assert.match(indexHtml, /worksheet-word-export\.js/, "Worksheet Word exporter must be loaded");
+assert.doesNotMatch(indexHtml, /id="worksheet-word"/, "Player must not generate Word files dynamically");
+assert.doesNotMatch(indexHtml, /worksheet-word-export\.js/, "Fixed Word files must be produced separately from the Player");
+assert.match(indexHtml, /id="worksheet-shuffle"/, "Player must retain adjustable worksheet ordering");
+assert.match(indexHtml, /id="worksheet-reset"/, "Player must retain adjustable worksheet reset controls");
 const worksheetComponents = require("node:fs").readFileSync(path.join(root, "js", "worksheet-components.js"), "utf8");
-const worksheetWordExporter = require("node:fs").readFileSync(path.join(root, "js", "worksheet-word-export.js"), "utf8");
 assert.match(worksheetComponents, /wb-picture-count/, "Worksheet picture questions must display a quantity cue when the answer depends on a count");
-assert.match(worksheetWordExporter, /countCue\(item\)/, "Word export must include quantity cues with object pictures");
 assert.equal(JSON.stringify(global.CURRICULUM_BOOKS.map((book) =>
   book.units.map((unit) => unit.passportSentences || []))), passportSnapshot, "Passport sentences must remain unchanged");
 

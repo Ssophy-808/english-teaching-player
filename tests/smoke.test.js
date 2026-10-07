@@ -76,6 +76,10 @@ books.forEach((book) => book.units.filter((unit) => !unit.isReview).forEach((uni
 
 const book1Unit4 = books.find((book) => book.id === "book-1").units.find((unit) => unit.id === "unit-4");
 assert.deepEqual(book1Unit4.lessons[0].worksheet.pages.map((page) => page.items.length), [8, 4, 6, 8], "Book 1 Unit 4 must use the full standard worksheet format");
+const book1Unit4FirstPage = global.WorksheetComponents.studentPage(book1Unit4.lessons[0], book1Unit4.lessons[0].worksheet.pages[0], 0, 4);
+assert.match(book1Unit4FirstPage, /wb-locked-template/, "Book 1 Unit 4 must use the same locked writing template as Book 3 Unit 4");
+assert.match(book1Unit4FirstPage, /Look and Answer/, "Book 1 Unit 4 must retain the Book 3 Unit 4 page-title position");
+assert.match(book1Unit4FirstPage, /Name:/, "Book 1 Unit 4 must retain the Book 3 Unit 4 name line");
 
 books.forEach((book) => {
   const reviews = book.units.filter((unit) => unit.isReview);

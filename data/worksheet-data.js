@@ -692,17 +692,18 @@
       return !/\b(?:we|they|them|their|these|those|parents|cousins)\b/i.test(`${item.question} ${item.answer}`);
     });
     const template = allowedPairs[index % Math.max(allowedPairs.length, 1)] || {};
-    const source = `${template.question || ""} ${template.answer || ""}`;
-    const anchor = vocabulary.flatMap((item) => reviewVocabularyTerms(item).map((term) => ({ item, term })))
-      .sort((a, b) => b.term.length - a.term.length)
-      .find(({ term }) => new RegExp(`\\b${term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i").test(source));
+    const anchors = vocabulary.flatMap((item) => reviewVocabularyTerms(item).map((term) => ({ item, term })))
+      .sort((a, b) => b.term.length - a.term.length);
+    const anchorIn = (text) => anchors.find(({ term }) => new RegExp(`\\b${term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i").test(text));
+    const questionAnchor = anchorIn(template.question || "");
+    const answerAnchor = anchorIn(template.answer || "");
     const word = reviewWord(asset) || "picture";
     let question = template.question || "";
     let answer = template.answer || "";
 
-    if (anchor) {
-      question = replaceReviewTerm(question, anchor.term, word);
-      answer = replaceReviewTerm(answer, anchor.term, word);
+    if (questionAnchor || answerAnchor) {
+      if (questionAnchor) question = replaceReviewTerm(question, questionAnchor.term, word);
+      if (answerAnchor) answer = replaceReviewTerm(answer, answerAnchor.term, word);
     } else if (/^Is there\b/i.test(question)) {
       question = `Is there ${reviewArticle(word)} ${word}?`;
       answer = `Yes, there is. There is ${reviewArticle(word)} ${word}.`;

@@ -573,15 +573,127 @@
     ];
   }
 
+  function worksheetWord(asset) {
+    return reviewWord(asset).split(/\s*\/\s*/)[0].trim();
+  }
+
+  function worksheetPlural(asset) {
+    const parts = reviewWord(asset).split(/\s*\/\s*/).map((value) => value.trim()).filter(Boolean);
+    if (parts.length > 1) return parts[1];
+    const word = parts[0] || "items";
+    return ({ foot: "feet", tooth: "teeth", child: "children", person: "people" })[word.toLowerCase()] || pluralReviewWord(word);
+  }
+
+  function unitPairForVocabulary(bookId, unitId, asset, index, day) {
+    const key = `${bookId}/${unitId}`;
+    const word = worksheetWord(asset) || "picture";
+    const plural = worksheetPlural(asset);
+    const article = reviewArticle(word);
+    const slot = (index + day - 1) % 4;
+    const pick = (values) => ({ question: values[slot][0], answer: values[slot][1] });
+
+    if (key === "book-1/unit-1") return pick([
+      ["Who are you?", `I am ${article} ${word}.`], [`Are you ${article} ${word}?`, `Yes, I am. I am ${article} ${word}.`],
+      ["Who am I?", `You are ${article} ${word}.`], [`Am I ${article} ${word}?`, `Yes, you are. You are ${article} ${word}.`]
+    ]);
+    if (key === "book-1/unit-2") {
+      if (/^me$/i.test(word)) return { question: "Who is this?", answer: "This is me." };
+      const female = /^(grandmother|mother|aunt|sister)$/i.test(word);
+      return { question: `Who is ${female ? "she" : "he"}?`, answer: `${female ? "She" : "He"} is my ${word}.` };
+    }
+    if (key === "book-1/unit-3") {
+      const age = `${word} ${/^one$/i.test(word) ? "year" : "years"} old`;
+      return pick([
+        ["How old are you?", `I am ${age}.`], ["How old is he?", `He is ${age}.`],
+        ["How old is she?", `She is ${age}.`], ["How old are you?", `I am ${age}.`]
+      ]);
+    }
+    if (key === "book-1/unit-4") return pick([
+      [`Are you ${word}?`, `Yes, I am. I am ${word}.`], [`Is she ${word}?`, `Yes, she is. She is ${word}.`],
+      [`Is he ${word}?`, `Yes, he is. He is ${word}.`], [`Are you ${word}?`, `Yes, I am. I am ${word}.`]
+    ]);
+    if (key === "book-1/unit-5") return slot % 2
+      ? { question: `Is it ${article} ${word}?`, answer: `Yes, it is. It is ${article} ${word}.` }
+      : { question: "What is it?", answer: `It is ${article} ${word}.` };
+    if (key === "book-1/unit-6") return { question: "What color is it?", answer: `It is ${word}.` };
+    if (key === "book-1/unit-7") {
+      const near = slot % 2 === 0;
+      return { question: `What is ${near ? "this" : "that"}?`, answer: `${near ? "This" : "That"} is ${article} ${word}.` };
+    }
+    if (key === "book-1/unit-8") {
+      const near = slot % 2 === 0;
+      return { question: `Is ${near ? "this" : "that"} ${article} ${word}?`, answer: `Yes, it is. It is ${article} ${word}.` };
+    }
+    if (key === "book-1/unit-9") return pick([
+      [`Is he ${word}?`, `Yes, he is. He is ${word}.`], [`Is she ${word}?`, `Yes, she is. She is ${word}.`],
+      [`Are they ${word}?`, `Yes, they are. They are ${word}.`], [`Are we ${word}?`, `Yes, we are. We are ${word}.`]
+    ]);
+
+    if (key === "book-2/unit-1") return { question: `Is there ${article} ${word}?`, answer: `Yes, there is. There is ${article} ${word}.` };
+    if (key === "book-2/unit-2") return { question: `Are there ${word} books?`, answer: `Yes, there are. There are ${word} books.` };
+    if (key === "book-2/unit-3") {
+      const count = ((index + day) % 9) + 2;
+      return { question: `How many ${plural} are there?`, answer: `There are ${count} ${plural}.` };
+    }
+    if (key === "book-2/unit-4") {
+      const near = slot % 2 === 0;
+      return { question: `What are ${near ? "these" : "those"}?`, answer: `${near ? "These" : "Those"} are ${plural}.` };
+    }
+    if (key === "book-2/unit-5") {
+      const near = slot % 2 === 0;
+      return { question: `Are ${near ? "these" : "those"} ${plural}?`, answer: `Yes, they are. They are ${plural}.` };
+    }
+    if (key === "book-2/unit-6") return { question: `Can you ${word}?`, answer: `Yes, I can. I can ${word}.` };
+    if (key === "book-2/unit-7") return { question: "Where is the book?", answer: `It is ${/^between$/i.test(word) ? "between the desk and the chair" : `${word} the desk`}.` };
+    if (key === "book-2/unit-8") return pick([
+      ["Where are you?", `I am in the ${word}.`], ["Where is he?", `He is in the ${word}.`],
+      ["Where is she?", `She is in the ${word}.`], ["Where are they?", `They are in the ${word}.`]
+    ]);
+    if (key === "book-2/unit-9") return slot % 2
+      ? { question: `Do you like ${plural}?`, answer: `Yes, I do. I like ${plural}.` }
+      : { question: "What do you like?", answer: `I like ${plural}.` };
+
+    if (["unit-1", "unit-2", "unit-3"].includes(unitId) && bookId === "book-3") {
+      const profile = BOOK3_PROGRESSIVE_PROFILES[unitId];
+      const [question, answer, cue] = profile.pair(word, index, profile.contexts[day - 1] || "", day);
+      return { question, answer, cue };
+    }
+    if (key === "book-3/unit-4") return pick([
+      ["What do you want?", `I want ${article} ${word}.`], ["What does he want?", `He wants ${article} ${word}.`],
+      ["What does she want?", `She wants ${article} ${word}.`], ["What does Lumi want?", `Lumi wants ${article} ${word}.`]
+    ]);
+    if (key === "book-3/unit-5") {
+      const quantity = /^(eye|ear|leg|hand|arm|foot|tooth)$/i.test(word) ? `two ${plural}` : `${article} ${word}`;
+      const owner = slot % 2 ? "Lumi" : "Ludi";
+      return { question: `Who has ${quantity}?`, answer: `${owner} has ${quantity}.` };
+    }
+    if (key === "book-3/unit-6") {
+      const description = /^hair$/i.test(word) ? "long hair" : `${word} hair`;
+      return { question: `Do you have ${description}?`, answer: `Yes, I do. I have ${description}.` };
+    }
+    if (key === "book-3/unit-7") return { question: `Do you like to play ${word}?`, answer: `Yes, I do. I like to play ${word}.` };
+    if (key === "book-3/unit-8") return /day$/i.test(word)
+      ? { question: "What day is today?", answer: `It is ${word}.` }
+      : { question: "What do you like to do on Sundays?", answer: `I like to ${word}.` };
+    if (key === "book-3/unit-9") {
+      if (!/^go\s/i.test(word)) return { question: "How is the weather today?", answer: `It is ${word}.` };
+      const weather = ["sunny", "rainy", "snowy", "windy", "cloudy"][(index + day - 1) % 5];
+      return { question: `What do you like to do on ${weather} days?`, answer: `I like to ${word}.` };
+    }
+    return null;
+  }
+
   function standardProgressivePairs(unit, day, bookId) {
     const vocabulary = vocabularyItems(unit);
     const offset = (day - 1) * 2;
     const sourceUnit = { ...unit, bookId };
     return Array.from({ length: 8 }, (_, index) => {
       const asset = vocabulary[(index + offset) % Math.max(vocabulary.length, 1)] || {};
-      const pair = reviewPairForVocabulary(sourceUnit, unit, asset, index + offset);
+      const pair = unitPairForVocabulary(bookId, unit.id, asset, index + offset, day)
+        || reviewPairForVocabulary(sourceUnit, unit, asset, index + offset);
       return {
         ...pair,
+        asset,
         cue: `${asset.word || asset.meaning || "Picture"} + complete question`
       };
     });
@@ -684,6 +796,15 @@
   }
 
   function reviewPairForVocabulary(unit, section, asset, index) {
+    const directPair = unitPairForVocabulary(unit.bookId, section.id, asset, index, (index % 4) + 1);
+    if (directPair) {
+      return {
+        ...directPair,
+        asset,
+        section: section.title,
+        cue: directPair.cue || `${asset?.word || "Picture cue"} + complete question`
+      };
+    }
     const vocabulary = vocabularyItems(section);
     const allowedPairs = pairs(section).filter((item) => {
       const earlyBook1 = unit.bookId === "book-1"

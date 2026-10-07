@@ -74,6 +74,50 @@ books.forEach((book) => book.units.filter((unit) => !unit.isReview).forEach((uni
   });
 }));
 
+function expectedAnswerSubject(question) {
+  const value = String(question).toLowerCase();
+  if (/^(?:are|do|can) you\b|^(?:what|where) do you\b|^how old are you\b|^where are you\b/.test(value)) return "i";
+  if (/^am i\b|^who am i\b/.test(value)) return "you";
+  if (/^(?:is|does) he\b|^what does he\b|^who is he\b|^how old is he\b|^where is he\b/.test(value)) return "he";
+  if (/^(?:is|does) she\b|^what does she\b|^who is she\b|^how old is she\b|^where is she\b/.test(value)) return "she";
+  if (/^(?:are|do) they\b|^what do they\b|^where are they\b/.test(value)) return "they";
+  if (/^(?:are|do) we\b|^what do we\b/.test(value)) return "we";
+  return "";
+}
+
+function actualAnswerSubject(answer) {
+  const value = String(answer).toLowerCase().replace(/^(yes|no),\s*/, "");
+  return value.match(/^(i|you|he|she|we|they)\b/)?.[1] || "";
+}
+
+books.forEach((book) => book.units.forEach((unit) => unit.lessons.forEach((lesson) => {
+  lesson.worksheet.pages.forEach((page) => page.items.forEach((item) => {
+    if (item.choices) {
+      assert.ok(item.choices.includes(item.expectedAnswer), `${book.id}/${unit.id}/${lesson.id}/${page.type} must include its correct answer among the choices`);
+    }
+    const pair = String(item.expectedAnswer || "").split(" → ");
+    if (pair.length === 2) {
+      const expectedSubject = expectedAnswerSubject(pair[0]);
+      const actualSubject = actualAnswerSubject(pair[1]);
+      if (expectedSubject && actualSubject) {
+        assert.equal(actualSubject, expectedSubject, `${book.id}/${unit.id}/${lesson.id} answer subject must match: ${pair.join(" → ")}`);
+      }
+    }
+    assert.doesNotMatch(String(item.expectedAnswer || ""), /like to (?:Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)\b/i, `${book.id}/${unit.id}/${lesson.id} must not use a weekday as an activity`);
+    assert.doesNotMatch(String(item.expectedAnswer || ""), /\bmy me\b|\bone years old\b/i, `${book.id}/${unit.id}/${lesson.id} must use a natural family or age answer`);
+    assert.doesNotMatch(String(item.expectedAnswer || ""), /^(?:What\s+)?(?:does|do)\s+[^?.!]+\s+(?:likes|wants|has)\b/i, `${book.id}/${unit.id}/${lesson.id} auxiliary questions must use the base verb`);
+    assert.doesNotMatch(String(item.expectedAnswer || ""), /^(?:He|She|It)\s+(?:like|want|have)\b/i, `${book.id}/${unit.id}/${lesson.id} third-person answers must use the correct verb form`);
+    assert.doesNotMatch(String(item.expectedAnswer || ""), /^(?:I|You|We|They)\s+(?:likes|wants|has)\b/i, `${book.id}/${unit.id}/${lesson.id} non-third-person answers must use the base verb`);
+    assert.doesNotMatch(String(item.expectedAnswer || ""), /\b(?:undefined|null)\b/i, `${book.id}/${unit.id}/${lesson.id} answers must not contain missing data`);
+  }));
+  lesson.worksheet.pages.filter((page) => page.type === "matching").forEach((page) => {
+    if (!page.items.every((item) => String(item.expectedAnswer).includes(" → "))) return;
+    const expectedPairs = page.items.flatMap((item) => String(item.expectedAnswer).split(" → ")).sort();
+    const displayedPairs = page.items.flatMap((item) => [item.left, item.right]).sort();
+    assert.deepEqual(displayedPairs, expectedPairs, `${book.id}/${unit.id}/${lesson.id} matching choices must contain every question and answer exactly once`);
+  });
+})));
+
 const book1Unit4 = books.find((book) => book.id === "book-1").units.find((unit) => unit.id === "unit-4");
 assert.deepEqual(book1Unit4.lessons[0].worksheet.pages.map((page) => page.items.length), [8, 4, 6, 8], "Book 1 Unit 4 must use the full standard worksheet format");
 const book1Unit4FirstPage = global.WorksheetComponents.studentPage(book1Unit4.lessons[0], book1Unit4.lessons[0].worksheet.pages[0], 0, 4);

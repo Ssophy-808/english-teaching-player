@@ -23,9 +23,10 @@ const books = global.COURSE_CATALOG.filter((book) => ["book-1", "book-2", "book-
 assert.equal(books.length, 3, "Book 1, Book 2, and Book 3 must exist");
 books.forEach((book) => {
   assert.equal(book.units.filter((unit) => !unit.isReview).length, 9, `${book.id} must have 9 teaching units`);
-  assert.equal(book.units.filter((unit) => unit.isReview).length, 3, `${book.id} must have three cumulative reviews`);
+  assert.equal(book.units.filter((unit) => unit.isReview).length, 4, `${book.id} must have three section reviews and one final review`);
   book.units.forEach((unit) => {
-    assert.equal(unit.lessons.length, 4, `${book.id}/${unit.id} must have four days`);
+    const expectedDays = unit.isReview && unit.reviewRange === "1–9" ? 5 : 4;
+    assert.equal(unit.lessons.length, expectedDays, `${book.id}/${unit.id} must have ${expectedDays} days`);
     unit.lessons.forEach((lesson, index) => {
       assert.equal(lesson.worksheet.pages.length, 4, `${lesson.id} must have four worksheet pages`);
       lesson.worksheet.pages.forEach((page) => {
@@ -147,13 +148,16 @@ books.forEach((book) => {
 
 books.forEach((book) => {
   const reviews = book.units.filter((unit) => unit.isReview);
-  assert.deepEqual(reviews.map((unit) => unit.reviewRange), ["1–3", "4–6", "7–9"], `${book.id} review ranges must cover every three units`);
+  assert.deepEqual(reviews.map((unit) => unit.reviewRange), ["1–3", "4–6", "7–9", "1–9"], `${book.id} must include three section reviews and a final 1–9 review`);
   reviews.forEach((review) => {
-    assert.equal(review.lessons.length, 4, `${book.id}/${review.id} must have Day 1-Day 4`);
-    assert.equal(review.reviewSections.length, 3, `${book.id}/${review.id} must combine three source units`);
-    assert.deepEqual(review.lessons.map((lesson) => lesson.worksheet.pages[0].title), [
+    const finalReview = review.reviewRange === "1–9";
+    assert.equal(review.lessons.length, finalReview ? 5 : 4, `${book.id}/${review.id} must have the correct review day count`);
+    assert.equal(review.reviewSections.length, finalReview ? 9 : 3, `${book.id}/${review.id} must combine the correct source units`);
+    const expectedFirstPages = [
       "A Connected Review Story", "Review: Make the Question", "Follow the Question Chain", "Lumi and Ludi's Review Story"
-    ], `${book.id}/${review.id} must increase independence across four days`);
+    ];
+    if (finalReview) expectedFirstPages.push("Final Review Story");
+    assert.deepEqual(review.lessons.map((lesson) => lesson.worksheet.pages[0].title), expectedFirstPages, `${book.id}/${review.id} must increase independence across all review days`);
     const worksheetJson = JSON.stringify(review.lessons.map((lesson) => lesson.worksheet.pages));
     assert.doesNotMatch(worksheetJson, /\[Unit\s+\d+\]/, `${book.id}/${review.id} must not label individual questions by unit number`);
     assert.match(worksheetJson, /story_cloze/, `${book.id}/${review.id} must include a connected cloze passage`);
@@ -274,6 +278,7 @@ routeContext.window = routeContext;
 vm.runInNewContext(require("node:fs").readFileSync(path.join(root, "js/routes.js"), "utf8"), routeContext);
 assert.equal(routeContext.LessonRoutes.pathFor("book-1", "unit-2", 4), "/english-teaching-player/book1/unit2/day4/");
 assert.equal(routeContext.LessonRoutes.pathFor("book-3", "unit-10", 1), "/english-teaching-player/book3/unit10/day1/");
+assert.equal(routeContext.LessonRoutes.pathFor("book-3", "unit-13", 5), "/english-teaching-player/book3/unit13/day5/");
 assert.deepEqual({ ...routeContext.LessonRoutes.parse("/english-teaching-player/book2/unit9/day3/") }, { bookId: "book-2", unitId: "unit-9", day: 3 });
 
-console.log("Smoke tests passed: catalog, four-day structure, worksheets, Passport integrity, activities, and routes.");
+console.log("Smoke tests passed: catalog, review day structure, worksheets, Passport integrity, activities, and routes.");

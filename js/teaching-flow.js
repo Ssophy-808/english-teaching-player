@@ -3042,9 +3042,11 @@
       "Vocabulary recognition and complete answers",
       "Question and answer building",
       "Grammar correction and mixed practice",
-      "Independent cumulative application"
+      "Independent cumulative application",
+      "Final integrated review and mastery check"
     ];
-    return [1, 2, 3, 4].map((day) => {
+    const totalDays = Math.max(4, unit.days?.length || 4);
+    return Array.from({ length: totalDays }, (_, dayIndex) => dayIndex + 1).map((day) => {
       const allVocabulary = vocabularyItems(unit.vocabulary || []);
       const vocabulary = rotatedReviewSlice(allVocabulary, day, 12);
       const sentences = rotatedReviewSlice(unit.mainSentences || [], day, 9);
@@ -3054,7 +3056,8 @@
           `Read and complete the sentence: ${sentence}`,
           `Build the matching question or answer: ${sentence}`,
           `Check the grammar and rewrite: ${sentence}`,
-          `Use the pattern independently: ${sentence}`
+          `Use the pattern independently: ${sentence}`,
+          `Complete the final mixed challenge: ${sentence}`
         ];
         return {
           prompt: prompts[day - 1],
@@ -3086,7 +3089,7 @@
           practiceStep(`review-${day}-worksheet-step`, "Four-Page Review Worksheet", "Open 可調整練習 and complete today’s four review pages.", { modelAnswer: "Complete all four pages and check the teacher answer mode." })
         ]),
         customPhase(`review-${day}-wrapup`, "homework", "Wrap Up", "Review and Preview", 5, "homework", [
-          step(`review-${day}-homework`, "homework", "Homework", null, day === 4 ? "Correct the cumulative review and record the patterns that still need practice." : "Finish today’s review page and preview the next review day.", { activity: "homework" })
+          step(`review-${day}-homework`, "homework", "Homework", null, day === totalDays ? "Correct the cumulative review and record the patterns that still need practice." : "Finish today’s review page and preview the next review day.", { activity: "homework" })
         ])
       ];
       const steps = phases.flatMap((phase) => phase.steps);

@@ -913,7 +913,7 @@
       });
     }
     if (!schedule.length) return [];
-    const dayStride = Math.max(1, Math.ceil(schedule.length / 4));
+    const dayStride = Math.max(1, Math.ceil(schedule.length / Math.max(4, unit.days?.length || 4)));
     const start = ((day - 1) * dayStride) % schedule.length;
     return Array.from({ length: count }, (_, index) => {
       const scheduled = schedule[(start + index) % schedule.length];
@@ -939,12 +939,12 @@
     return {
       type: "story_cloze",
       layout: "locked_template",
-      title: day === 4 ? "Lumi and Ludi's Review Story" : "A Connected Review Story",
+      title: day >= 4 ? (day === 5 ? "Final Review Story" : "Lumi and Ludi's Review Story") : "A Connected Review Story",
       instruction: day === 1
         ? "Read the story. Look at the pictures and answer each question in a complete sentence."
         : "Follow the whole story. Answer every question, then read the passage aloud.",
       skill: "connected reading and complete answers",
-      introLines: day === 4
+      introLines: day >= 4
         ? ["Hi, I'm Lumi.", "Today is the final review challenge.", "Look at the pictures and answer the questions."]
         : ["Hi, I'm Lumi.", "Today is review day.", "Look at the pictures and answer the questions."],
       endingLines: ["Check every complete sentence.", "Great job today!"],
@@ -955,7 +955,7 @@
   }
 
   function connectedChainPage(reviewPairs, day) {
-    const items = reviewPairs.slice(0, day === 4 ? 6 : 4).map((item, index) => ({
+    const items = reviewPairs.slice(0, day >= 4 ? 6 : 4).map((item, index) => ({
       prompt: item.question,
       lead: index === 0 ? "Start the conversation." : "Use the last answer and continue.",
       asset: item.asset,
@@ -964,8 +964,8 @@
     return {
       type: "chain_questions",
       layout: "locked_template",
-      title: day === 4 ? "Independent Chain Challenge" : "Follow the Question Chain",
-      instruction: day === 4
+      title: day >= 4 ? (day === 5 ? "Final Question and Answer Challenge" : "Independent Chain Challenge") : "Follow the Question Chain",
+      instruction: day >= 4
         ? "Answer in complete sentences. Then write one new question that keeps the conversation going."
         : "Read from top to bottom. Each answer helps the conversation continue.",
       skill: "connected questions and complete answers",
@@ -1026,6 +1026,13 @@
       standard("matching", "Mixed Review Dialogue", "Match questions and answers to complete the dialogue.", matchingItems),
       standard("multiple_choice", "Mixed Grammar Check", "Circle the only correct complete question.", questionChoices),
       connectedClozePage(storySource, day)
+    ];
+
+    if (day === 5) return [
+      connectedClozePage(reviewPairs.slice(0, 3), day),
+      standard("matching", "Final Question and Answer Match", "Match every question to its complete answer.", matchingItems),
+      standard("multiple_choice", "Final Mixed Check", "Circle the correct complete answer.", answerChoices),
+      connectedChainPage(reviewPairs.slice(13, 19), day)
     ];
 
     return [

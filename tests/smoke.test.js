@@ -123,6 +123,14 @@ const book1Unit4 = books.find((book) => book.id === "book-1").units.find((unit) 
 assert.deepEqual(book1Unit4.lessons[0].worksheet.pages.map((page) => page.items.length), [8, 4, 6, 8], "Book 1 Unit 4 must use the full standard worksheet format");
 const book1Unit4FirstPage = global.WorksheetComponents.studentPage(book1Unit4.lessons[0], book1Unit4.lessons[0].worksheet.pages[0], 0, 4);
 assert.match(book1Unit4FirstPage, /wb-locked-template/, "Book 1 Unit 4 must use the same locked writing template as Book 3 Unit 4");
+const book1Unit4MixedReview = book1Unit4.lessons[3].worksheet.pages[3];
+assert.equal(book1Unit4MixedReview.title, "Question and Answer Review", "Book 1 Unit 4 Day 4 must end with a mixed answer-writing review");
+assert.ok(book1Unit4MixedReview.items.every((item) => /\?$/.test(item.prompt)), "Book 1 Unit 4 mixed review must give the child complete questions");
+assert.deepEqual(
+  [...new Set(book1Unit4MixedReview.items.map((item) => item.expectedAnswer.match(/\b(?:boy|teacher|father|mother|seven|nine|happy|tall)\b/i)?.[0]?.toLowerCase()))].filter(Boolean).sort(),
+  ["boy", "father", "happy", "mother", "nine", "seven", "tall", "teacher"],
+  "Book 1 Unit 4 mixed review must cover vocabulary and grammar from the first four lessons"
+);
 assert.match(book1Unit4FirstPage, /Look and Answer/, "Book 1 Unit 4 must retain the Book 3 Unit 4 page-title position");
 assert.match(book1Unit4FirstPage, /Name:/, "Book 1 Unit 4 must retain the Book 3 Unit 4 name line");
 

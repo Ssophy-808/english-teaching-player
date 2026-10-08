@@ -758,6 +758,29 @@
     ];
   }
 
+  function book1FirstFourMixedAnswerPage(book) {
+    const unit = (id) => book.units.find((item) => item.id === id);
+    const picture = (unitId, word) => vocabularyItems(unit(unitId))
+      .find((item) => String(item.word || "").replace(/\(s\)|\(es\)/gi, "").trim().toLowerCase() === word.toLowerCase()) || {};
+    return progressivePage(
+      "template_mixed_answer_review",
+      "Question and Answer Review",
+      "Read each question. Look at the picture and write a complete answer.",
+      "mixed question and answer review",
+      [
+        { prompt: "Who are you?", asset: picture("unit-1", "boy"), expectedAnswer: "I am a boy." },
+        { prompt: "Are you a teacher?", asset: picture("unit-1", "teacher"), expectedAnswer: "Yes, I am. I am a teacher." },
+        { prompt: "Who is he?", asset: picture("unit-2", "father"), expectedAnswer: "He is my father." },
+        { prompt: "Who is she?", asset: picture("unit-2", "mother"), expectedAnswer: "She is my mother." },
+        { prompt: "How old is he?", asset: picture("unit-3", "seven"), expectedAnswer: "He is seven years old." },
+        { prompt: "How old is she?", asset: picture("unit-3", "nine"), expectedAnswer: "She is nine years old." },
+        { prompt: "Is she happy?", asset: picture("unit-4", "happy"), expectedAnswer: "Yes, she is. She is happy." },
+        { prompt: "Is he tall?", asset: picture("unit-4", "tall"), expectedAnswer: "Yes, he is. He is tall." }
+      ],
+      { layout: "locked_template", showPictures: true }
+    );
+  }
+
   function reviewWord(asset) {
     return String(asset?.word || "").replace(/\(s\)|\(es\)/gi, "").trim();
   }
@@ -1017,6 +1040,9 @@
         : book.id === "book-3" && BOOK3_PROGRESSIVE_PROFILES[unit.id]
           ? book3ProgressivePages(unit, day)
           : standardProgressivePages(unit, day, book.id);
+      if (book.id === "book-1" && unit.id === "unit-4" && day === 4) {
+        pages[3] = book1FirstFourMixedAnswerPage(book);
+      }
       lesson.worksheet = { ...(lesson.worksheet || {}), day, unitTitle: unit.title, pages };
     })));
   }

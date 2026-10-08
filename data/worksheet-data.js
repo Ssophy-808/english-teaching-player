@@ -758,25 +758,31 @@
     ];
   }
 
-  function book1FirstFourMixedAnswerPage(book) {
-    const unit = (id) => book.units.find((item) => item.id === id);
-    const picture = (unitId, word) => vocabularyItems(unit(unitId))
-      .find((item) => String(item.word || "").replace(/\(s\)|\(es\)/gi, "").trim().toLowerCase() === word.toLowerCase()) || {};
+  function cumulativeMixedAnswerPage(book, currentUnit) {
+    const teachingUnits = book.units.filter((item) => !item.isReview);
+    const currentIndex = teachingUnits.findIndex((item) => item.id === currentUnit.id);
+    const availableUnits = teachingUnits.slice(0, currentIndex + 1);
+    const sourceUnits = availableUnits.length <= 8
+      ? Array.from({ length: 8 }, (_, index) => availableUnits[index % availableUnits.length])
+      : Array.from({ length: 8 }, (_, index) => availableUnits[Math.round(index * (availableUnits.length - 1) / 7)]);
+    const usage = new Map();
+    const items = sourceUnits.map((sourceUnit, index) => {
+      const used = usage.get(sourceUnit.id) || 0;
+      usage.set(sourceUnit.id, used + 1);
+      const vocabulary = vocabularyItems(sourceUnit)
+        .slice()
+        .sort((a, b) => worksheetWord(b).replace(/[^A-Za-z]/g, "").length - worksheetWord(a).replace(/[^A-Za-z]/g, "").length);
+      const asset = vocabulary[(used + currentIndex) % Math.max(vocabulary.length, 1)] || {};
+      const pair = unitPairForVocabulary(book.id, sourceUnit.id, asset, index + currentIndex + used, 1)
+        || reviewPairForVocabulary({ ...currentUnit, bookId: book.id }, sourceUnit, asset, index);
+      return { prompt: pair.question, asset, expectedAnswer: pair.answer };
+    });
     return progressivePage(
       "template_mixed_answer_review",
-      "Question and Answer Review",
+      "Mixed Question and Answer Review",
       "Read each question. Look at the picture and write a complete answer.",
       "mixed question and answer review",
-      [
-        { prompt: "Who are you?", asset: picture("unit-1", "boy"), expectedAnswer: "I am a boy." },
-        { prompt: "Are you a teacher?", asset: picture("unit-1", "teacher"), expectedAnswer: "Yes, I am. I am a teacher." },
-        { prompt: "Who is he?", asset: picture("unit-2", "father"), expectedAnswer: "He is my father." },
-        { prompt: "Who is she?", asset: picture("unit-2", "mother"), expectedAnswer: "She is my mother." },
-        { prompt: "How old is he?", asset: picture("unit-3", "seven"), expectedAnswer: "He is seven years old." },
-        { prompt: "How old is she?", asset: picture("unit-3", "nine"), expectedAnswer: "She is nine years old." },
-        { prompt: "Is she happy?", asset: picture("unit-4", "happy"), expectedAnswer: "Yes, she is. She is happy." },
-        { prompt: "Is he tall?", asset: picture("unit-4", "tall"), expectedAnswer: "Yes, he is. He is tall." }
-      ],
+      items,
       { layout: "locked_template", showPictures: true }
     );
   }
@@ -792,7 +798,7 @@
   function pluralReviewWord(word) {
     if (/s$/i.test(word)) return word;
     if (/[^aeiou]y$/i.test(word)) return `${word.slice(0, -1)}ies`;
-    if (/(?:ch|sh|x|z)$/i.test(word)) return `${word}es`;
+    if (/(?:ch|sh|x|z|o)$/i.test(word)) return `${word}es`;
     return `${word}s`;
   }
 
@@ -1040,8 +1046,9 @@
         : book.id === "book-3" && BOOK3_PROGRESSIVE_PROFILES[unit.id]
           ? book3ProgressivePages(unit, day)
           : standardProgressivePages(unit, day, book.id);
-      if (book.id === "book-1" && unit.id === "unit-4" && day === 4) {
-        pages[3] = book1FirstFourMixedAnswerPage(book);
+      const teachingUnitIndex = book.units.filter((item) => !item.isReview).findIndex((item) => item.id === unit.id);
+      if (!unit.isReview && teachingUnitIndex > 0 && day === 4) {
+        pages[3] = cumulativeMixedAnswerPage(book, unit);
       }
       lesson.worksheet = { ...(lesson.worksheet || {}), day, unitTitle: unit.title, pages };
     })));

@@ -76,7 +76,7 @@ books.forEach((book) => book.units.filter((unit) => !unit.isReview).forEach((uni
 
 function expectedAnswerSubject(question) {
   const value = String(question).toLowerCase();
-  if (/^(?:are|do|can) you\b|^(?:what|where) do you\b|^how old are you\b|^where are you\b/.test(value)) return "i";
+  if (/^(?:are|do|can) you\b|^(?:what|where) do you\b|^how old are you\b|^where are you\b|^who are you\b/.test(value)) return "i";
   if (/^am i\b|^who am i\b/.test(value)) return "you";
   if (/^(?:is|does) he\b|^what does he\b|^who is he\b|^how old is he\b|^where is he\b/.test(value)) return "he";
   if (/^(?:is|does) she\b|^what does she\b|^who is she\b|^how old is she\b|^where is she\b/.test(value)) return "she";
@@ -123,16 +123,27 @@ const book1Unit4 = books.find((book) => book.id === "book-1").units.find((unit) 
 assert.deepEqual(book1Unit4.lessons[0].worksheet.pages.map((page) => page.items.length), [8, 4, 6, 8], "Book 1 Unit 4 must use the full standard worksheet format");
 const book1Unit4FirstPage = global.WorksheetComponents.studentPage(book1Unit4.lessons[0], book1Unit4.lessons[0].worksheet.pages[0], 0, 4);
 assert.match(book1Unit4FirstPage, /wb-locked-template/, "Book 1 Unit 4 must use the same locked writing template as Book 3 Unit 4");
-const book1Unit4MixedReview = book1Unit4.lessons[3].worksheet.pages[3];
-assert.equal(book1Unit4MixedReview.title, "Question and Answer Review", "Book 1 Unit 4 Day 4 must end with a mixed answer-writing review");
-assert.ok(book1Unit4MixedReview.items.every((item) => /\?$/.test(item.prompt)), "Book 1 Unit 4 mixed review must give the child complete questions");
-assert.deepEqual(
-  [...new Set(book1Unit4MixedReview.items.map((item) => item.expectedAnswer.match(/\b(?:boy|teacher|father|mother|seven|nine|happy|tall)\b/i)?.[0]?.toLowerCase()))].filter(Boolean).sort(),
-  ["boy", "father", "happy", "mother", "nine", "seven", "tall", "teacher"],
-  "Book 1 Unit 4 mixed review must cover vocabulary and grammar from the first four lessons"
-);
 assert.match(book1Unit4FirstPage, /Look and Answer/, "Book 1 Unit 4 must retain the Book 3 Unit 4 page-title position");
 assert.match(book1Unit4FirstPage, /Name:/, "Book 1 Unit 4 must retain the Book 3 Unit 4 name line");
+
+books.forEach((book) => {
+  const teachingUnits = book.units.filter((unit) => !unit.isReview);
+  assert.notEqual(teachingUnits[0].lessons[3].worksheet.pages[3].title, "Mixed Question and Answer Review", `${book.id} first unit must keep its original Day 4 final page`);
+  teachingUnits.slice(1).forEach((unit) => {
+    const reviewPage = unit.lessons[3].worksheet.pages[3];
+    assert.equal(reviewPage.title, "Mixed Question and Answer Review", `${book.id}/${unit.id} Day 4 must end with a mixed review worksheet`);
+    assert.equal(reviewPage.items.length, 8, `${book.id}/${unit.id} mixed review must contain eight questions`);
+    assert.ok(reviewPage.items.every((item) => /\?$/.test(item.prompt)), `${book.id}/${unit.id} mixed review must give complete questions`);
+    assert.ok(reviewPage.items.every((item) => item.asset?.image || item.asset?.sprite?.src || item.asset?.visual), `${book.id}/${unit.id} mixed review must give a picture for every question`);
+    assert.ok(reviewPage.items.every((item) => !/^Answer:/i.test(item.prompt)), `${book.id}/${unit.id} mixed review must ask children to write answers, not questions`);
+    reviewPage.items.forEach((item) => {
+      const expectedSubject = expectedAnswerSubject(item.prompt);
+      const actualSubject = actualAnswerSubject(item.expectedAnswer);
+      if (expectedSubject && actualSubject) assert.equal(actualSubject, expectedSubject, `${book.id}/${unit.id} mixed review question and answer subjects must match`);
+      assert.doesNotMatch(item.expectedAnswer, /\bmangos\b/i, `${book.id}/${unit.id} must spell mangoes correctly`);
+    });
+  });
+});
 
 books.forEach((book) => {
   const reviews = book.units.filter((unit) => unit.isReview);
@@ -216,7 +227,9 @@ book3FirstFourUnits.slice(0, 3).forEach((unit) => {
 assert.equal(book3Unit4Lessons[1].worksheet.pages[0].title, "Make the Question", "Day 2 must begin independent question construction");
 assert.equal(book3Unit4Lessons[2].worksheet.pages[0].title, "Write Your Question", "Day 3 must add mixed guided question writing");
 assert.equal(book3Unit4Lessons[3].worksheet.pages[0].title, "Picture Question Challenge", "Day 4 must begin independent mixed production");
-const promptsByDay = book3Unit4Lessons.map((lesson) => lesson.worksheet.pages.flatMap((page) => page.items.map((item) => item.prompt || item.left)));
+const promptsByDay = book3Unit4Lessons.map((lesson) => lesson.worksheet.pages
+  .filter((page) => page.title !== "Mixed Question and Answer Review")
+  .flatMap((page) => page.items.map((item) => item.prompt || item.left)));
 promptsByDay.forEach((prompts, dayIndex) => {
   promptsByDay.slice(dayIndex + 1).forEach((laterPrompts, offset) => {
     const duplicates = [...new Set(prompts.filter((prompt) => laterPrompts.includes(prompt)))];

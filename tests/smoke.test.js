@@ -109,6 +109,7 @@ books.forEach((book) => book.units.forEach((unit) => unit.lessons.forEach((lesso
     assert.doesNotMatch(String(item.expectedAnswer || ""), /^(?:He|She|It)\s+(?:like|want|have)\b/i, `${book.id}/${unit.id}/${lesson.id} third-person answers must use the correct verb form`);
     assert.doesNotMatch(String(item.expectedAnswer || ""), /^(?:I|You|We|They)\s+(?:likes|wants|has)\b/i, `${book.id}/${unit.id}/${lesson.id} non-third-person answers must use the base verb`);
     assert.doesNotMatch(String(item.expectedAnswer || ""), /\b(?:undefined|null)\b/i, `${book.id}/${unit.id}/${lesson.id} answers must not contain missing data`);
+    assert.doesNotMatch(String(item.prompt || ""), /\+\s*(?:complete question|check the grammar)/i, `${book.id}/${unit.id}/${lesson.id} must not use abstract plus-sign question cues`);
   }));
   lesson.worksheet.pages.filter((page) => page.type === "matching").forEach((page) => {
     if (!page.items.every((item) => String(item.expectedAnswer).includes(" → "))) return;

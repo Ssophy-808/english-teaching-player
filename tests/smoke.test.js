@@ -179,6 +179,31 @@ const book2Unit1 = books.find((book) => book.id === "book-2").units.find((unit) 
 assert.doesNotMatch(JSON.stringify(book2Unit1.passportSentences), /\b(?:dog|cat)\b/i, "Book 2 Unit 1 classroom pictures must not use unrelated animal prompts");
 assert.match(JSON.stringify(book2Unit1.passportSentences), /Is there a television\?/, "Book 2 Unit 1 television picture must use a television question");
 
+const book2FruitUnits = books.find((book) => book.id === "book-2").units
+  .filter((unit) => ["unit-4", "unit-5"].includes(unit.id));
+book2FruitUnits.forEach((unit) => {
+  const day1AnswerPage = unit.lessons[0].worksheet.pages[0];
+  const day1Answers = day1AnswerPage.items.map((item) => item.expectedAnswer);
+  const day1Questions = day1AnswerPage.items.map((item) => item.prompt);
+  assert.ok(day1Answers.some((answer) => /^Yes,/i.test(answer)), `${unit.id} must include positive fruit answers`);
+  assert.ok(day1Answers.some((answer) => /^No,/i.test(answer)), `${unit.id} must include negative fruit answers`);
+  assert.ok(day1Questions.some((question) => /^What are (?:these|those)\?/i.test(question)), `${unit.id} must include What are these/those questions`);
+  assert.ok(day1Questions.some((question) => /^Are (?:these|those)\b/i.test(question)), `${unit.id} must include Are these/those questions`);
+
+  const mixedPage = unit.lessons[0].worksheet.pages[3];
+  assert.equal(mixedPage.items.filter((item) => /^Fix:/i.test(item.prompt)).length, 5, `${unit.id} must limit repeated correction items to five`);
+  assert.equal(mixedPage.items.filter((item) => /^(?:Put in order|Change to plural|Change to singular):/i.test(item.prompt)).length, 3, `${unit.id} must use the lower section for reorder and number-form practice`);
+
+  unit.lessons.slice(1).forEach((lesson) => {
+    const writingPage = lesson.worksheet.pages[0];
+    const prompts = writingPage.items.map((item) => item.prompt).join(" ");
+    assert.doesNotMatch(prompts, /\b(?:apples|bananas|oranges|peaches|strawberries|kiwis|mangoes|tomatoes|cherries)\b/i, `${unit.id}/${lesson.id} picture cues must not reveal the fruit word`);
+    const expectedQuestions = writingPage.items.map((item) => item.expectedAnswer);
+    assert.ok(expectedQuestions.some((question) => /^What are (?:these|those)\?/i.test(question)), `${unit.id}/${lesson.id} must practise What questions`);
+    assert.ok(expectedQuestions.some((question) => /^Are (?:these|those)\b/i.test(question)), `${unit.id}/${lesson.id} must practise Yes/No questions`);
+  });
+});
+
 const book2FirstReview = books.find((book) => book.id === "book-2")
   .units.find((unit) => unit.isReview && unit.reviewRange === "1–3");
 const book2ReviewWords = new Set(book2FirstReview.vocabulary.map((item) => String(item.word || item)));

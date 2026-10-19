@@ -584,6 +584,13 @@
     return ({ foot: "feet", tooth: "teeth", child: "children", person: "people" })[word.toLowerCase()] || pluralReviewWord(word);
   }
 
+  function differentFruitPlural(plural, index) {
+    const options = ["apples", "bananas", "oranges", "peaches", "strawberries", "kiwis", "mangoes", "tomatoes", "cherries"];
+    return options.find((value, optionIndex) => optionIndex >= index % options.length && value.toLowerCase() !== plural.toLowerCase())
+      || options.find((value) => value.toLowerCase() !== plural.toLowerCase())
+      || "apples";
+  }
+
   function unitPairForVocabulary(bookId, unitId, asset, index, day) {
     const key = `${bookId}/${unitId}`;
     const word = worksheetWord(asset) || "picture";
@@ -635,14 +642,18 @@
       const count = ((index + day) % 9) + 2;
       return { question: `How many ${plural} are there?`, answer: `There are ${count} ${plural}.` };
     }
-    if (key === "book-2/unit-4") {
-      const near = slot % 2 === 0;
-      return { question: `What are ${near ? "these" : "those"}?`, answer: `${near ? "These" : "Those"} are ${plural}.` };
-    }
-    if (key === "book-2/unit-5") {
-      const near = slot % 2 === 0;
-      return { question: `Are ${near ? "these" : "those"} ${plural}?`, answer: `Yes, they are. They are ${plural}.` };
-    }
+    if (key === "book-2/unit-4") return [
+      { question: "What are these?", answer: `These are ${plural}.` },
+      { question: "What are those?", answer: `Those are ${plural}.` },
+      { question: `Are these ${differentFruitPlural(plural, index)}?`, answer: `No, they aren't. They are ${plural}.` },
+      { question: `Are those ${plural}?`, answer: `Yes, they are. They are ${plural}.` }
+    ][slot];
+    if (key === "book-2/unit-5") return [
+      { question: `Are these ${plural}?`, answer: `Yes, they are. They are ${plural}.` },
+      { question: `Are those ${differentFruitPlural(plural, index + 1)}?`, answer: `No, they aren't. They are ${plural}.` },
+      { question: "What are these?", answer: `These are ${plural}.` },
+      { question: "What are those?", answer: `Those are ${plural}.` }
+    ][slot];
     if (key === "book-2/unit-6") return { question: `Can you ${word}?`, answer: `Yes, I can. I can ${word}.` };
     if (key === "book-2/unit-7") return { question: "Where is the book?", answer: `It is ${/^between$/i.test(word) ? "between the desk and the chair" : `${word} the desk`}.` };
     if (key === "book-2/unit-8") return pick([
@@ -699,6 +710,46 @@
     });
   }
 
+  function isFruitQuestionUnit(bookId, unitId) {
+    return bookId === "book-2" && (unitId === "unit-4" || unitId === "unit-5");
+  }
+
+  function pictureQuestionPrompt(pair, bookId, unitId) {
+    if (!isFruitQuestionUnit(bookId, unitId)) return `Answer: ${pair.answer}`;
+    return /^What are\b/i.test(pair.question)
+      ? "Look at the picture. Write a What question."
+      : "Look at the picture. Write a Yes/No question.";
+  }
+
+  function pictureQuestionAnswer(pair, bookId, unitId) {
+    if (!isFruitQuestionUnit(bookId, unitId) || !/^Are (?:these|those)\b/i.test(pair.question) || !/^No,/i.test(pair.answer)) {
+      return pair.question;
+    }
+    const pointer = /^Are those\b/i.test(pair.question) ? "those" : "these";
+    return `Are ${pointer} ${worksheetPlural(pair.asset)}?`;
+  }
+
+  function mixedCorrectionItems(pairsForDay, bookId, unitId) {
+    const corrections = pairsForDay.slice(0, 5).map((pair) => ({
+      prompt: `Fix: ${grammarError(pair.answer)}`,
+      asset: pair.asset,
+      expectedAnswer: pair.answer
+    }));
+    if (!isFruitQuestionUnit(bookId, unitId)) {
+      return corrections.concat(pairsForDay.slice(5, 8).map((pair) => ({
+        prompt: `Put in order: ${scramble(pair.question)}`,
+        asset: pair.asset,
+        expectedAnswer: pair.question
+      })));
+    }
+    const [sixth, seventh, eighth] = pairsForDay.slice(5, 8);
+    return corrections.concat([
+      { prompt: `Put in order: ${scramble(sixth.question)}`, asset: sixth.asset, expectedAnswer: sixth.question },
+      { prompt: `Change to plural: ${worksheetWord(seventh.asset)} → __________`, asset: seventh.asset, expectedAnswer: worksheetPlural(seventh.asset) },
+      { prompt: `Change to singular: ${worksheetPlural(eighth.asset)} → __________`, asset: eighth.asset, expectedAnswer: worksheetWord(eighth.asset) }
+    ]);
+  }
+
   function standardProgressivePages(unit, day, bookId) {
     const pairsForDay = standardProgressivePairs(unit, day, bookId);
     const matchPairs = pairsForDay.slice(0, 4);
@@ -733,25 +784,32 @@
       locked("template_picture_answer", "Look and Answer", "Look at each picture. Write a complete answer.", pairsForDay.map((pair) => ({ prompt: pair.question, asset: pair.asset, expectedAnswer: pair.answer })), true),
       page("matching", "Look and Match", "Draw a line from each question to the correct answer.", matchingItems),
       page("multiple_choice", "Choose the Answer", "Look at the picture. Circle the correct complete answer.", answerChoices),
-      locked("template_fix_mistakes", "Fix the Mistakes", "Find the mistake. Rewrite the whole sentence correctly.", pairsForDay.map((pair) => ({ prompt: grammarError(pair.answer), asset: pair.asset, expectedAnswer: pair.answer })))
+      locked(
+        "template_fix_mistakes",
+        isFruitQuestionUnit(bookId, unit.id) ? "Fix, Reorder, and Change" : "Fix and Reorder",
+        isFruitQuestionUnit(bookId, unit.id)
+          ? "Fix Questions 1–5. Then reorder the sentence and change singular or plural forms."
+          : "Fix Questions 1–5. Then put the remaining questions in order.",
+        mixedCorrectionItems(pairsForDay, bookId, unit.id)
+      )
     ];
 
     if (day === 2) return [
-      locked("template_picture_question", "Make the Question", "Look at the picture and answer cue. Write the matching question.", pairsForDay.map((pair) => ({ prompt: `Answer: ${pair.answer}`, asset: pair.asset, expectedAnswer: pair.question })), true),
+      locked("template_picture_question", "Make the Question", "Look at the picture and write the matching question.", pairsForDay.map((pair) => ({ prompt: pictureQuestionPrompt(pair, bookId, unit.id), asset: pair.asset, expectedAnswer: pictureQuestionAnswer(pair, bookId, unit.id) })), true),
       page("matching", "Match Questions and Answers", "Draw a line from each answer to its matching question.", matchingItems),
       page("multiple_choice", "Choose the Question", "Read the answer. Circle the question that matches.", questionChoices),
       locked("template_question_order", "Build the Question", "Put the words in order. Write the complete question.", pairsForDay.map((pair) => ({ prompt: scramble(pair.question), asset: pair.asset, expectedAnswer: pair.question })))
     ];
 
     if (day === 3) return [
-      locked("template_guided_question", "Write Your Question", "Read the answer. Look at the picture and write its question.", pairsForDay.map((pair) => ({ prompt: `Answer: ${pair.answer}`, asset: pair.asset, expectedAnswer: pair.question })), true),
+      locked("template_guided_question", "Write Your Question", "Look at the picture. Write a What question or a Yes/No question.", pairsForDay.map((pair) => ({ prompt: pictureQuestionPrompt(pair, bookId, unit.id), asset: pair.asset, expectedAnswer: pictureQuestionAnswer(pair, bookId, unit.id) })), true),
       page("matching", "Match the Dialogue", "Match each question to the best complete answer.", matchingItems),
       page("multiple_choice", "Choose the Question", "Circle the only correct complete question.", questionChoices),
       locked("template_mixed_correction", "Fix the Questions", "Find the mistake. Rewrite each question correctly.", pairsForDay.map((pair) => ({ prompt: grammarError(pair.question), asset: pair.asset, expectedAnswer: pair.question })))
     ];
 
     return [
-      locked("template_independent_picture", "Picture Question Challenge", "Read the answer. Look at the picture and write its question.", pairsForDay.map((pair) => ({ prompt: `Answer: ${pair.answer}`, asset: pair.asset, expectedAnswer: pair.question })), true),
+      locked("template_independent_picture", "Picture Question Challenge", "Look at the picture. Write a What question or a Yes/No question.", pairsForDay.map((pair) => ({ prompt: pictureQuestionPrompt(pair, bookId, unit.id), asset: pair.asset, expectedAnswer: pictureQuestionAnswer(pair, bookId, unit.id) })), true),
       page("matching", "Complete the Dialogue", "Match each question to the best complete answer.", matchingItems),
       page("multiple_choice", "Final Grammar Check", "Circle the only correct question.", questionChoices),
       locked("template_final_output", "Question Writing Review", "Read each answer and write its question.", pairsForDay.map((pair) => ({ prompt: `Answer: ${pair.answer}`, asset: pair.asset, expectedAnswer: pair.question })))

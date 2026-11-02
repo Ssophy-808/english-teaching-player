@@ -57,9 +57,12 @@ const progressiveFirstPageTitles = [
   "Look and Answer", "Make the Question", "Write Your Question", "Picture Question Challenge"
 ];
 books.forEach((book) => book.units.filter((unit) => !unit.isReview).forEach((unit) => {
+  const expectedProgression = book.id === "book-3" && unit.id === "unit-5"
+    ? ["Look and Answer", "Choose and Write", "Look, Think, and Answer", "Build Complete Sentences"]
+    : progressiveFirstPageTitles;
   assert.deepEqual(
     unit.lessons.map((lesson) => lesson.worksheet.pages[0].title),
-    progressiveFirstPageTitles,
+    expectedProgression,
     `${book.id}/${unit.id} must build independent question writing from Day 1 to Day 4`
   );
   unit.lessons.forEach((lesson) => {
@@ -266,6 +269,47 @@ promptsByDay.forEach((prompts, dayIndex) => {
   });
 });
 assert.doesNotMatch(JSON.stringify(book3Unit4Lessons), /Ava/, "Book 3 Unit 4 must use Lumi for the girl name across all days");
+
+const book3Unit5 = books.find((book) => book.id === "book-3").units.find((unit) => unit.id === "unit-5");
+assert.deepEqual(
+  book3Unit5.lessons.map((lesson) => lesson.worksheet.pages[0].title),
+  ["Look and Answer", "Choose and Write", "Look, Think, and Answer", "Build Complete Sentences"],
+  "Book 3 Unit 5 must follow the workbook-style grammar progression"
+);
+const book3Unit5Day1Correction = book3Unit5.lessons[0].worksheet.pages[3];
+assert.deepEqual(
+  book3Unit5Day1Correction.items.slice(0, 5).map((item) => item.expectedAnswer),
+  [
+    "My little sister has three teeth.",
+    "She doesn't have short legs.",
+    "I don't have a big nose.",
+    "Lumi doesn't have a big head.",
+    "We have two arms."
+  ],
+  "Book 3 Unit 5 must practise the correction patterns from the workbook"
+);
+const book3Unit5Day2Unscramble = book3Unit5.lessons[1].worksheet.pages[3];
+assert.ok(book3Unit5Day2Unscramble.items.some((item) => /^Who has\b/.test(item.expectedAnswer)), "Book 3 Unit 5 unscramble must include Who has questions");
+assert.ok(book3Unit5Day2Unscramble.items.some((item) => /\b(?:don't|doesn't) have\b/.test(item.expectedAnswer)), "Book 3 Unit 5 unscramble must include negative sentences");
+assert.ok(book3Unit5Day2Unscramble.items.some((item) => /\b(?:bunny|bicycle|popcorn|fish)\b/i.test(item.expectedAnswer)), "Book 3 Unit 5 unscramble must reuse vocabulary from Units 1–4");
+assert.deepEqual(
+  book3Unit5.lessons[0].worksheet.pages[3].items.map((item) => item.prompt)
+    .filter((prompt) => book3Unit5.lessons[2].worksheet.pages[3].items.some((item) => item.prompt === prompt)),
+  [],
+  "Book 3 Unit 5 Day 1 and Day 3 correction prompts must not repeat"
+);
+const book3Unit5NewPages = book3Unit5.lessons.flatMap((lesson, lessonIndex) => lesson.worksheet.pages
+  .filter((page, pageIndex) => !(lessonIndex === 3 && pageIndex === 3)));
+book3Unit5NewPages.flatMap((page) => page.items).forEach((item) => {
+  const completeAnswers = String(item.expectedAnswer || "").split(" → ");
+  completeAnswers.filter((value) => /\?$/.test(value)).forEach((question) => {
+    assert.match(question, /^Who has\b/, "Book 3 Unit 5 must keep Who has as its only question pattern");
+  });
+});
+const book3Unit5Json = JSON.stringify(book3Unit5NewPages);
+assert.match(book3Unit5Json, /\bteeth\b/, "Book 3 Unit 5 must practise tooth/teeth");
+assert.match(book3Unit5Json, /\bfeet\b/, "Book 3 Unit 5 must practise foot/feet");
+assert.match(book3Unit5Json, /\b(?:bunny|spider|fish|bicycle|popcorn|puzzle)\b/i, "Book 3 Unit 5 must spiral vocabulary from Units 1–4");
 
 const book1 = books.find((book) => book.id === "book-1");
 const book1Numbers = book1.units.find((unit) => unit.id === "unit-3").vocabulary;

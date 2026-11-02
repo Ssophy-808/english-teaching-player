@@ -845,6 +845,132 @@
     );
   }
 
+  function book3Unit5Pages(unit, day, book) {
+    const asset = (unitId, word) => {
+      const source = book.units.find((item) => item.id === unitId);
+      return vocabularyItems(source).find((item) => String(item.word || "").toLowerCase() === word.toLowerCase()) || {};
+    };
+    const pictures = {
+      bunny: asset("unit-1", "bunnies"), spider: asset("unit-1", "spiders"), fish: asset("unit-1", "fish"),
+      popcorn: asset("unit-3", "popcorn"), bicycle: asset("unit-4", "bicycle"), puzzle: asset("unit-4", "puzzle"),
+      head: asset("unit-5", "head"), eyes: asset("unit-5", "eye(s)"), ears: asset("unit-5", "ear(s)"),
+      nose: asset("unit-5", "nose"), legs: asset("unit-5", "leg(s)"), hands: asset("unit-5", "hand(s)"),
+      arms: asset("unit-5", "arm(s)"), teeth: asset("unit-5", "tooth / teeth"), mouth: asset("unit-5", "mouth"),
+      feet: asset("unit-5", "foot / feet")
+    };
+    const whoPairs = [
+      { question: "Who has two long ears?", answer: "The bunny has two long ears.", asset: pictures.bunny },
+      { question: "Who has eight legs?", answer: "The spider has eight legs.", asset: pictures.spider },
+      { question: "Who has no legs?", answer: "The fish has no legs.", asset: pictures.fish },
+      { question: "Who has a bicycle?", answer: "Ludi has a bicycle.", asset: pictures.bicycle },
+      { question: "Who has some popcorn?", answer: "Lumi has some popcorn.", asset: pictures.popcorn },
+      { question: "Who has two hands?", answer: "Ludi has two hands.", asset: pictures.hands },
+      { question: "Who has two feet?", answer: "Lumi has two feet.", asset: pictures.feet },
+      { question: "Who has a big head?", answer: "Ludi has a big head.", asset: pictures.head },
+      { question: "Who has two eyes?", answer: "Lumi has two eyes.", asset: pictures.eyes },
+      { question: "Who has one mouth?", answer: "Ludi has one mouth.", asset: pictures.mouth }
+    ];
+    const offset = ((day - 1) * 2) % whoPairs.length;
+    const dailyPairs = [...whoPairs.slice(offset), ...whoPairs.slice(0, offset)].slice(0, 8);
+    const matchPairs = dailyPairs.slice(0, 4);
+    const rotatedAnswers = rotateAnswers(matchPairs);
+    const matchingItems = matchPairs.map((pair, index) => ({
+      left: pair.question,
+      right: rotatedAnswers[index],
+      asset: pair.asset,
+      expectedAnswer: `${pair.question} → ${pair.answer}`
+    }));
+    const allGrammarChoices = [
+      { prompt: "My little sister ______ three teeth.", choices: ["has", "have", "doesn't"], expectedAnswer: "has", asset: pictures.teeth },
+      { prompt: "She ______ have short legs.", choices: ["doesn't", "don't", "has"], expectedAnswer: "doesn't", asset: pictures.legs },
+      { prompt: "I ______ have a big nose.", choices: ["don't", "doesn't", "has"], expectedAnswer: "don't", asset: pictures.nose },
+      { prompt: "Lumi doesn't ______ a big head.", choices: ["have", "has", "having"], expectedAnswer: "have", asset: pictures.head },
+      { prompt: "We ______ two arms.", choices: ["have", "has", "doesn't"], expectedAnswer: "have", asset: pictures.arms },
+      { prompt: "The spider ______ eight legs.", choices: ["has", "have", "don't"], expectedAnswer: "has", asset: pictures.spider },
+      { prompt: "The bunny ______ two long ears.", choices: ["has", "have", "don't"], expectedAnswer: "has", asset: pictures.bunny },
+      { prompt: "They ______ have a puzzle.", choices: ["don't", "doesn't", "has"], expectedAnswer: "don't", asset: pictures.puzzle },
+      { prompt: "Ludi ______ a bicycle.", choices: ["has", "have", "doesn't"], expectedAnswer: "has", asset: pictures.bicycle },
+      { prompt: "We ______ some popcorn.", choices: ["have", "has", "doesn't"], expectedAnswer: "have", asset: pictures.popcorn },
+      { prompt: "The fish ______ have legs.", choices: ["doesn't", "don't", "has"], expectedAnswer: "doesn't", asset: pictures.fish },
+      { prompt: "I ______ two hands.", choices: ["have", "has", "doesn't"], expectedAnswer: "have", asset: pictures.hands }
+    ];
+    const grammarOffset = ((day - 1) * 3) % allGrammarChoices.length;
+    const dailyGrammarChoices = [...allGrammarChoices.slice(grammarOffset), ...allGrammarChoices.slice(0, grammarOffset)];
+    const correctionItems = [
+      { prompt: "My little sister has three tooth.", expectedAnswer: "My little sister has three teeth.", asset: pictures.teeth },
+      { prompt: "She don't have short legs.", expectedAnswer: "She doesn't have short legs.", asset: pictures.legs },
+      { prompt: "I doesn't have a big nose.", expectedAnswer: "I don't have a big nose.", asset: pictures.nose },
+      { prompt: "Lumi doesn't has a big head.", expectedAnswer: "Lumi doesn't have a big head.", asset: pictures.head },
+      { prompt: "We has two arms.", expectedAnswer: "We have two arms.", asset: pictures.arms },
+      { prompt: "Change to plural: one tooth → three ______", expectedAnswer: "teeth", asset: pictures.teeth },
+      { prompt: "Change to plural: one ear → six ______", expectedAnswer: "ears", asset: pictures.ears },
+      { prompt: "Put in order: ears / has / The bunny / long / .", expectedAnswer: "The bunny has long ears.", asset: pictures.bunny }
+    ];
+    const laterCorrectionItems = [
+      { prompt: "The bunny have two long ears.", expectedAnswer: "The bunny has two long ears.", asset: pictures.bunny },
+      { prompt: "They doesn't have a puzzle.", expectedAnswer: "They don't have a puzzle.", asset: pictures.puzzle },
+      { prompt: "Ludi don't have bicycle.", expectedAnswer: "Ludi doesn't have a bicycle.", asset: pictures.bicycle },
+      { prompt: "We has some popcorn.", expectedAnswer: "We have some popcorn.", asset: pictures.popcorn },
+      { prompt: "The spider have eight legs.", expectedAnswer: "The spider has eight legs.", asset: pictures.spider },
+      { prompt: "Change to plural: one eye → four ______", expectedAnswer: "eyes", asset: pictures.eyes },
+      { prompt: "Change to plural: one foot → two ______", expectedAnswer: "feet", asset: pictures.feet },
+      { prompt: "Put in order: has / Who / a puzzle / ?", expectedAnswer: "Who has a puzzle?", asset: pictures.puzzle }
+    ];
+    const unscrambleItems = [
+      { prompt: "head. / has / a / Patrick / big", expectedAnswer: "Patrick has a big head.", asset: pictures.head },
+      { prompt: "has / short / Who / arms / ?", expectedAnswer: "Who has short arms?", asset: pictures.arms },
+      { prompt: "have / hands. / eight / small / don't / They", expectedAnswer: "They don't have eight small hands.", asset: pictures.hands },
+      { prompt: "have / one / Suzy / doesn't / foot / .", expectedAnswer: "Suzy doesn't have one foot.", asset: pictures.feet },
+      { prompt: "ears. / two / long / has / The bunny", expectedAnswer: "The bunny has two long ears.", asset: pictures.bunny },
+      { prompt: "a / Who / bicycle / has / ?", expectedAnswer: "Who has a bicycle?", asset: pictures.bicycle },
+      { prompt: "some / has / Lumi / popcorn / .", expectedAnswer: "Lumi has some popcorn.", asset: pictures.popcorn },
+      { prompt: "legs. / doesn't / The fish / have", expectedAnswer: "The fish doesn't have legs.", asset: pictures.fish }
+    ];
+    const sentenceCues = [
+      { prompt: "The bunny / two long ears", expectedAnswer: "The bunny has two long ears.", asset: pictures.bunny },
+      { prompt: "The spider / eight legs", expectedAnswer: "The spider has eight legs.", asset: pictures.spider },
+      { prompt: "The fish / no legs", expectedAnswer: "The fish doesn't have legs.", asset: pictures.fish },
+      { prompt: "Ludi / a bicycle", expectedAnswer: "Ludi has a bicycle.", asset: pictures.bicycle },
+      { prompt: "Lumi / some popcorn", expectedAnswer: "Lumi has some popcorn.", asset: pictures.popcorn },
+      { prompt: "We / two arms", expectedAnswer: "We have two arms.", asset: pictures.arms },
+      { prompt: "I / not / six teeth", expectedAnswer: "I don't have six teeth.", asset: pictures.teeth },
+      { prompt: "Lumi / not / a big head", expectedAnswer: "Lumi doesn't have a big head.", asset: pictures.head }
+    ];
+    const page = (type, title, instruction, items, options = {}) => progressivePage(
+      type, title, instruction, "Who has · has/have · don't/doesn't · body-part plurals", items, options
+    );
+    const locked = (type, title, instruction, items, showPictures = false) => page(
+      type, title, instruction, items, { layout: "locked_template", showPictures }
+    );
+    const answerItems = dailyPairs.map((pair) => ({ prompt: pair.question, asset: pair.asset, expectedAnswer: pair.answer }));
+    const answerChoices = dailyGrammarChoices.slice(0, 6).map((item) => ({ ...item }));
+
+    if (day === 1) return [
+      locked("template_picture_answer", "Look and Answer", "Look at each picture. Answer the Who has question in a complete sentence.", answerItems, true),
+      page("matching", "Who Has It?", "Match each Who has question to the correct answer.", matchingItems),
+      page("multiple_choice", "Choose the Correct Word", "Circle has, have, don't, or doesn't to complete each sentence.", answerChoices),
+      locked("template_mixed_correction", "Correct, Change, and Reorder", "Correct Sentences 1–5. Then change the plural forms and reorder the last sentence.", correctionItems)
+    ];
+    if (day === 2) return [
+      locked("template_grammar_choice", "Choose and Write", "Choose has, have, don't, or doesn't. Write the complete sentence.", dailyGrammarChoices.slice(0, 8).map((item) => ({ prompt: `${item.prompt} (${item.choices.join(" / ")})`, asset: item.asset, expectedAnswer: item.prompt.replace("______", item.expectedAnswer) })), true),
+      page("matching", "Read and Match", "Match each Who has question to the correct complete answer.", matchingItems),
+      page("multiple_choice", "Grammar Check", "Choose the correct word for each sentence.", answerChoices),
+      locked("template_question_order", "Unscramble Different Sentences", "Unscramble the affirmative sentence, negative sentence, or Who has question.", unscrambleItems)
+    ];
+    if (day === 3) return [
+      locked("template_picture_answer", "Look, Think, and Answer", "Use the pictures from this lesson and earlier lessons. Answer each Who has question.", answerItems, true),
+      page("matching", "Question and Answer Match", "Match the Who has questions and complete answers.", matchingItems),
+      page("multiple_choice", "Mixed Grammar Check", "Choose the correct has, have, don't, or doesn't.", answerChoices),
+      locked("template_mixed_correction", "Correct the Sentences", "Correct the grammar or plural form in every sentence.", laterCorrectionItems)
+    ];
+    return [
+      locked("template_independent_picture", "Build Complete Sentences", "Use each picture and cue. Write a complete sentence with has, have, don't, or doesn't.", sentenceCues, true),
+      page("matching", "Final Who Has Match", "Match each Who has question to its complete answer.", matchingItems),
+      page("multiple_choice", "Final Grammar Check", "Choose the correct has, have, don't, doesn't, or plural form.", answerChoices),
+      locked("template_final_output", "Mixed Sentence Review", "Write complete sentences using words from this lesson and earlier lessons.", sentenceCues, true)
+    ];
+  }
+
   function reviewWord(asset) {
     return String(asset?.word || "").replace(/\(s\)|\(es\)/gi, "").trim();
   }
@@ -1108,6 +1234,8 @@
         ? bookReviewPages(unit, day)
         : book.id === "book-3" && unit.id === "unit-4"
         ? [book3Unit4Day1Pages, book3Unit4Day2Pages, book3Unit4Day3Pages, book3Unit4Day4Pages][day - 1]()
+        : book.id === "book-3" && unit.id === "unit-5"
+          ? book3Unit5Pages(unit, day, book)
         : book.id === "book-3" && BOOK3_PROGRESSIVE_PROFILES[unit.id]
           ? book3ProgressivePages(unit, day)
           : standardProgressivePages(unit, day, book.id);

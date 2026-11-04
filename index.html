@@ -15,7 +15,7 @@
     </script>
     <link rel="stylesheet" href="css/style.css?v=22">
     <link rel="stylesheet" href="css/worksheet.css?v=12">
-    <link rel="stylesheet" href="css/phonics.css?v=1">
+    <link rel="stylesheet" href="css/phonics.css?v=2">
   </head>
   <body>
     <noscript>請啟用 JavaScript 才能使用教材播放器。</noscript>
@@ -55,7 +55,10 @@
           <p id="phonics-course-label" class="eyebrow">SOUND IT OUT · PHONICS PRACTICE</p>
           <h1 id="phonics-unit-title">Unit 1 · Long a</h1>
         </div>
-        <button id="phonics-settings-button" class="flow-button" type="button">⚙ Teacher Settings</button>
+        <div class="phonics-header-actions">
+          <button id="phonics-units-button" class="flow-button" type="button">▦ Choose Unit</button>
+          <button id="phonics-settings-button" class="flow-button" type="button">⚙ Teacher Settings</button>
+        </div>
       </header>
       <section id="phonics-stage" class="phonics-stage" aria-live="polite"></section>
     </main>
@@ -69,7 +72,7 @@
         <fieldset><legend>Mode</legend><label><input type="radio" name="phonics-mode" value="practice" checked> Practice</label><label><input type="radio" name="phonics-mode" value="quiz"> Quiz</label></fieldset>
         <label>Number of questions<select name="questionCount"><option value="8">8</option><option value="10">10</option><option value="14" selected>14</option></select></label>
         <fieldset><legend>Include</legend>
-          <label><input type="checkbox" name="include" value="recognition" checked> Short / Long</label>
+          <label><input type="checkbox" name="include" value="recognition" checked> Sound Groups</label>
           <label><input type="checkbox" name="include" value="pattern" checked> Pattern</label>
           <label><input type="checkbox" name="include" value="listening" checked> Listening</label>
           <label><input type="checkbox" name="include" value="odd" checked> Odd One Out</label>
@@ -238,7 +241,7 @@
     <script src="data/book3.js?v=7" defer></script>
     <script src="data/book3-review.js?v=2" defer></script>
     <script src="data/review-units.js?v=4" defer></script>
-    <script src="data/phonics-data.js?v=1" defer></script>
+    <script src="data/phonics-data.js?v=2" defer></script>
     <script src="data/course-schema.js?v=2" defer></script>
     <script src="js/teaching-flow.js?v=58" defer></script>
     <script src="data/worksheet-data.js?v=28" defer></script>
@@ -251,8 +254,8 @@
     <script src="js/test-builder.js?v=14" defer></script>
     <script src="js/daily-handout.js?v=1" defer></script>
     <script src="js/routes.js?v=1" defer></script>
-    <script src="js/phonics-practice.js?v=1" defer></script>
+    <script src="js/phonics-practice.js?v=2" defer></script>
     <script src="js/player.js?v=7" defer></script>
-    <script src="js/app.js?v=6" defer></script>
+    <script src="js/app.js?v=7" defer></script>
   </body>
 </html>

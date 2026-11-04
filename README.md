@@ -4,16 +4,17 @@ A static, projection-friendly lesson player for English teachers. It includes a 
 
 ## Sound It Out / Phonics Practice
 
-The home library now includes a separate **Sound It Out** card. It opens a reusable phonics-practice module inside this SPA rather than copying textbook pages into the lesson player. The first completed prototype is:
+The home library includes a separate **Sound It Out** card. It opens a reusable phonics-practice module inside this SPA rather than copying textbook pages into the lesson player. Sound It Out 2 includes all 12 units:
 
 ```text
 /phonics/sio2/unit1/
 Sound It Out 2 · Unit 1 · Long a
+/phonics/sio2/unit2/ through /phonics/sio2/unit12/
 ```
 
-The prototype follows a five-level progression:
+Each unit follows a five-level progression:
 
-1. Visual short/long recognition
+1. Visual sound-group recognition
 2. Spelling-pattern recognition
 3. Two-choice sound contrast
 4. Three-choice listening
@@ -21,7 +22,7 @@ The prototype follows a five-level progression:
 
 Each question is shown alone. Practice Mode gives immediate positive feedback, keeps an incorrect question on screen, reveals a hint after a second error, and provides a wrong-answer-only retry. Quiz Mode stores answers without revealing correctness and reports results by skill and spelling pattern at the end. Level mastery and teacher settings are stored in browser `localStorage`; there is no student account or leaderboard.
 
-Reusable low-pressure activities currently include Short/Long Sort, Pattern Sort, Flip Cards, Read First, and Mystery Word. Teacher Settings control Practice/Quiz mode, question count, included skills, shuffling, and progress visibility.
+Reusable low-pressure activities include Sound Group Sort, Pattern Sort, Flip Cards, Read First, and Mystery Word. Teacher Settings control Practice/Quiz mode, question count, included skills, shuffling, and progress visibility. The unit picker links Long a/e/i/o/u, hard/soft c and g, r-controlled vowels, and consonant teams without duplicating activity HTML.
 
 ### Phonics files and components
 
@@ -30,7 +31,7 @@ Reusable low-pressure activities currently include Short/Long Sort, Pattern Sort
 - `css/phonics.css` contains the responsive student and teacher-control layouts.
 - `js/routes.js`, `js/app.js`, `index.html`, `404.html`, and `tools/serve_site.py` connect the module to the existing library and permanent routes.
 
-### Add another phonics Unit
+### Add or revise a phonics Unit
 
 Add a unit object to the appropriate course in `data/phonics-data.js`. UI and activity HTML must not be duplicated. A unit supplies stable IDs, sound labels, patterns, words, contrast pairs, and optional Wordwall/audio metadata:
 
@@ -71,9 +72,8 @@ When `audio` is non-empty, **Play Sound** uses that file. When it is empty, the 
 
 ### Current placeholders
 
-- Unit 1 word audio paths are empty and use the separately labeled browser-voice fallback.
-- Unit 1 Wordwall URL is empty; paste the supplied activity URL into `wordwall.url`.
-- Only Unit 1 is present by design. Do not duplicate it into Units 2–12 until the prototype is approved.
+- Unit 1–12 word audio paths are empty and use the separately labeled browser-voice fallback.
+- Unit 1–12 Wordwall URLs are empty; paste each supplied activity URL into its `wordwall.url`.
 
 ## Current architecture
 

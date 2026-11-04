@@ -52,7 +52,7 @@
     })).join("") + cardMarkup({
       number: "SIO 2",
       title: "Sound It Out",
-      subtitle: "Phonics Practice · Unit 1 Long a prototype",
+      subtitle: "Phonics Practice · 12 interactive units",
       action: "phonics:sio2"
     });
     scrollToTop();
@@ -175,6 +175,7 @@
     if (type === "phonics") {
       window.LessonRoutes.navigate(window.LessonRoutes.phonicsPathFor(id, "unit1"));
       window.PhonicsPractice?.open(id, "unit1");
+      window.PhonicsPractice?.showUnits();
     }
   });
 

@@ -10,13 +10,15 @@
     shuffle: true,
     showProgress: true
   };
-  const LEVELS = [
-    { id: 1, title: "See the Sound", subtitle: "Short a or Long a", category: "recognition" },
-    { id: 2, title: "Spot the Pattern", subtitle: "A space E · A-I · A-Y · E-I-G-H", category: "pattern" },
-    { id: 3, title: "Hear the Contrast", subtitle: "Choose between two words", category: "contrast" },
-    { id: 4, title: "Listening Choice", subtitle: "Listen and choose from three", category: "listening" },
-    { id: 5, title: "Exam Challenge", subtitle: "Same / Different · Odd One Out", category: "challenge" }
-  ];
+  function levels() {
+    return [
+      { id: 1, title: "See the Sound", subtitle: unit.classificationSummary, category: "recognition" },
+      { id: 2, title: "Spot the Pattern", subtitle: unit.patternSummary, category: "pattern" },
+      { id: 3, title: "Hear the Contrast", subtitle: "Choose between two words", category: "contrast" },
+      { id: 4, title: "Listening Choice", subtitle: "Listen and choose from three", category: "listening" },
+      { id: 5, title: "Exam Challenge", subtitle: "Same / Different · Odd One Out", category: "challenge" }
+    ];
+  }
 
   let onExit = null;
   let course = null;
@@ -53,6 +55,8 @@
   }
   function wordFor(value) { return unit.words.find((item) => item.word === value); }
   function soundLabel(word) { return unit.soundLabels[word.vowelType] || word.vowelType; }
+  function soundIds() { return [...new Set(unit.words.map((word) => word.vowelType))]; }
+  function soundChoices() { return soundIds().map((id) => unit.soundLabels[id] || id); }
   function patternFor(id) { return unit.patterns.find((item) => item.id === id); }
   function patternLabel(id) { return patternFor(id)?.display || id; }
   function sessionId(prefix, index) { return `${prefix}-${Date.now()}-${index}`; }
@@ -63,6 +67,7 @@
     elements.view = document.getElementById("phonics-view");
     elements.stage = document.getElementById("phonics-stage");
     elements.home = document.getElementById("phonics-home-button");
+    elements.units = document.getElementById("phonics-units-button");
     elements.settings = document.getElementById("phonics-settings-button");
     elements.courseLabel = document.getElementById("phonics-course-label");
     elements.unitTitle = document.getElementById("phonics-unit-title");
@@ -78,12 +83,28 @@
     saveJson(MASTERY_KEY, mastery);
   }
 
+  function renderUnitPicker() {
+    session = null;
+    study = null;
+    elements.stage.innerHTML = `
+      <section class="phonics-unit-picker">
+        <header><p class="eyebrow">SOUND IT OUT 2</p><h2>Choose a unit</h2><p>每次可選一課，使用五個階段練習該課的發音組合。</p></header>
+        <div class="phonics-unit-grid">
+          ${course.units.map((item) => `<button class="phonics-unit-card${item.id === unit.id ? " is-current" : ""}" type="button" data-phonics-unit="${escapeHtml(item.id)}">
+            <span>UNIT ${item.number}</span><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(item.classificationSummary)}</small>
+          </button>`).join("")}
+        </div>
+      </section>`;
+  }
+
   function renderHome() {
     session = null;
     study = null;
     const complete = completedLevel();
     const modeLabel = settings.mode === "quiz" ? "Quiz Mode" : "Practice Mode";
+    const unitLevels = levels();
     elements.stage.innerHTML = `
+      <div class="phonics-unit-switcher"><p>Unit ${unit.number} · ${escapeHtml(unit.title)}</p><button type="button" data-choose-unit>Change Unit</button></div>
       <section class="phonics-welcome">
         <div>
           <span class="phonics-mode-pill">${escapeHtml(modeLabel)}</span>
@@ -94,7 +115,7 @@
         <button class="button button-primary phonics-quiz-start" type="button" data-start-quiz>${settings.mode === "quiz" ? "Start Quiz" : "Start Mixed Practice"}</button>
       </section>
       <section class="phonics-level-grid" aria-label="Practice levels">
-        ${LEVELS.map((level) => {
+        ${unitLevels.map((level) => {
           const locked = level.id > complete + 1;
           const done = level.id <= complete;
           return `<article class="phonics-level-card${locked ? " is-locked" : ""}${done ? " is-done" : ""}">
@@ -107,7 +128,7 @@
       <section class="phonics-extra-panel">
         <div><p class="eyebrow">MORE WAYS TO PRACTICE</p><h2>Low-pressure activities</h2></div>
         <div class="phonics-extra-actions">
-          <button type="button" data-extra="sound-sort">Short / Long Sort</button>
+          <button type="button" data-extra="sound-sort">Sound Group Sort</button>
           <button type="button" data-extra="pattern-sort">Pattern Sort</button>
           <button type="button" data-extra="flip">Flip Cards</button>
           <button type="button" data-extra="read">Read First</button>
@@ -119,20 +140,21 @@
   }
 
   function recognitionQuestions(count, prefix = "recognition") {
-    const longs = unit.words.filter((word) => word.core && word.vowelType === unit.longSound);
-    const shorts = unit.words.filter((word) => word.vowelType === unit.shortSound);
-    return take([...take(longs, Math.ceil(count / 2)), ...take(shorts, Math.floor(count / 2))], count).map((word, index) => ({
-      id: sessionId(prefix, index), category: "recognition", type: "choice", prompt: "Short a or Long a?", displayWord: word.word,
-      answer: soundLabel(word), choices: [unit.soundLabels[unit.shortSound], unit.soundLabels[unit.longSound]], word,
-      hint: "Look at the spelling and say the vowel sound slowly."
+    const groups = soundIds();
+    const perGroup = Math.max(1, Math.ceil(count / groups.length));
+    const pool = groups.flatMap((id) => take(unit.words.filter((word) => word.vowelType === id), perGroup));
+    return take(pool, count).map((word, index) => ({
+      id: sessionId(prefix, index), category: "recognition", type: "choice", prompt: unit.recognitionPrompt, displayWord: word.word,
+      answer: soundLabel(word), choices: soundChoices(), word,
+      hint: "Look at the spelling and say the target sound slowly."
     }));
   }
 
   function patternQuestions(count, prefix = "pattern") {
-    return take(unit.words.filter((word) => word.core && word.vowelType === unit.longSound), count).map((word, index) => ({
+    return take(unit.words.filter((word) => word.core), count).map((word, index) => ({
       id: sessionId(prefix, index), category: "pattern", type: "choice", prompt: "Which pattern?", displayWord: word.word,
       answer: patternLabel(word.pattern), choices: unit.patterns.map((pattern) => pattern.display), word,
-      hint: "Look for the letters making the Long a sound."
+      hint: "Look for the letters making the target sound."
     }));
   }
 
@@ -146,10 +168,11 @@
 
   function listeningQuestions(count) {
     const pool = unit.words;
-    return take(pool.filter((word) => word.core || word.vowelType === unit.shortSound), count).map((answerWord, index) => {
+    return take(pool, count).map((answerWord, index) => {
       const otherSound = pool.filter((word) => word.vowelType !== answerWord.vowelType && word.word !== answerWord.word);
       const sameSound = pool.filter((word) => word.vowelType === answerWord.vowelType && word.word !== answerWord.word);
-      const choices = shuffled([answerWord.word, take(otherSound, 1)[0].word, take(sameSound, 1)[0].word]);
+      const distractors = shuffled([...otherSound, ...sameSound]).filter((word, position, all) => all.findIndex((item) => item.word === word.word) === position);
+      const choices = shuffled([answerWord.word, ...take(distractors, 2).map((word) => word.word)]);
       return { id: sessionId("listening", index), category: "listening", type: "audio-choice", prompt: "Listen and choose.",
         audioWord: answerWord, answer: answerWord.word, choices, hint: "Replay the sound, then compare the vowel." };
     });
@@ -160,22 +183,22 @@
     return take(pool, count).map((displayWord, index) => {
       const same = Math.random() >= 0.5;
       const candidates = pool.filter((word) => word.word !== displayWord.word && (same ? word.vowelType === displayWord.vowelType : word.vowelType !== displayWord.vowelType));
-      const audioWord = take(candidates, 1)[0];
+      const audioWord = take(candidates.length ? candidates : pool.filter((word) => word.word !== displayWord.word), 1)[0];
       return { id: sessionId("same-different", index), category: "same-different", type: "audio-choice",
-        prompt: "Does the audio have the same vowel sound?", displayWord: displayWord.word, audioWord,
+        prompt: "Does the audio have the same target sound?", displayWord: displayWord.word, audioWord,
         answer: same ? "Same" : "Different", choices: ["Same", "Different"], word: displayWord,
-        hint: "Compare only the vowel sound, not the whole word." };
+        hint: "Compare the target sound, not the whole word." };
     });
   }
 
   function oddQuestions(count) {
-    const longWords = unit.words.filter((word) => word.core && word.vowelType === unit.longSound);
-    const shortWords = unit.words.filter((word) => word.vowelType === unit.shortSound);
+    const groups = soundIds().map((id) => unit.words.filter((word) => word.vowelType === id)).filter((items) => items.length);
     return Array.from({ length: count }, (_unused, index) => {
-      const oddIsShort = index % 2 === 0;
-      const pair = take(oddIsShort ? longWords : shortWords, 2);
-      const odd = take(oddIsShort ? shortWords : longWords, 1)[0];
-      return { id: sessionId("odd", index), category: "odd", type: "choice", prompt: "Which word has a different vowel sound?",
+      const pairGroup = groups[index % groups.length];
+      const oddGroup = groups[(index + 1) % groups.length] || groups[0];
+      const pair = take(pairGroup, 2);
+      const odd = take(oddGroup, 1)[0];
+      return { id: sessionId("odd", index), category: "odd", type: "choice", prompt: "Which word has a different target sound?",
         answer: odd.word, choices: shuffled([...pair.map((word) => word.word), odd.word]), word: odd,
         explanationWords: [...pair, odd], hint: "Read each word and compare its vowel sound." };
     });
@@ -184,7 +207,7 @@
   function mysteryQuestions(count) {
     return take(unit.words.filter((word) => word.core), count).map((word, index) => ({
       id: sessionId("mystery", index), category: "pattern", type: "choice", prompt: "Find the mystery word.",
-      displayHtml: `<span>Long a</span><span>${escapeHtml(patternLabel(word.pattern))}</span><span>${escapeHtml(word.clue)}</span>`,
+      displayHtml: `<span>${escapeHtml(unit.focus)}</span><span>${escapeHtml(patternLabel(word.pattern))}</span><span>${escapeHtml(word.clue)}</span>`,
       answer: word.word, choices: shuffled([word.word, ...take(unit.words.filter((item) => item.core && item.word !== word.word), 3).map((item) => item.word)]),
       word, hint: "Use the sound, pattern, and first-letter clue."
     }));
@@ -258,7 +281,7 @@
     const item = question.word || question.audioWord;
     if (question.category === "odd") return question.explanationWords.map((word) => `${word.word} → ${soundLabel(word)}`).join(" · ");
     if (!item) return question.answer;
-    return item.vowelType === unit.longSound ? `${soundLabel(item)} · ${patternLabel(item.pattern)}` : soundLabel(item);
+    return item.core ? `${soundLabel(item)} · ${patternLabel(item.pattern)}` : soundLabel(item);
   }
 
   function answerQuestion(value) {
@@ -298,7 +321,7 @@
   }
 
   function categoryLabel(category) {
-    return ({ recognition: "Short / Long", pattern: "Pattern", listening: "Listening", "same-different": "Same / Different", odd: "Odd One Out" })[category] || category;
+    return ({ recognition: "Sound Groups", pattern: "Pattern", listening: "Listening", "same-different": "Same / Different", odd: "Odd One Out" })[category] || category;
   }
 
   function resultRows() {
@@ -327,7 +350,7 @@
     const counts = {};
     wrong.forEach((answer) => {
       const item = answer.question.word || answer.question.audioWord;
-      const key = item?.pattern && item.pattern !== "short-a" ? `${patternLabel(item.pattern)} vs Short a` : categoryLabel(answer.question.category);
+      const key = item?.pattern && patternFor(item.pattern) ? patternLabel(item.pattern) : categoryLabel(answer.question.category);
       counts[key] = (counts[key] || 0) + 1;
     });
     return Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0];
@@ -340,7 +363,7 @@
     const wrongQuestions = session.questions.filter((question) => session.wrongIds.has(question.id));
     elements.stage.innerHTML = `
       <section class="phonics-results">
-        <div class="phonics-results-hero"><span>★</span><p>Great job!</p><h2>${escapeHtml(unit.soundLabels[unit.shortSound])} / ${escapeHtml(unit.soundLabels[unit.longSound])}</h2><strong>${correct} / ${total} correct</strong></div>
+        <div class="phonics-results-hero"><span>★</span><p>Great job!</p><h2>${escapeHtml(unit.resultTitle)}</h2><strong>${correct} / ${total} correct</strong></div>
         <div class="phonics-results-grid">
           <section><h3>Skill breakdown</h3><ul>${resultRows()}</ul></section>
           <section><h3>Patterns</h3><ul>${patternMastery()}</ul></section>
@@ -374,7 +397,7 @@
   }
 
   function startStudy(type) {
-    if (type === "sound-sort") return startSession("Short / Long Sort", recognitionQuestions(10, "sound-sort"), { mode: "practice" });
+    if (type === "sound-sort") return startSession("Sound Group Sort", recognitionQuestions(10, "sound-sort"), { mode: "practice" });
     if (type === "pattern-sort") return startSession("Pattern Sort", patternQuestions(8, "pattern-sort"), { mode: "practice" });
     if (type === "mystery") return startSession("Mystery Word", mysteryQuestions(6), { mode: "practice" });
     study = { type, words: shuffled(unit.words.filter((word) => word.core)), index: 0, revealed: false };
@@ -430,15 +453,22 @@
     const level = event.target.closest("[data-start-level]");
     if (level) {
       const number = Number(level.dataset.startLevel);
-      return startSession(`Level ${number} · ${LEVELS[number - 1].title}`, questionsForLevel(number), { mode: "practice", level: number });
+      return startSession(`Level ${number} · ${levels()[number - 1].title}`, questionsForLevel(number), { mode: "practice", level: number });
     }
+    const unitButton = event.target.closest("[data-phonics-unit]");
+    if (unitButton) {
+      const unitId = unitButton.dataset.phonicsUnit;
+      window.LessonRoutes.navigate(window.LessonRoutes.phonicsPathFor(course.id, unitId));
+      return open(course.id, unitId);
+    }
+    if (event.target.closest("[data-choose-unit]")) return renderUnitPicker();
     const extra = event.target.closest("[data-extra]");
     if (extra) return startStudy(extra.dataset.extra);
     const play = event.target.closest("[data-play-word]");
     if (play) return playWord(play.dataset.playWord);
     if (event.target.closest("[data-next-question]")) return nextQuestion();
     if (event.target.closest("[data-show-hint]")) { session.showHint = true; return renderQuestion(); }
-    if (event.target.closest("[data-start-quiz]")) return startSession(settings.mode === "quiz" ? "Unit 1 · Quick Quiz" : "Unit 1 · Mixed Practice", quizQuestions(), { mode: settings.mode });
+    if (event.target.closest("[data-start-quiz]")) return startSession(settings.mode === "quiz" ? `Unit ${unit.number} · Quick Quiz` : `Unit ${unit.number} · Mixed Practice`, quizQuestions(), { mode: settings.mode });
     if (event.target.closest("[data-retry-wrong]")) return startSession("Practice Wrong Answers", session.resultWrongQuestions, { mode: "practice", retrySource: session });
     if (event.target.closest("[data-study-reveal]")) { study.revealed = true; return renderStudy(); }
     if (event.target.closest("[data-study-next]")) {
@@ -471,10 +501,15 @@
     if (typeof onExit === "function") onExit();
   }
 
+  function showUnits() {
+    if (course && unit) renderUnitPicker();
+  }
+
   function init(options = {}) {
     cacheElements();
     onExit = options.onExit;
     elements.home.addEventListener("click", close);
+    elements.units.addEventListener("click", renderUnitPicker);
     elements.settings.addEventListener("click", openSettings);
     elements.modalClose.addEventListener("click", closeSettings);
     elements.modal.addEventListener("click", (event) => { if (event.target === elements.modal) closeSettings(); });
@@ -482,5 +517,5 @@
     elements.stage.addEventListener("click", handleStageClick);
   }
 
-  window.PhonicsPractice = { init, open, close };
+  window.PhonicsPractice = { init, open, close, showUnits };
 })();

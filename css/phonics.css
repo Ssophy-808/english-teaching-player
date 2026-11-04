@@ -22,7 +22,22 @@
 }
 .phonics-app-header h1 { margin: 0; color: var(--navy); font-size: clamp(1.25rem, 3vw, 2rem); }
 .phonics-app-header .eyebrow { margin-bottom: 3px; }
+.phonics-header-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 9px; }
 .phonics-stage { width: min(1180px, calc(100% - 40px)); margin: 0 auto; padding: clamp(30px, 6vw, 72px) 0 80px; }
+
+.phonics-unit-picker > header { margin-bottom: 26px; text-align: center; }
+.phonics-unit-picker > header h2 { margin: 5px 0 8px; color: var(--navy); font-size: clamp(2rem, 5vw, 3.7rem); }
+.phonics-unit-picker > header p:last-child { margin: 0; color: var(--muted); font-weight: 700; }
+.phonics-unit-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.phonics-unit-card { display: grid; min-height: 190px; align-content: start; border: 1px solid #dce7f3; border-radius: 24px; padding: 22px; color: inherit; background: white; box-shadow: 0 12px 30px rgba(31,65,114,.08); cursor: pointer; text-align: left; }
+.phonics-unit-card:hover { border-color: var(--blue); transform: translateY(-3px); }
+.phonics-unit-card.is-current { border: 2px solid var(--blue); background: #f1f7ff; }
+.phonics-unit-card span { color: var(--blue); font-size: .78rem; font-weight: 900; letter-spacing: .1em; }
+.phonics-unit-card strong { margin: 12px 0 8px; color: var(--navy); font-size: 1.35rem; }
+.phonics-unit-card small { color: var(--muted); font-weight: 700; line-height: 1.45; }
+.phonics-unit-switcher { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 18px; border-radius: 18px; padding: 14px 18px; background: #eaf3ff; }
+.phonics-unit-switcher p { margin: 0; color: var(--navy); font-weight: 850; }
+.phonics-unit-switcher button { border: 0; border-radius: 12px; padding: 10px 14px; color: var(--blue); background: white; cursor: pointer; font-weight: 850; }
 
 .phonics-welcome {
   display: flex;
@@ -145,6 +160,7 @@
 .phonics-settings-card > .button { width: 100%; margin-top: 14px; }
 
 @media (max-width: 1000px) {
+  .phonics-unit-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .phonics-level-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .phonics-level-card:last-child { grid-column: 1 / -1; min-height: 220px; }
   .phonics-extra-panel { align-items: flex-start; flex-direction: column; }
@@ -153,7 +169,10 @@
 
 @media (max-width: 680px) {
   .phonics-app-header { grid-template-columns: auto 1fr; }
-  .phonics-app-header .flow-button { grid-column: 1 / -1; width: 100%; }
+  .phonics-header-actions { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
+  .phonics-header-actions .flow-button { width: 100%; }
+  .phonics-unit-grid { grid-template-columns: 1fr; }
+  .phonics-unit-card { min-height: 150px; }
   .phonics-stage { width: min(100% - 24px, 1180px); padding-top: 20px; }
   .phonics-welcome { align-items: stretch; flex-direction: column; padding: 25px; }
   .phonics-welcome h2 { font-size: 2.2rem; }

@@ -358,10 +358,15 @@ assert.deepEqual(
 const phonicsContext = { window: {} };
 vm.runInNewContext(require("node:fs").readFileSync(path.join(root, "data/phonics-data.js"), "utf8"), phonicsContext);
 const phonicsUnit = phonicsContext.window.PHONICS_COURSES[0].units[0];
+assert.equal(phonicsContext.window.PHONICS_COURSES[0].units.length, 12, "Sound It Out 2 must expose all 12 units");
 assert.equal(phonicsUnit.title, "Long a");
 assert.deepEqual(Array.from(phonicsUnit.patterns, (pattern) => pattern.display), ["A space E", "A-I", "A-Y", "E-I-G-H"]);
 assert.deepEqual(Array.from(phonicsUnit.words.filter((word) => word.core), (word) => word.word), ["cape", "late", "nail", "rain", "hay", "ray", "eight", "weigh"]);
 assert.ok(phonicsUnit.words.every((word) => Object.hasOwn(word, "audio")), "Every phonics word must expose an audio field");
+assert.equal(phonicsContext.window.PHONICS_COURSES[0].units[4].title, "Long u");
+assert.deepEqual(Array.from(phonicsContext.window.PHONICS_COURSES[0].units[8].patterns, (pattern) => pattern.id), ["er", "ir", "ur"]);
+assert.deepEqual(Array.from(phonicsContext.window.PHONICS_COURSES[0].units[11].words.filter((word) => word.core), (word) => word.word), ["ghee", "ghost", "cough", "laugh", "phone", "photo", "dolphin", "graph"]);
+assert.ok(phonicsContext.window.PHONICS_COURSES[0].units.every((item) => item.words.every((word) => Object.hasOwn(word, "audio"))), "Every SIO2 word must expose an audio field");
 assert.match(indexHtml, /id="phonics-view"/, "The phonics student view must be mounted in the existing SPA");
 assert.match(indexHtml, /js\/phonics-practice\.js/, "The reusable phonics activity engine must load");
 

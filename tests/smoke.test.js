@@ -349,5 +349,20 @@ assert.equal(routeContext.LessonRoutes.pathFor("book-1", "unit-2", 4), "/english
 assert.equal(routeContext.LessonRoutes.pathFor("book-3", "unit-10", 1), "/english-teaching-player/book3/unit10/day1/");
 assert.equal(routeContext.LessonRoutes.pathFor("book-3", "unit-13", 5), "/english-teaching-player/book3/unit13/day5/");
 assert.deepEqual({ ...routeContext.LessonRoutes.parse("/english-teaching-player/book2/unit9/day3/") }, { bookId: "book-2", unitId: "unit-9", day: 3 });
+assert.equal(routeContext.LessonRoutes.phonicsPathFor("sio2", "unit1"), "/english-teaching-player/phonics/sio2/unit1/");
+assert.deepEqual(
+  { ...routeContext.LessonRoutes.parse("/english-teaching-player/phonics/sio2/unit1/") },
+  { phonics: true, courseId: "sio2", phonicsUnitId: "unit1", bookId: "", unitId: "", day: 0 }
+);
 
-console.log("Smoke tests passed: catalog, review day structure, worksheets, Passport integrity, activities, and routes.");
+const phonicsContext = { window: {} };
+vm.runInNewContext(require("node:fs").readFileSync(path.join(root, "data/phonics-data.js"), "utf8"), phonicsContext);
+const phonicsUnit = phonicsContext.window.PHONICS_COURSES[0].units[0];
+assert.equal(phonicsUnit.title, "Long a");
+assert.deepEqual(Array.from(phonicsUnit.patterns, (pattern) => pattern.display), ["A space E", "A-I", "A-Y", "E-I-G-H"]);
+assert.deepEqual(Array.from(phonicsUnit.words.filter((word) => word.core), (word) => word.word), ["cape", "late", "nail", "rain", "hay", "ray", "eight", "weigh"]);
+assert.ok(phonicsUnit.words.every((word) => Object.hasOwn(word, "audio")), "Every phonics word must expose an audio field");
+assert.match(indexHtml, /id="phonics-view"/, "The phonics student view must be mounted in the existing SPA");
+assert.match(indexHtml, /js\/phonics-practice\.js/, "The reusable phonics activity engine must load");
+
+console.log("Smoke tests passed: catalog, review day structure, worksheets, Passport integrity, activities, routes, and phonics data.");

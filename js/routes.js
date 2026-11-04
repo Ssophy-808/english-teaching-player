@@ -18,9 +18,17 @@
     return `${basePath}${parts.join("/")}${parts.length ? "/" : ""}`;
   }
 
+  function phonicsPathFor(courseId, unitId) {
+    const parts = ["phonics", String(courseId || "sio2"), String(unitId || "unit1")];
+    return `${basePath}${parts.join("/")}/`;
+  }
+
   function parse(pathname = window.location.pathname) {
     const relative = pathname.startsWith(basePath) ? pathname.slice(basePath.length) : pathname;
     const parts = relative.split("/").filter(Boolean);
+    if (parts[0]?.toLowerCase() === "phonics") {
+      return { phonics: true, courseId: parts[1] || "sio2", phonicsUnitId: parts[2] || "unit1", bookId: "", unitId: "", day: 0 };
+    }
     return {
       bookId: expanded(parts[0], "book"),
       unitId: expanded(parts[1], "unit"),
@@ -41,5 +49,5 @@
   }
 
   restoreRedirectedRoute();
-  window.LessonRoutes = { basePath, parse, pathFor, navigate };
+  window.LessonRoutes = { basePath, parse, pathFor, phonicsPathFor, navigate };
 })();

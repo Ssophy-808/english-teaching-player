@@ -11,7 +11,9 @@ class SpaHandler(SimpleHTTPRequestHandler):
     def do_GET(self):
         requested = self.path.split("?", 1)[0]
         local = SITE / requested.lstrip("/")
-        if re.match(r"^/book\d+(?:/unit\d+)?(?:/day\d+)?/?$", requested) and not local.exists():
+        app_route = re.match(r"^/book\d+(?:/unit\d+)?(?:/day\d+)?/?$", requested)
+        phonics_route = re.match(r"^/phonics/[^/]+(?:/[^/]+)?/?$", requested)
+        if (app_route or phonics_route) and not local.exists():
             self.path = "/index.html"
         return super().do_GET()
 

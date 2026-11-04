@@ -2,6 +2,79 @@
 
 A static, projection-friendly lesson player for English teachers. It includes a phase-based teaching flow, Book → Unit → Lesson navigation, one-step-at-a-time playback, Previous / Next controls, keyboard navigation, progress, fullscreen, saved local progress, Wordwall, picture quizzes, in-flow review games, and a no-prep classroom toolbox.
 
+## Sound It Out / Phonics Practice
+
+The home library now includes a separate **Sound It Out** card. It opens a reusable phonics-practice module inside this SPA rather than copying textbook pages into the lesson player. The first completed prototype is:
+
+```text
+/phonics/sio2/unit1/
+Sound It Out 2 · Unit 1 · Long a
+```
+
+The prototype follows a five-level progression:
+
+1. Visual short/long recognition
+2. Spelling-pattern recognition
+3. Two-choice sound contrast
+4. Three-choice listening
+5. Same/different and limited odd-one-out exam practice
+
+Each question is shown alone. Practice Mode gives immediate positive feedback, keeps an incorrect question on screen, reveals a hint after a second error, and provides a wrong-answer-only retry. Quiz Mode stores answers without revealing correctness and reports results by skill and spelling pattern at the end. Level mastery and teacher settings are stored in browser `localStorage`; there is no student account or leaderboard.
+
+Reusable low-pressure activities currently include Short/Long Sort, Pattern Sort, Flip Cards, Read First, and Mystery Word. Teacher Settings control Practice/Quiz mode, question count, included skills, shuffling, and progress visibility.
+
+### Phonics files and components
+
+- `data/phonics-data.js` contains courses, units, spelling patterns, word records, contrast pairs, Wordwall URLs, and audio metadata.
+- `js/phonics-practice.js` contains reusable question generators, the five-level activity engine, study cards, audio interface, Practice/Quiz behavior, retry, mastery, and result analysis.
+- `css/phonics.css` contains the responsive student and teacher-control layouts.
+- `js/routes.js`, `js/app.js`, `index.html`, `404.html`, and `tools/serve_site.py` connect the module to the existing library and permanent routes.
+
+### Add another phonics Unit
+
+Add a unit object to the appropriate course in `data/phonics-data.js`. UI and activity HTML must not be duplicated. A unit supplies stable IDs, sound labels, patterns, words, contrast pairs, and optional Wordwall/audio metadata:
+
+```js
+{
+  id: "unit2",
+  number: 2,
+  title: "Long e",
+  shortSound: "short-e",
+  longSound: "long-e",
+  soundLabels: { "short-e": "Short e", "long-e": "Long e" },
+  patterns: [
+    { id: "e_e", display: "E space E", words: ["eve", "these"] },
+    { id: "ee", display: "E-E", words: ["bee", "feet"] },
+    { id: "ea", display: "E-A", words: ["pea", "meat"] },
+    { id: "ey", display: "E-Y", words: ["honey", "key"] }
+  ],
+  words: [
+    { word: "eve", vowelType: "long-e", pattern: "e_e", audio: "", core: true }
+  ],
+  contrastPairs: [["pet", "Pete"]],
+  wordwall: { url: "", label: "Open Wordwall" },
+  audioPolicy: { useBrowserTtsFallback: true, locale: "en-US" }
+}
+```
+
+`display` is the teacher-facing pronunciation of a pattern. Silent-e patterns should use `A space E`, `E space E`, or `I space E`, not a hyphen label.
+
+### Add recorded audio
+
+Every word record has an independent `audio` field:
+
+```js
+{ word: "rain", vowelType: "long-a", pattern: "ai", audio: "assets/audio/sio2/unit1/rain.mp3", core: true }
+```
+
+When `audio` is non-empty, **Play Sound** uses that file. When it is empty, the UI explicitly identifies browser text-to-speech as a fallback. No fake audio files are created. Set `useBrowserTtsFallback` to `false` to disable fallback for a Unit.
+
+### Current placeholders
+
+- Unit 1 word audio paths are empty and use the separately labeled browser-voice fallback.
+- Unit 1 Wordwall URL is empty; paste the supplied activity URL into `wordwall.url`.
+- Only Unit 1 is present by design. Do not duplicate it into Units 2–12 until the prototype is approved.
+
 ## Current architecture
 
 This remains one static single-page application. Existing Player, Wordwall, Show Book, Passport, classroom tools, Test Bank, progress and fullscreen code is retained. The September 2026 refactor adds a route layer and a reusable workbook layer around those working modules.

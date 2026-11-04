@@ -49,7 +49,12 @@
       subtitle: book.units.length ? `${book.subtitle} · ${book.units.filter((unit) => !unit.isReview).length} units + ${book.units.filter((unit) => unit.isReview).length} reviews` : `${book.subtitle} · Coming soon`,
       action: `book:${book.id}`,
       comingSoon: !book.units.length
-    })).join("");
+    })).join("") + cardMarkup({
+      number: "SIO 2",
+      title: "Sound It Out",
+      subtitle: "Phonics Practice · Unit 1 Long a prototype",
+      action: "phonics:sio2"
+    });
     scrollToTop();
   }
 
@@ -120,6 +125,10 @@
 
   function applyRoute() {
     const route = window.LessonRoutes.parse();
+    if (route.phonics) {
+      window.PhonicsPractice?.open(route.courseId, route.phonicsUnitId);
+      return;
+    }
     if (!route.bookId) { renderBooks(); return; }
     const book = catalog.find((item) => item.id === route.bookId);
     if (!book) { renderBooks(); return; }
@@ -162,6 +171,17 @@
     if (type === "lesson" && selectedBook && selectedUnit) {
       const lesson = selectedUnit.lessons.find((item) => item.id === id);
       if (lesson) openLesson(selectedBook, selectedUnit, lesson);
+    }
+    if (type === "phonics") {
+      window.LessonRoutes.navigate(window.LessonRoutes.phonicsPathFor(id, "unit1"));
+      window.PhonicsPractice?.open(id, "unit1");
+    }
+  });
+
+  window.PhonicsPractice?.init({
+    onExit() {
+      window.LessonRoutes.navigate(window.LessonRoutes.pathFor(), true);
+      renderBooks();
     }
   });
 

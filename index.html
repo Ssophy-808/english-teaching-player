@@ -8,12 +8,14 @@
     <title>English Teaching Player</title>
     <script>
       (function () {
-        const match = location.pathname.match(/^(.*?\/)(?:book\d+(?:\/unit\d+)?(?:\/day\d+)?\/?)?$/i);
-        document.write(`<base href="${match ? match[1] : "./"}">`);
+        const match = location.pathname.match(/^(.*?\/)(?:book\d+(?:\/unit\d+)?(?:\/day\d+)?|phonics\/[^/]+(?:\/[^/]+)?)\/?$/i);
+        const fallback = location.pathname.endsWith("/") ? location.pathname : location.pathname.replace(/[^/]*$/, "");
+        document.write(`<base href="${match ? match[1] : fallback || "./"}">`);
       })();
     </script>
     <link rel="stylesheet" href="css/style.css?v=22">
     <link rel="stylesheet" href="css/worksheet.css?v=12">
+    <link rel="stylesheet" href="css/phonics.css?v=1">
   </head>
   <body>
     <noscript>請啟用 JavaScript 才能使用教材播放器。</noscript>
@@ -45,6 +47,38 @@
         <div id="library-grid" class="library-grid"></div>
       </section>
     </main>
+
+    <main id="phonics-view" class="phonics-view" hidden aria-label="Sound It Out phonics practice">
+      <header class="phonics-app-header">
+        <button id="phonics-home-button" class="icon-button" type="button" aria-label="Back to course library" title="Back to course library">⌂</button>
+        <div>
+          <p id="phonics-course-label" class="eyebrow">SOUND IT OUT · PHONICS PRACTICE</p>
+          <h1 id="phonics-unit-title">Unit 1 · Long a</h1>
+        </div>
+        <button id="phonics-settings-button" class="flow-button" type="button">⚙ Teacher Settings</button>
+      </header>
+      <section id="phonics-stage" class="phonics-stage" aria-live="polite"></section>
+    </main>
+
+    <section id="phonics-settings-modal" class="phonics-settings-modal" hidden aria-label="Phonics teacher settings" aria-modal="true" role="dialog">
+      <form id="phonics-settings-form" class="phonics-settings-card">
+        <header>
+          <div><p class="eyebrow">TEACHER CONTROLS</p><h2>Practice Settings</h2></div>
+          <button id="phonics-settings-close" class="icon-button" type="button" aria-label="Close settings">×</button>
+        </header>
+        <fieldset><legend>Mode</legend><label><input type="radio" name="phonics-mode" value="practice" checked> Practice</label><label><input type="radio" name="phonics-mode" value="quiz"> Quiz</label></fieldset>
+        <label>Number of questions<select name="questionCount"><option value="8">8</option><option value="10">10</option><option value="14" selected>14</option></select></label>
+        <fieldset><legend>Include</legend>
+          <label><input type="checkbox" name="include" value="recognition" checked> Short / Long</label>
+          <label><input type="checkbox" name="include" value="pattern" checked> Pattern</label>
+          <label><input type="checkbox" name="include" value="listening" checked> Listening</label>
+          <label><input type="checkbox" name="include" value="odd" checked> Odd One Out</label>
+        </fieldset>
+        <label class="phonics-setting-check"><input type="checkbox" name="shuffle" checked> Shuffle questions and choices</label>
+        <label class="phonics-setting-check"><input type="checkbox" name="showProgress" checked> Show progress</label>
+        <button class="button button-primary" type="submit">Save Settings</button>
+      </form>
+    </section>
 
     <main id="player-view" class="player-view" hidden aria-label="Lesson player">
       <header class="player-header">
@@ -204,6 +238,7 @@
     <script src="data/book3.js?v=7" defer></script>
     <script src="data/book3-review.js?v=2" defer></script>
     <script src="data/review-units.js?v=4" defer></script>
+    <script src="data/phonics-data.js?v=1" defer></script>
     <script src="data/course-schema.js?v=2" defer></script>
     <script src="js/teaching-flow.js?v=58" defer></script>
     <script src="data/worksheet-data.js?v=28" defer></script>
@@ -216,6 +251,7 @@
     <script src="js/test-builder.js?v=14" defer></script>
     <script src="js/daily-handout.js?v=1" defer></script>
     <script src="js/routes.js?v=1" defer></script>
+    <script src="js/phonics-practice.js?v=1" defer></script>
     <script src="js/player.js?v=7" defer></script>
     <script src="js/app.js?v=6" defer></script>
   </body>

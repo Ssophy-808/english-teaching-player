@@ -23,11 +23,24 @@
     return `${basePath}${parts.join("/")}/`;
   }
 
+  function literacyPathFor(bookId, unitId) {
+    const parts = ["literacy", compact(bookId || "book1"), compact(unitId || "unit4")];
+    return `${basePath}${parts.join("/")}/`;
+  }
+
   function parse(pathname = window.location.pathname) {
     const relative = pathname.startsWith(basePath) ? pathname.slice(basePath.length) : pathname;
     const parts = relative.split("/").filter(Boolean);
     if (parts[0]?.toLowerCase() === "phonics") {
       return { phonics: true, courseId: parts[1] || "sio2", phonicsUnitId: parts[2] || "unit1", bookId: "", unitId: "", day: 0 };
+    }
+    if (parts[0]?.toLowerCase() === "literacy") {
+      return {
+        literacy: true,
+        literacyBookId: expanded(parts[1] || "book1", "book"),
+        literacyUnitId: expanded(parts[2] || "unit4", "unit"),
+        bookId: "", unitId: "", day: 0
+      };
     }
     return {
       bookId: expanded(parts[0], "book"),
@@ -49,5 +62,5 @@
   }
 
   restoreRedirectedRoute();
-  window.LessonRoutes = { basePath, parse, pathFor, phonicsPathFor, navigate };
+  window.LessonRoutes = { basePath, parse, pathFor, phonicsPathFor, literacyPathFor, navigate };
 })();

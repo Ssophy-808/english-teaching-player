@@ -354,6 +354,11 @@ assert.deepEqual(
   { ...routeContext.LessonRoutes.parse("/english-teaching-player/phonics/sio2/unit1/") },
   { phonics: true, courseId: "sio2", phonicsUnitId: "unit1", bookId: "", unitId: "", day: 0 }
 );
+assert.equal(routeContext.LessonRoutes.literacyPathFor("book1", "unit4"), "/english-teaching-player/literacy/book1/unit4/");
+assert.deepEqual(
+  { ...routeContext.LessonRoutes.parse("/english-teaching-player/literacy/book1/unit4/") },
+  { literacy: true, literacyBookId: "book-1", literacyUnitId: "unit-4", bookId: "", unitId: "", day: 0 }
+);
 
 const phonicsContext = { window: {} };
 vm.runInNewContext(require("node:fs").readFileSync(path.join(root, "data/phonics-data.js"), "utf8"), phonicsContext);
@@ -370,4 +375,18 @@ assert.ok(phonicsContext.window.PHONICS_COURSES[0].units.every((item) => item.wo
 assert.match(indexHtml, /id="phonics-view"/, "The phonics student view must be mounted in the existing SPA");
 assert.match(indexHtml, /js\/phonics-practice\.js/, "The reusable phonics activity engine must load");
 
-console.log("Smoke tests passed: catalog, review day structure, worksheets, Passport integrity, activities, routes, and phonics data.");
+const literacyContext = { window: {} };
+vm.runInNewContext(require("node:fs").readFileSync(path.join(root, "data/literacy-data.js"), "utf8"), literacyContext);
+const literacyBank = literacyContext.window.LITERACY_BANKS[0];
+assert.equal(literacyBank.id, "book1-unit4");
+assert.ok(literacyBank.questions.length >= 10, "The literacy demo bank must contain at least 10 reusable question groups");
+assert.ok(literacyBank.questions.some((question) => question.type === "reading" && question.questions.length >= 2), "The literacy bank must support reading sets with subquestions");
+assert.ok(literacyBank.questions.some((question) => question.image), "The literacy bank must support picture-plus-context questions");
+literacyBank.questions.filter((question) => question.image).forEach((question) => {
+  assert.ok(require("node:fs").existsSync(path.join(root, question.image)), `Literacy image must exist: ${question.image}`);
+});
+assert.ok(literacyBank.questions.every((question) => question.type === "reading" || (Array.isArray(question.choices) && Number.isInteger(question.answer))), "Every standalone literacy question must expose choices and an answer index");
+assert.match(indexHtml, /id="literacy-view"/, "The literacy practice view must be mounted in the existing SPA");
+assert.match(indexHtml, /js\/literacy-practice\.js/, "The reusable LiteracyQuestion engine must load");
+
+console.log("Smoke tests passed: catalog, review day structure, worksheets, Passport integrity, activities, routes, phonics, and literacy data.");

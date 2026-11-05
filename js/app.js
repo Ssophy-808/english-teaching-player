@@ -54,6 +54,11 @@
       title: "Sound It Out",
       subtitle: "Phonics Practice · 12 interactive units",
       action: "phonics:sio2"
+    }) + cardMarkup({
+      number: "THINK",
+      title: "素養題練習",
+      subtitle: "Context Clues · 情境推理與短閱讀",
+      action: "literacy:book1-unit4"
     });
     scrollToTop();
   }
@@ -129,6 +134,11 @@
       window.PhonicsPractice?.open(route.courseId, route.phonicsUnitId);
       return;
     }
+    if (route.literacy) {
+      const bankId = `${String(route.literacyBookId).replaceAll("-", "")}-${String(route.literacyUnitId).replaceAll("-", "")}`;
+      window.LiteracyPractice?.open(bankId);
+      return;
+    }
     if (!route.bookId) { renderBooks(); return; }
     const book = catalog.find((item) => item.id === route.bookId);
     if (!book) { renderBooks(); return; }
@@ -177,9 +187,23 @@
       window.PhonicsPractice?.open(id, "unit1");
       window.PhonicsPractice?.showUnits();
     }
+    if (type === "literacy") {
+      const practiceBank = (window.LITERACY_BANKS || []).find((item) => item.id === id);
+      if (practiceBank) {
+        window.LessonRoutes.navigate(window.LessonRoutes.literacyPathFor(practiceBank.bookId, practiceBank.unitId));
+        window.LiteracyPractice?.open(practiceBank.id);
+      }
+    }
   });
 
   window.PhonicsPractice?.init({
+    onExit() {
+      window.LessonRoutes.navigate(window.LessonRoutes.pathFor(), true);
+      renderBooks();
+    }
+  });
+
+  window.LiteracyPractice?.init({
     onExit() {
       window.LessonRoutes.navigate(window.LessonRoutes.pathFor(), true);
       renderBooks();

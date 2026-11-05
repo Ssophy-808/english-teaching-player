@@ -75,6 +75,57 @@ When `audio` is non-empty, **Play Sound** uses that file. When it is empty, the 
 - Unit 1–12 word audio paths are empty and use the separately labeled browser-voice fallback.
 - Unit 1–12 Wordwall URLs are empty; paste each supplied activity URL into its `wordwall.url`.
 
+## 素養題練習 / Literacy Practice
+
+The home library includes a separate **素養題練習** card. It opens an independent classroom-projection module at:
+
+```text
+/literacy/book1/unit4/
+```
+
+The first demo bank reviews Book 1 Units 1–4 and contains 12 reusable question groups. Its reading set expands into three slides, so a full practice run contains 14 one-question screens. The module supports context judgment, reverse-question inference, dialogue continuation, state inference, picture-plus-context questions, multi-clue reasoning, dialogue cloze, and reading sets with subquestions.
+
+Interaction behavior is shared by every future bank: large A/B/C buttons, `Correct!`, retry without revealing the answer, teacher-controlled **Show Answer**, explanation and reasoning clues, **Reset**, **Next Question**, random order, fullscreen, and a separate Teacher Mode with answer, explanation, grammar, skill, difficulty, and question type.
+
+### Literacy files
+
+- `data/literacy-data.js` contains all question banks and metadata. Questions are not embedded in the component.
+- `js/literacy-practice.js` contains the reusable `LiteracyQuestion` / `ContextQuestion` engine, reading-set expansion, interaction state, Teacher Mode, and fullscreen behavior.
+- `css/literacy.css` contains the responsive projection layout and large classroom controls.
+- `js/routes.js`, `js/app.js`, `index.html`, `404.html`, and `tools/serve_site.py` connect the module to the existing SPA and permanent URLs.
+
+### Add the next Unit
+
+Add another object to `window.LITERACY_BANKS` in `data/literacy-data.js`. Use compact route IDs such as `book1` and `unit5`; the route becomes `/literacy/book1/unit5/`.
+
+```js
+{
+  id: "book1-unit5",
+  bookId: "book1",
+  unitId: "unit5",
+  title: "Book 1 · Unit 5",
+  subtitle: "情境式素養題",
+  scope: "Only vocabulary and grammar already taught in this Unit",
+  questions: [
+    {
+      id: "b1u5-context-1",
+      type: "context",
+      context: ["Sentence one.", "Sentence two."],
+      question: "What is the best answer?",
+      choices: ["Choice A", "Choice B", "Choice C"],
+      answer: 1,
+      explanation: "A short teacher-facing explanation.",
+      reasoning: ["Clue one", "Clue two", "→ Conclusion"],
+      grammar: "Target grammar",
+      skill: "Infer from context",
+      difficulty: 2
+    }
+  ]
+}
+```
+
+For a picture question, add `image`, `imageAlt`, and `context`. For a reading set, use `type: "reading"`, add `passage: []`, and put two or three question objects inside `questions: []`. No component or HTML changes are needed.
+
 ## Current architecture
 
 This remains one static single-page application. Existing Player, Wordwall, Show Book, Passport, classroom tools, Test Bank, progress and fullscreen code is retained. The September 2026 refactor adds a route layer and a reusable workbook layer around those working modules.

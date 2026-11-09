@@ -49,6 +49,14 @@
     "tooth / teeth": "assets/images/book3/unit5/tooth.png",
     mouth: "assets/images/book3/unit5/mouth.png",
     "foot / feet": "assets/images/book3/unit5/foot.png",
+    hair: "assets/images/book3/unit6/long-hair.png",
+    long: "assets/images/book3/unit6/long-hair.png",
+    short: "assets/images/book3/unit6/short-hair.png",
+    curly: "assets/images/book3/unit6/curly-hair.png",
+    straight: "assets/images/book3/unit6/straight-hair.png",
+    braided: "assets/images/book3/unit6/braided-hair.png",
+    blond: "assets/images/book3/unit6/blond-hair.png",
+    dark: "assets/images/book3/unit6/dark-hair.png",
     basketball: "assets/images/book3/unit7/basketball.png",
     "ping-pong": "assets/images/book3/unit7/ping-pong.png",
     volleyball: "assets/images/book3/unit7/volleyball.png",
@@ -194,8 +202,14 @@
       [["Ludi has a big mouth and two big eyes.", "Ludi 有一張大嘴巴和兩隻大眼睛。"]]
     ], "I / you / we / they have; he / she has"),
     makeUnit("unit-6", "Do you have long hair?", "Hair", [
-      ["hair", "頭髮", "💇"], ["long", "長的", "📏"], ["short", "短的", "✂️"], ["curly", "捲的", "〰️"],
-      ["straight", "直的", "➖"], ["braided", "編辮子的", "🪢"], ["blond", "金髮的", "👱"], ["dark", "深色的", "🖤"]
+      ["hair", "頭髮", "💇"],
+      ["long", "長的", "📏"],
+      ["short", "短的", "✂️"],
+      ["curly", "捲的", "〰️"],
+      ["straight", "直的", "➖"],
+      ["braided", "編辮子的", "🪢"],
+      ["blond", "金髮的", "👱"],
+      ["dark", "深色的", "🖤"]
     ], [["Long i", ["pie", "light", "night"]], ["Long o", ["boat", "road", "row"]]], [
       [["Do you have long hair?", "你有長頭髮嗎？"], ["Yes, I do.", "是的，我有。"]],
       [["I have long hair.", "我有長頭髮。"], ["We have short hair.", "我們有短頭髮。"]],

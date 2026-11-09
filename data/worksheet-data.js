@@ -680,7 +680,18 @@
     }
     if (key === "book-3/unit-6") {
       const description = /^hair$/i.test(word) ? "long hair" : `${word} hair`;
-      return { question: `Do you have ${description}?`, answer: `Yes, I do. I have ${description}.` };
+      const wrongDescription = description === "short hair" ? "long hair" : "short hair";
+      const hairSlot = (index + day - 1) % 8;
+      return [
+        { question: `Do you have ${description}?`, answer: `Yes, I do. I have ${description}.` },
+        { question: `Does she have ${description}?`, answer: `Yes, she does. She has ${description}.` },
+        { question: `Does he have ${description}?`, answer: `Yes, he does. He has ${description}.` },
+        { question: `Do they have ${description}?`, answer: `Yes, they do. They have ${description}.` },
+        { question: `Does Lumi have ${description}?`, answer: `Yes, she does. Lumi has ${description}.` },
+        { question: `Does Ludi have ${wrongDescription}?`, answer: `No, he doesn't. Ludi has ${description}.` },
+        { question: `Who has ${description}?`, answer: `Lumi has ${description}.` },
+        { question: "What kind of hair does she have?", answer: `She has ${description}.` }
+      ][hairSlot];
     }
     if (key === "book-3/unit-7") return { question: `Do you like to play ${word}?`, answer: `Yes, I do. I like to play ${word}.` };
     if (key === "book-3/unit-8") return /day$/i.test(word)

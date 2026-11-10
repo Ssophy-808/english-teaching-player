@@ -171,13 +171,19 @@ books.forEach((book) => {
     assert.equal(review.lessons.length, finalReview ? 5 : 4, `${book.id}/${review.id} must have the correct review day count`);
     assert.equal(review.reviewSections.length, finalReview ? 9 : 3, `${book.id}/${review.id} must combine the correct source units`);
     const expectedFirstPages = [
-      "A Connected Review Story", "Review: Make the Question", "Follow the Question Chain", "Lumi and Ludi's Review Story"
+      "Reading Cloze Writing", "Review: Make the Question", "Follow the Question Chain", "Cumulative Reading Cloze Writing"
     ];
-    if (finalReview) expectedFirstPages.push("Final Review Story");
+    if (finalReview) expectedFirstPages.push("Final Reading Cloze Writing");
     assert.deepEqual(review.lessons.map((lesson) => lesson.worksheet.pages[0].title), expectedFirstPages, `${book.id}/${review.id} must increase independence across all review days`);
     const worksheetJson = JSON.stringify(review.lessons.map((lesson) => lesson.worksheet.pages));
     assert.doesNotMatch(worksheetJson, /\[Unit\s+\d+\]/, `${book.id}/${review.id} must not label individual questions by unit number`);
-    assert.match(worksheetJson, /story_cloze/, `${book.id}/${review.id} must include a connected cloze passage`);
+    assert.match(worksheetJson, /reading_cloze/, `${book.id}/${review.id} must include a Reading Cloze writing page`);
+    review.lessons.flatMap((lesson) => lesson.worksheet.pages)
+      .filter((page) => page.type === "reading_cloze")
+      .forEach((page) => {
+        assert.ok(page.wordBank.length >= page.items.length, `${book.id}/${review.id} Reading Cloze needs a usable Word Bank`);
+        assert.ok(page.items.every((item) => item.prompt.includes("________")), `${book.id}/${review.id} Reading Cloze sentences need blanks`);
+      });
     assert.match(worksheetJson, /chain_questions/, `${book.id}/${review.id} must include a linked question chain`);
   });
 });

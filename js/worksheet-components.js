@@ -74,6 +74,27 @@
     return `<section class="wb-story-cloze wb-passage-page"><div class="wb-passage-hero">${hero}</div><div class="wb-passage-copy">${intro}</div>${prompts}<div class="wb-passage-copy wb-passage-ending">${ending}</div></section>`;
   }
 
+  function readingCloze(page) {
+    const hero = (page.heroAssets || []).map((asset) => assetMarkup(asset, "Reading cloze picture")).join("");
+    const intro = (page.introLines || []).map((line) => `<p>${escapeHtml(line)}</p>`).join("");
+    const wordBank = (page.wordBank || []).map((word) => `<span>${escapeHtml(word)}</span>`).join("");
+    const passage = (page.items || []).map((item, index) => `
+      <p class="wb-reading-cloze-line">
+        <b>${index + 1}.</b>
+        <span>${escapeHtml(item.prompt)}</span>
+        ${itemPicture(item, item.expectedAnswer)}
+      </p>`).join("");
+    const ending = (page.endingLines || []).map((line) => `<p>${escapeHtml(line)}</p>`).join("");
+    return `<section class="wb-reading-cloze wb-passage-page">
+      <div class="wb-passage-hero">${hero}</div>
+      <div class="wb-word-bank"><strong>Word Bank</strong>${wordBank}</div>
+      <div class="wb-passage-copy">${intro}</div>
+      <div class="wb-reading-cloze-passage">${passage}</div>
+      <div class="wb-passage-copy wb-passage-ending">${ending}</div>
+      <div class="wb-reading-cloze-write"><strong>My complete sentence:</strong>${answerLines(1)}</div>
+    </section>`;
+  }
+
   function chainQuestions(page) {
     const lines = page.items.map((item, index) => `<li><span class="wb-chain-step">${index + 1}</span><div><small>${escapeHtml(item.lead)}</small><p>${escapeHtml(item.prompt)}</p>${answerLines(1)}</div>${itemPicture(item, item.expectedAnswer)}</li>`).join("");
     return `<section class="wb-chain"><p class="wb-story-intro">${escapeHtml(page.intro)}</p><ol>${lines}</ol><div class="wb-chain-new"><strong>My next question:</strong>${answerLines(1)}</div></section>`;
@@ -90,6 +111,7 @@
   }
 
   function pageBody(page) {
+    if (page.type === "reading_cloze") return readingCloze(page);
     if (page.type === "story_cloze") return storyCloze(page);
     if (page.type === "chain_questions") return chainQuestions(page);
     if (page.layout === "locked_template") return lockedTemplateBody(page);

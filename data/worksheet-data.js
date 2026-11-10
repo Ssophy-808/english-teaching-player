@@ -1118,9 +1118,14 @@
 
   function clozeItem(item, index) {
     const answer = String(item.answer || "");
-    const preferred = String(item.asset?.word || "").replace(/\(s\)|\(es\)/gi, "").trim();
-    const escaped = preferred.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const preferredMatch = preferred && answer.match(new RegExp(`\\b${escaped}`, "i"));
+    const vocabularyTerms = reviewVocabularyTerms(item.asset)
+      .flatMap((term) => [term, pluralReviewWord(term)])
+      .filter(Boolean)
+      .sort((a, b) => b.length - a.length);
+    const preferredMatch = vocabularyTerms.map((term) => {
+      const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      return answer.match(new RegExp(`\\b${escaped}\\b`, "i"));
+    }).find(Boolean);
     const stopWords = new Set(["a", "an", "am", "are", "at", "can", "do", "does", "he", "her", "his", "i", "in", "is", "it", "my", "no", "not", "on", "she", "the", "they", "to", "we", "yes", "you", "your"]);
     const words = answer.match(/[A-Za-z]+(?:'[A-Za-z]+)?/g) || [];
     const candidates = words.filter((word) => !stopWords.has(word.toLowerCase()));
@@ -1130,19 +1135,23 @@
   }
 
   function connectedClozePage(reviewPairs, day) {
-    const items = reviewPairs.slice(0, 3).map(clozeItem);
+    const seenWords = new Set();
+    const items = reviewPairs.map(clozeItem).filter((item) => {
+      const key = item.missing.toLowerCase();
+      if (seenWords.has(key)) return false;
+      seenWords.add(key);
+      return true;
+    }).slice(0, 3);
     return {
-      type: "story_cloze",
+      type: "reading_cloze",
       layout: "locked_template",
-      title: day >= 4 ? (day === 5 ? "Final Review Story" : "Lumi and Ludi's Review Story") : "A Connected Review Story",
-      instruction: day === 1
-        ? "Read the story. Look at the pictures and answer each question in a complete sentence."
-        : "Follow the whole story. Answer every question, then read the passage aloud.",
-      skill: "connected reading and complete answers",
+      title: day >= 4 ? (day === 5 ? "Final Reading Cloze Writing" : "Cumulative Reading Cloze Writing") : "Reading Cloze Writing",
+      instruction: "Use the Word Bank to complete the passage. Then copy one complete sentence.",
+      skill: "reading cloze and sentence writing",
       introLines: day >= 4
         ? ["Hi, I'm Lumi.", "Today is the final review challenge.", "Look at the pictures and answer the questions."]
         : ["Hi, I'm Lumi.", "Today is review day.", "Look at the pictures and answer the questions."],
-      endingLines: ["Check every complete sentence.", "Great job today!"],
+      endingLines: ["Read the completed passage aloud.", "Choose one sentence and write it below."],
       heroAssets: items.slice(0, 3).map((item) => item.asset),
       wordBank: [...new Set(items.map((item) => item.missing))],
       items
@@ -1171,7 +1180,7 @@
 
   function bookReviewPages(unit, day) {
     const reviewPairs = reviewWorksheetPairs(unit, day, 24);
-    const storySource = day === 2 ? reviewPairs.slice(18, 21) : day === 3 ? reviewPairs.slice(14, 17) : reviewPairs.slice(0, 3);
+    const storySource = day === 2 ? reviewPairs.slice(18, 24) : day === 3 ? reviewPairs.slice(14, 20) : reviewPairs.slice(0, 6);
     const matchingSource = day === 2 ? reviewPairs.slice(8, 12) : day === 3 ? reviewPairs.slice(4, 8) : reviewPairs.slice(3, 7);
     const choiceSource = day === 2 ? reviewPairs.slice(12, 18) : day === 3 ? reviewPairs.slice(8, 14) : reviewPairs.slice(7, 13);
     const chainSource = day === 2 ? reviewPairs.slice(18, 22) : day === 3 ? reviewPairs.slice(0, 4) : reviewPairs.slice(13, 19);
@@ -1224,7 +1233,7 @@
     ];
 
     if (day === 5) return [
-      connectedClozePage(reviewPairs.slice(0, 3), day),
+      connectedClozePage(reviewPairs.slice(0, 6), day),
       standard("matching", "Final Question and Answer Match", "Match every question to its complete answer.", matchingItems),
       standard("multiple_choice", "Final Mixed Check", "Circle the correct complete answer.", answerChoices),
       connectedChainPage(reviewPairs.slice(13, 19), day)

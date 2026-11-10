@@ -24,7 +24,7 @@
     bread: "assets/images/book3/unit3/bread.png",
     cake: "assets/images/book3/unit3/cake.jpg",
     popcorn: "assets/images/book3/unit3/popcorn.png",
-    cookies: "assets/images/book3/unit3/cookies.jpg",
+    cookies: "assets/images/book3/unit3/cookies.png",
     "ice cream": "assets/images/book3/unit3/ice-cream.png",
     juice: "assets/images/book3/unit3/juice.png",
     "potato chips": "assets/images/book3/unit3/potato-chips.png",

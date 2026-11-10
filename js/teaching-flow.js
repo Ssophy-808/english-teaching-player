@@ -3576,6 +3576,33 @@
     };
   }
 
+  function attachPracticeQuestionBank(lesson, book, unit, day) {
+    const extras = window.PRACTICE_QUESTION_BANKS?.[`${book.id}/${unit.id}`]?.[`day${day}`] || [];
+    if (!extras.length) return lesson;
+
+    const phases = lesson.phases.map((phase) => ({
+      ...phase,
+      steps: phase.steps.map((step) => step.activity === "practice-loop"
+        ? {
+            ...step,
+            practiceLoop: {
+              ...step.practiceLoop,
+              questions: [...(step.practiceLoop?.questions || [])]
+            }
+          }
+        : step)
+    }));
+    const loopStep = phases.flatMap((phase) => phase.steps).find((step) => step.activity === "practice-loop");
+    if (!loopStep) return lesson;
+    const copiedExtras = extras.map((question) => ({
+      ...question,
+      wordBank: [...(question.wordBank || [])],
+      passage: (question.passage || []).map((part) => typeof part === "string" ? part : { ...part })
+    }));
+    loopStep.practiceLoop.questions.unshift(...copiedExtras);
+    return { ...lesson, phases, steps: phases.flatMap((phase) => phase.steps) };
+  }
+
   function lessonsForUnit(book, unit, unitIndex) {
     const lessons = unit.isReview
       ? reviewUnitLessons(unit, book.id)
@@ -3605,7 +3632,12 @@
     return lessons.map((lesson, index) => {
       const day = index + 1;
       if (unit.isReview) return lesson;
-      const upgraded = extendWorksheetToFourPages(upgradeToSpiralReview(lesson, book, unit, unitIndex, day), book, unit, day);
+      const upgraded = attachPracticeQuestionBank(
+        extendWorksheetToFourPages(upgradeToSpiralReview(lesson, book, unit, unitIndex, day), book, unit, day),
+        book,
+        unit,
+        day
+      );
       if (unit.id === "unit-2" && (book.id === "book-1" || book.id === "book-2")) {
         const bookNumber = book.id === "book-1" ? 1 : 2;
         return {

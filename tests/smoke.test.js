@@ -11,6 +11,7 @@ require(path.join(root, "data/book2.js"));
 require(path.join(root, "data/book3.js"));
 require(path.join(root, "data/book3-review.js"));
 require(path.join(root, "data/review-units.js"));
+require(path.join(root, "data/practice-data.js"));
 
 const passportSnapshot = JSON.stringify(global.CURRICULUM_BOOKS.map((book) =>
   book.units.map((unit) => unit.passportSentences || [])));
@@ -21,6 +22,19 @@ require(path.join(root, "js/worksheet-components.js"));
 
 const books = global.COURSE_CATALOG.filter((book) => ["book-1", "book-2", "book-3"].includes(book.id));
 assert.equal(books.length, 3, "Book 1, Book 2, and Book 3 must exist");
+
+const readingClozeQuestions = books.flatMap((book) => book.units)
+  .flatMap((unit) => unit.lessons)
+  .flatMap((lesson) => lesson.steps)
+  .filter((step) => step.activity === "practice-loop")
+  .flatMap((step) => step.practiceLoop.questions)
+  .filter((question) => question.type === "reading-cloze");
+assert.ok(readingClozeQuestions.length >= 1, "Practice sets must include a Reading Cloze demo");
+readingClozeQuestions.forEach((question) => {
+  const blanks = question.passage.filter((part) => part && typeof part === "object" && Number.isInteger(part.blank));
+  assert.ok(question.wordBank.length >= blanks.length, "Reading Cloze word bank must cover every blank");
+  blanks.forEach((blank) => assert.ok(question.wordBank.includes(blank.answer), `Reading Cloze word bank must include ${blank.answer}`));
+});
 books.forEach((book) => {
   assert.equal(book.units.filter((unit) => !unit.isReview).length, 9, `${book.id} must have 9 teaching units`);
   assert.equal(book.units.filter((unit) => unit.isReview).length, 4, `${book.id} must have three section reviews and one final review`);

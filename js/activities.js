@@ -233,6 +233,65 @@
       </article>`;
   }
 
+  function clozeAnswers(question) {
+    const answers = [];
+    (question.passage || []).forEach((part) => {
+      if (part && typeof part === "object" && Number.isInteger(part.blank)) {
+        answers[part.blank] = String(part.answer || "");
+      }
+    });
+    return answers;
+  }
+
+  function ensureClozeState(step, questionIndex, question) {
+    const answers = clozeAnswers(question);
+    if (!step.loopClozeState
+      || step.loopClozeState.questionIndex !== questionIndex
+      || step.loopClozeState.answers.length !== answers.length) {
+      step.loopClozeState = {
+        questionIndex,
+        answers: answers.map(() => ""),
+        selected: ""
+      };
+    }
+    return step.loopClozeState;
+  }
+
+  function renderReadingCloze(step, questionIndex, question, feedbackClass) {
+    const state = ensureClozeState(step, questionIndex, question);
+    const used = new Set(state.answers.filter(Boolean));
+    const bank = (question.wordBank || []).map((word) => {
+      const disabled = step.loopAnswered || used.has(word);
+      const selected = state.selected === word;
+      return `<button class="cloze-word ${selected ? "is-selected" : ""}" type="button"
+        data-cloze-word="${escapeHtml(word)}" ${disabled ? "disabled" : ""}>${escapeHtml(word)}</button>`;
+    }).join("");
+    const passage = (question.passage || []).map((part) => {
+      if (typeof part === "string") return escapeHtml(part);
+      const blank = Number(part.blank);
+      const value = state.answers[blank] || "";
+      const label = value ? `Blank ${blank + 1}: ${value}` : `Empty blank ${blank + 1}`;
+      return `<button class="reading-cloze-blank ${value ? "is-filled" : ""}" type="button"
+        data-cloze-blank="${blank}" aria-label="${escapeHtml(label)}" ${step.loopAnswered ? "disabled" : ""}>
+        ${value ? escapeHtml(value) : `<span>${blank + 1}</span>`}
+      </button>`;
+    }).join("");
+    return `
+      <section class="reading-cloze" aria-label="Reading cloze">
+        ${question.title ? `<h3>${escapeHtml(question.title)}</h3>` : ""}
+        <div class="cloze-bank-wrap">
+          <p>Word Bank</p>
+          <div class="cloze-word-bank">${bank}</div>
+        </div>
+        <div class="reading-cloze-passage">${passage}</div>
+        <p class="quiz-feedback ${feedbackClass}" role="status" aria-live="polite">${escapeHtml(step.loopFeedback || "")}</p>
+        <div class="cloze-actions">
+          <button class="button button-primary" type="button" data-cloze-check>Check Answer</button>
+          <button class="button button-secondary" type="button" data-cloze-reset>Reset</button>
+        </div>
+      </section>`;
+  }
+
   function renderPracticeLoop(step, duration) {
     const loop = step.practiceLoop || {};
     const questions = loop.questions || [];
@@ -243,6 +302,7 @@
     const position = Math.min(Number(step.loopIndex) || 0, Math.max(questions.length - 1, 0));
     const questionIndex = step.loopOrder[position] ?? 0;
     const question = questions[questionIndex] || {};
+    const isReadingCloze = question.type === "reading-cloze";
     const picture = question.image || question.sprite || question.visual
       ? `<div class="guided-picture">${renderPictureAsset(question, "guided-image", "guided-visual")}</div>`
       : "";
@@ -258,8 +318,10 @@
       reorder: "PUT IN ORDER",
       fill: "COMPLETE",
       dialogue: "PAIR RESPONSE",
-      rewrite: "ANSWER IN A COMPLETE SENTENCE"
+      rewrite: "ANSWER IN A COMPLETE SENTENCE",
+      "reading-cloze": "READ · THINK · FILL"
     };
+    const cloze = isReadingCloze ? renderReadingCloze(step, questionIndex, question, feedbackClass) : "";
     return `
       <article class="step-card practice-loop-card" data-step-type="practice">
         <div class="step-meta"><span class="phase-badge">${escapeHtml(step.phaseTitle || "Practice Loop")}</span>${duration}</div>
@@ -271,11 +333,13 @@
         ${picture}
         <p class="practice-loop-task">${escapeHtml(taskLabels[question.type] || "THINK & ANSWER")}</p>
         ${question.instruction ? `<p class="question-rule">💡 ${escapeHtml(question.instruction)}</p>` : ""}
-        <p class="guided-prompt">${escapeHtml(question.prompt || "")}</p>
-        <p class="quiz-feedback ${feedbackClass}" role="status" aria-live="polite">${escapeHtml(step.loopFeedback || "")}</p>
-        ${choices ? `<div class="guided-options quiz-options">${choices}</div>` : `
-          <button class="button button-secondary" type="button" data-loop-answer>${step.loopRevealed ? "Hide answer" : "Show answer"}</button>
-          ${step.loopRevealed ? `<p class="grammar-model-answer">${escapeHtml(question.modelAnswer || question.answer || "")}</p>` : ""}
+        ${isReadingCloze ? cloze : `
+          <p class="guided-prompt">${escapeHtml(question.prompt || "")}</p>
+          <p class="quiz-feedback ${feedbackClass}" role="status" aria-live="polite">${escapeHtml(step.loopFeedback || "")}</p>
+          ${choices ? `<div class="guided-options quiz-options">${choices}</div>` : `
+            <button class="button button-secondary" type="button" data-loop-answer>${step.loopRevealed ? "Hide answer" : "Show answer"}</button>
+            ${step.loopRevealed ? `<p class="grammar-model-answer">${escapeHtml(question.modelAnswer || question.answer || "")}</p>` : ""}
+          `}
         `}
         <div class="practice-loop-actions">
           <button class="button button-primary" type="button" data-loop-next>${position === questions.length - 1 ? "Start again" : "Next question"}</button>
@@ -777,14 +841,48 @@
         step.loopRevealed = false;
         step.loopAnswered = false;
         step.loopFeedback = "";
+        step.loopClozeState = null;
       };
       container.onclick = (event) => {
         const questions = step.practiceLoop?.questions || [];
         const position = Number(step.loopIndex) || 0;
         const questionIndex = step.loopOrder?.[position] ?? 0;
         const question = questions[questionIndex] || {};
+        const clozeState = question.type === "reading-cloze"
+          ? ensureClozeState(step, questionIndex, question)
+          : null;
+        const clozeWord = event.target.closest("[data-cloze-word]");
+        const clozeBlank = event.target.closest("[data-cloze-blank]");
         const choice = event.target.closest("[data-loop-choice]");
-        if (choice) {
+        if (clozeWord && clozeState && !step.loopAnswered) {
+          const word = clozeWord.dataset.clozeWord;
+          clozeState.selected = clozeState.selected === word ? "" : word;
+          step.loopFeedback = "";
+        } else if (clozeBlank && clozeState && !step.loopAnswered) {
+          const blank = Number(clozeBlank.dataset.clozeBlank);
+          if (clozeState.selected) {
+            clozeState.answers[blank] = clozeState.selected;
+            clozeState.selected = "";
+          } else if (clozeState.answers[blank]) {
+            clozeState.answers[blank] = "";
+          }
+          step.loopFeedback = "";
+        } else if (event.target.closest("[data-cloze-check]") && clozeState) {
+          const expected = clozeAnswers(question);
+          const normalize = (value) => String(value || "").trim().toLowerCase();
+          const isCorrect = expected.length > 0
+            && expected.every((answer, index) => normalize(clozeState.answers[index]) === normalize(answer));
+          step.loopFeedback = isCorrect ? "Correct!" : "Try again!";
+          step.loopAnswered = isCorrect;
+        } else if (event.target.closest("[data-cloze-reset]") && clozeState) {
+          step.loopClozeState = {
+            questionIndex,
+            answers: clozeAnswers(question).map(() => ""),
+            selected: ""
+          };
+          step.loopFeedback = "";
+          step.loopAnswered = false;
+        } else if (choice) {
           const isCorrect = choice.dataset.loopChoice === question.answer;
           step.loopFeedback = isCorrect ? "Correct!" : "Try again!";
           step.loopAnswered = isCorrect;

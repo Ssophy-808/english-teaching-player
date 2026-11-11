@@ -1167,11 +1167,12 @@
         day >= 4
           ? "Lumi and Ludi have three pictures for their final review."
           : "Lumi and Ludi have three pictures for review.",
-        `First, ${contextLead(items[0])} They ask, “${items[0]?.question || "What is it?"}” Lumi writes, “${items[0]?.prompt || "It is ________."}”`,
-        `Next, ${contextLead(items[1])} They ask, “${items[1]?.question || "What is it?"}” Ludi writes, “${items[1]?.prompt || "It is ________."}”`,
-        `Last, ${contextLead(items[2])} They ask, “${items[2]?.question || "What is it?"}” They write, “${items[2]?.prompt || "It is ________."}”`,
+        `First, look at Picture 1. ${contextLead(items[0])} They ask, “${items[0]?.question || "What is it?"}” Lumi writes, “${items[0]?.prompt || "It is ________."}”`,
+        `Next, look at Picture 2. ${contextLead(items[1])} They ask, “${items[1]?.question || "What is it?"}” Ludi writes, “${items[1]?.prompt || "It is ________."}”`,
+        `Last, look at Picture 3. ${contextLead(items[2])} They ask, “${items[2]?.question || "What is it?"}” They write, “${items[2]?.prompt || "It is ________."}”`,
         "They read the whole passage again before class."
       ],
+      heroAssets: items.map((item) => item.asset),
       endingLines: ["Choose one completed sentence and write it below."],
       items
     };

@@ -185,6 +185,7 @@ books.forEach((book) => {
       .forEach((page) => {
         assert.equal(page.wordBank, undefined, `${book.id}/${review.id} Reading Cloze must not provide a Word Bank`);
         assert.ok(page.passageLines.length >= 3 && page.passageLines.length <= 5, `${book.id}/${review.id} Reading Cloze needs a 3–5 sentence passage`);
+        assert.equal(page.heroAssets.length, page.items.length, `${book.id}/${review.id} Reading Cloze needs one numbered picture per blank`);
         assert.ok(page.items.every((item) => item.prompt.includes("________")), `${book.id}/${review.id} Reading Cloze sentences need blanks`);
       });
     assert.match(worksheetJson, /chain_questions/, `${book.id}/${review.id} must include a linked question chain`);

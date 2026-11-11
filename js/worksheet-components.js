@@ -75,9 +75,15 @@
   }
 
   function readingCloze(page) {
+    const pictures = (page.heroAssets || []).map((asset, index) => `
+      <figure>
+        ${assetMarkup(asset, `Picture ${index + 1}`)}
+        <figcaption>Picture ${index + 1}</figcaption>
+      </figure>`).join("");
     const passage = (page.passageLines || []).map((line) => `<p>${escapeHtml(line)}</p>`).join("");
     const ending = (page.endingLines || []).map((line) => `<p>${escapeHtml(line)}</p>`).join("");
     return `<section class="wb-reading-cloze wb-passage-page">
+      <div class="wb-reading-cloze-pictures">${pictures}</div>
       <div class="wb-reading-cloze-passage">${passage}</div>
       <div class="wb-passage-copy wb-passage-ending">${ending}</div>
       <div class="wb-reading-cloze-write"><strong>My complete sentence:</strong>${answerLines(1)}</div>

@@ -195,6 +195,11 @@
 .wb-passage-prompt .wb-handwriting-row b:nth-child(2),
 .wb-passage-prompt .wb-handwriting-row b:nth-child(3) { border-top-color: #9fc4e3; }
 .wb-passage-ending { margin-top: 1mm; }
+.wb-reading-cloze-pictures { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5mm; margin: 3mm 0 4mm; }
+.wb-reading-cloze-pictures figure { display: grid; min-height: 38mm; place-items: center; gap: 1.5mm; margin: 0; padding: 2.5mm; border: 1px solid #a9bfd7; border-radius: 3mm; background: #f7fbff; }
+.wb-reading-cloze-pictures .wb-picture,
+.wb-reading-cloze-pictures .wb-visual { width: 29mm; height: 29mm; border: 0; background: transparent; object-fit: contain; }
+.wb-reading-cloze-pictures figcaption { color: #284b72; font-size: 9pt; font-weight: 800; }
 .wb-reading-cloze-passage { margin: 4mm 0 3mm; padding: 5mm 6mm; border: 1.5px solid #333; background: #fff; }
 .wb-reading-cloze-passage p { margin: 0 0 3mm; font: inherit; font-size: 13pt; font-weight: 600; line-height: 1.75; }
 .wb-reading-cloze-passage p:last-child { margin-bottom: 0; }

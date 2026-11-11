@@ -75,20 +75,9 @@
   }
 
   function readingCloze(page) {
-    const hero = (page.heroAssets || []).map((asset) => assetMarkup(asset, "Reading cloze picture")).join("");
-    const intro = (page.introLines || []).map((line) => `<p>${escapeHtml(line)}</p>`).join("");
-    const wordBank = (page.wordBank || []).map((word) => `<span>${escapeHtml(word)}</span>`).join("");
-    const passage = (page.items || []).map((item, index) => `
-      <p class="wb-reading-cloze-line">
-        <b>${index + 1}.</b>
-        <span>${escapeHtml(item.prompt)}</span>
-        ${itemPicture(item, item.expectedAnswer)}
-      </p>`).join("");
+    const passage = (page.passageLines || []).map((line) => `<p>${escapeHtml(line)}</p>`).join("");
     const ending = (page.endingLines || []).map((line) => `<p>${escapeHtml(line)}</p>`).join("");
     return `<section class="wb-reading-cloze wb-passage-page">
-      <div class="wb-passage-hero">${hero}</div>
-      <div class="wb-word-bank"><strong>Word Bank</strong>${wordBank}</div>
-      <div class="wb-passage-copy">${intro}</div>
       <div class="wb-reading-cloze-passage">${passage}</div>
       <div class="wb-passage-copy wb-passage-ending">${ending}</div>
       <div class="wb-reading-cloze-write"><strong>My complete sentence:</strong>${answerLines(1)}</div>

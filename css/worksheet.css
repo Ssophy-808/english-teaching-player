@@ -195,16 +195,9 @@
 .wb-passage-prompt .wb-handwriting-row b:nth-child(2),
 .wb-passage-prompt .wb-handwriting-row b:nth-child(3) { border-top-color: #9fc4e3; }
 .wb-passage-ending { margin-top: 1mm; }
-.wb-reading-cloze .wb-passage-hero { min-height: 38mm; margin-bottom: 3mm; }
-.wb-reading-cloze .wb-passage-hero .wb-picture,
-.wb-reading-cloze .wb-passage-hero .wb-visual { width: 31mm; height: 31mm; }
-.wb-reading-cloze-passage { display: grid; gap: 2mm; margin: 2mm 0 3mm; padding: 3mm 4mm; border: 1.5px solid #333; background: #fff; }
-.wb-reading-cloze-line { display: grid; grid-template-columns: 8mm minmax(0, 1fr) 20mm; min-height: 17mm; align-items: center; gap: 2mm; margin: 0; border-bottom: 1px solid #bbb; font: inherit; font-size: 12.5pt; font-weight: 600; line-height: 1.55; }
-.wb-reading-cloze-line:last-child { border-bottom: 0; }
-.wb-reading-cloze-line > b { display: grid; width: 7mm; height: 7mm; place-items: center; border-radius: 50%; color: white; background: #222; font-size: 9pt; }
-.wb-reading-cloze-line .wb-picture,
-.wb-reading-cloze-line .wb-visual { width: 18mm; height: 18mm; border: 0; background: transparent; object-fit: contain; }
-.wb-reading-cloze-line .wb-picture-cue { width: 18mm; height: 18mm; }
+.wb-reading-cloze-passage { margin: 4mm 0 3mm; padding: 5mm 6mm; border: 1.5px solid #333; background: #fff; }
+.wb-reading-cloze-passage p { margin: 0 0 3mm; font: inherit; font-size: 13pt; font-weight: 600; line-height: 1.75; }
+.wb-reading-cloze-passage p:last-child { margin-bottom: 0; }
 .wb-reading-cloze-write { margin-top: 2mm; padding: 2.5mm 4mm; border: 1.5px solid #333; }
 .wb-reading-cloze-write strong { display: block; margin-bottom: 1mm; font-size: 10.5pt; }
 .wb-reading-cloze-write .wb-answer-lines { margin: 0; }

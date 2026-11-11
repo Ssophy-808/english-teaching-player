@@ -32,8 +32,10 @@ const readingClozeQuestions = books.flatMap((book) => book.units)
 assert.ok(readingClozeQuestions.length >= 1, "Practice sets must include a Reading Cloze demo");
 readingClozeQuestions.forEach((question) => {
   const blanks = question.passage.filter((part) => part && typeof part === "object" && Number.isInteger(part.blank));
-  assert.ok(question.wordBank.length >= blanks.length, "Reading Cloze word bank must cover every blank");
-  blanks.forEach((blank) => assert.ok(question.wordBank.includes(blank.answer), `Reading Cloze word bank must include ${blank.answer}`));
+  assert.equal(question.wordBank, undefined, "Reading Cloze must not provide a Word Bank");
+  assert.equal(question.answers.length, blanks.length, "Reading Cloze must provide one answer per blank");
+  const passageText = question.passage.filter((part) => typeof part === "string").join("");
+  assert.ok((passageText.match(/[.!?](?:\s|$)/g) || []).length >= 3, "Reading Cloze must be a connected passage of at least three sentences");
 });
 books.forEach((book) => {
   assert.equal(book.units.filter((unit) => !unit.isReview).length, 9, `${book.id} must have 9 teaching units`);
@@ -181,7 +183,8 @@ books.forEach((book) => {
     review.lessons.flatMap((lesson) => lesson.worksheet.pages)
       .filter((page) => page.type === "reading_cloze")
       .forEach((page) => {
-        assert.ok(page.wordBank.length >= page.items.length, `${book.id}/${review.id} Reading Cloze needs a usable Word Bank`);
+        assert.equal(page.wordBank, undefined, `${book.id}/${review.id} Reading Cloze must not provide a Word Bank`);
+        assert.ok(page.passageLines.length >= 3 && page.passageLines.length <= 5, `${book.id}/${review.id} Reading Cloze needs a 3–5 sentence passage`);
         assert.ok(page.items.every((item) => item.prompt.includes("________")), `${book.id}/${review.id} Reading Cloze sentences need blanks`);
       });
     assert.match(worksheetJson, /chain_questions/, `${book.id}/${review.id} must include a linked question chain`);

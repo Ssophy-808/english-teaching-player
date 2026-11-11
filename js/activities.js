@@ -234,6 +234,9 @@
   }
 
   function clozeAnswers(question) {
+    if (Array.isArray(question.answers) && question.answers.length) {
+      return question.answers.map((answer) => String(answer || ""));
+    }
     const answers = [];
     (question.passage || []).forEach((part) => {
       if (part && typeof part === "object" && Number.isInteger(part.blank)) {
@@ -251,7 +254,7 @@
       step.loopClozeState = {
         questionIndex,
         answers: answers.map(() => ""),
-        selected: ""
+        incorrect: answers.map(() => false)
       };
     }
     return step.loopClozeState;
@@ -259,30 +262,19 @@
 
   function renderReadingCloze(step, questionIndex, question, feedbackClass) {
     const state = ensureClozeState(step, questionIndex, question);
-    const used = new Set(state.answers.filter(Boolean));
-    const bank = (question.wordBank || []).map((word) => {
-      const disabled = step.loopAnswered || used.has(word);
-      const selected = state.selected === word;
-      return `<button class="cloze-word ${selected ? "is-selected" : ""}" type="button"
-        data-cloze-word="${escapeHtml(word)}" ${disabled ? "disabled" : ""}>${escapeHtml(word)}</button>`;
-    }).join("");
     const passage = (question.passage || []).map((part) => {
       if (typeof part === "string") return escapeHtml(part);
       const blank = Number(part.blank);
       const value = state.answers[blank] || "";
-      const label = value ? `Blank ${blank + 1}: ${value}` : `Empty blank ${blank + 1}`;
-      return `<button class="reading-cloze-blank ${value ? "is-filled" : ""}" type="button"
-        data-cloze-blank="${blank}" aria-label="${escapeHtml(label)}" ${step.loopAnswered ? "disabled" : ""}>
-        ${value ? escapeHtml(value) : `<span>${blank + 1}</span>`}
-      </button>`;
+      const statusClass = step.loopAnswered ? "is-correct" : (state.incorrect?.[blank] ? "is-wrong" : "");
+      return `<input class="reading-cloze-input ${statusClass}" type="text"
+        data-cloze-blank="${blank}" value="${escapeHtml(value)}"
+        aria-label="Blank ${blank + 1}" autocomplete="off" spellcheck="false"
+        ${step.loopAnswered ? "disabled" : ""}>`;
     }).join("");
     return `
       <section class="reading-cloze" aria-label="Reading cloze">
         ${question.title ? `<h3>${escapeHtml(question.title)}</h3>` : ""}
-        <div class="cloze-bank-wrap">
-          <p>Word Bank</p>
-          <div class="cloze-word-bank">${bank}</div>
-        </div>
         <div class="reading-cloze-passage">${passage}</div>
         <p class="quiz-feedback ${feedbackClass}" role="status" aria-live="polite">${escapeHtml(step.loopFeedback || "")}</p>
         <div class="cloze-actions">
@@ -851,34 +843,19 @@
         const clozeState = question.type === "reading-cloze"
           ? ensureClozeState(step, questionIndex, question)
           : null;
-        const clozeWord = event.target.closest("[data-cloze-word]");
-        const clozeBlank = event.target.closest("[data-cloze-blank]");
         const choice = event.target.closest("[data-loop-choice]");
-        if (clozeWord && clozeState && !step.loopAnswered) {
-          const word = clozeWord.dataset.clozeWord;
-          clozeState.selected = clozeState.selected === word ? "" : word;
-          step.loopFeedback = "";
-        } else if (clozeBlank && clozeState && !step.loopAnswered) {
-          const blank = Number(clozeBlank.dataset.clozeBlank);
-          if (clozeState.selected) {
-            clozeState.answers[blank] = clozeState.selected;
-            clozeState.selected = "";
-          } else if (clozeState.answers[blank]) {
-            clozeState.answers[blank] = "";
-          }
-          step.loopFeedback = "";
-        } else if (event.target.closest("[data-cloze-check]") && clozeState) {
+        if (event.target.closest("[data-cloze-check]") && clozeState) {
           const expected = clozeAnswers(question);
           const normalize = (value) => String(value || "").trim().toLowerCase();
-          const isCorrect = expected.length > 0
-            && expected.every((answer, index) => normalize(clozeState.answers[index]) === normalize(answer));
-          step.loopFeedback = isCorrect ? "Correct!" : "Try again!";
+          clozeState.incorrect = expected.map((answer, index) => normalize(clozeState.answers[index]) !== normalize(answer));
+          const isCorrect = expected.length > 0 && clozeState.incorrect.every((wrong) => !wrong);
+          step.loopFeedback = isCorrect ? "Correct!" : "Try again! Check the red blank(s).";
           step.loopAnswered = isCorrect;
         } else if (event.target.closest("[data-cloze-reset]") && clozeState) {
           step.loopClozeState = {
             questionIndex,
             answers: clozeAnswers(question).map(() => ""),
-            selected: ""
+            incorrect: clozeAnswers(question).map(() => false)
           };
           step.loopFeedback = "";
           step.loopAnswered = false;
@@ -906,6 +883,26 @@
         } else return;
         container.innerHTML = renderStep(step);
         activateStep(container, step);
+      };
+      container.oninput = (event) => {
+        const input = event.target.closest("input[data-cloze-blank]");
+        if (!input || step.loopAnswered) return;
+        const questions = step.practiceLoop?.questions || [];
+        const position = Number(step.loopIndex) || 0;
+        const questionIndex = step.loopOrder?.[position] ?? 0;
+        const question = questions[questionIndex] || {};
+        if (question.type !== "reading-cloze") return;
+        const clozeState = ensureClozeState(step, questionIndex, question);
+        const blank = Number(input.dataset.clozeBlank);
+        clozeState.answers[blank] = input.value;
+        clozeState.incorrect[blank] = false;
+        input.classList.remove("is-wrong");
+        step.loopFeedback = "";
+        const feedback = container.querySelector(".quiz-feedback");
+        if (feedback) {
+          feedback.textContent = "";
+          feedback.classList.remove("is-correct", "is-wrong");
+        }
       };
       return;
     }

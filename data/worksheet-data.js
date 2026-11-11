@@ -1142,18 +1142,37 @@
       seenWords.add(key);
       return true;
     }).slice(0, 3);
+    const contextLead = (item) => {
+      if (!item) return "They read the next clue carefully.";
+      const missing = String(item.missing || "").toLowerCase();
+      const assetWord = String(item.asset?.word || "");
+      const vocabularyForms = reviewVocabularyTerms(item.asset).map((word) => word.toLowerCase());
+      if (assetWord && vocabularyForms.includes(missing)) {
+        const singular = item.asset?.aliases?.[0]
+          || assetWord.replace(/ies$/i, "y").replace(/(?:es|s)$/i, "");
+        return `Lumi sees one ${singular} and one more in the picture.`;
+      }
+      if (/^(?:am|are|can|do|does|has|have|is|likes?|wants?)$/.test(missing)) {
+        return "Ludi reads the subject and the question carefully.";
+      }
+      return `The picture and the question give a clue about ${assetWord || "the missing word"}.`;
+    };
     return {
       type: "reading_cloze",
       layout: "locked_template",
       title: day >= 4 ? (day === 5 ? "Final Reading Cloze Writing" : "Cumulative Reading Cloze Writing") : "Reading Cloze Writing",
-      instruction: "Use the Word Bank to complete the passage. Then copy one complete sentence.",
+      instruction: "Read the whole passage. Fill in each blank from context. Then copy one complete sentence.",
       skill: "reading cloze and sentence writing",
-      introLines: day >= 4
-        ? ["Hi, I'm Lumi.", "Today is the final review challenge.", "Look at the pictures and answer the questions."]
-        : ["Hi, I'm Lumi.", "Today is review day.", "Look at the pictures and answer the questions."],
-      endingLines: ["Read the completed passage aloud.", "Choose one sentence and write it below."],
-      heroAssets: items.slice(0, 3).map((item) => item.asset),
-      wordBank: [...new Set(items.map((item) => item.missing))],
+      passageLines: [
+        day >= 4
+          ? "Lumi and Ludi have three pictures for their final review."
+          : "Lumi and Ludi have three pictures for review.",
+        `First, ${contextLead(items[0])} They ask, “${items[0]?.question || "What is it?"}” Lumi writes, “${items[0]?.prompt || "It is ________."}”`,
+        `Next, ${contextLead(items[1])} They ask, “${items[1]?.question || "What is it?"}” Ludi writes, “${items[1]?.prompt || "It is ________."}”`,
+        `Last, ${contextLead(items[2])} They ask, “${items[2]?.question || "What is it?"}” They write, “${items[2]?.prompt || "It is ________."}”`,
+        "They read the whole passage again before class."
+      ],
+      endingLines: ["Choose one completed sentence and write it below."],
       items
     };
   }

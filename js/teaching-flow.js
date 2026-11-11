@@ -3596,7 +3596,7 @@
     if (!loopStep) return lesson;
     const copiedExtras = extras.map((question) => ({
       ...question,
-      wordBank: [...(question.wordBank || [])],
+      answers: [...(question.answers || [])],
       passage: (question.passage || []).map((part) => typeof part === "string" ? part : { ...part })
     }));
     loopStep.practiceLoop.questions.unshift(...copiedExtras);

@@ -10,19 +10,17 @@
           id: "b3u6-reading-cloze-picture-day",
           type: "reading-cloze",
           title: "Picture Day",
-          instruction: "Choose a word, then choose the blank where it belongs.",
-          wordBank: ["long", "short", "curly", "braided", "straight", "blond", "dark"],
+          instruction: "Read the whole passage. Type the missing words.",
           passage: [
-            "It is picture day. Lumi has ",
-            { blank: 0, answer: "long" },
-            " hair. Ludi has ",
-            { blank: 1, answer: "short" },
-            " hair. Their friend has ",
-            { blank: 2, answer: "curly" },
-            " hair. She wants ",
-            { blank: 3, answer: "braided" },
-            " hair for the class photo."
-          ]
+            "Lumi and Ludi are getting ready for picture day. Lumi needs more time because she has ",
+            { blank: 0 },
+            " hair. Ludi is ready first because he has ",
+            { blank: 1 },
+            " hair. Their friend wants two braids for the photo, so she asks for ",
+            { blank: 2 },
+            " hair. They all smile for the class picture."
+          ],
+          answers: ["long", "short", "braided"]
         }
       ]
     }

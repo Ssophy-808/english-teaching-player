@@ -22,7 +22,7 @@
     pizza: "assets/images/book3/unit2/pizza.png",
     milk: "assets/images/book3/unit3/milk.png",
     bread: "assets/images/book3/unit3/bread.png",
-    cake: "assets/images/book3/unit3/cake.jpg",
+    cake: "assets/images/book3/unit3/cake.png",
     popcorn: "assets/images/book3/unit3/popcorn.png",
     cookies: "assets/images/book3/unit3/cookies.png",
     "ice cream": "assets/images/book3/unit3/ice-cream.png",

@@ -187,7 +187,7 @@ books.forEach((book) => {
         if (page.answers.includes("do")) assert.ok(page.wordBank.includes("does"), `${book.id}/${review.id} Word Bank should contrast do and does`);
         assert.ok(page.passageLines.length >= 5 && page.passageLines.length <= 8, `${book.id}/${review.id} Reading Cloze needs a 5–8 sentence passage`);
         assert.equal(page.heroAssets.length, 0, `${book.id}/${review.id} Reading Cloze must use context and the Word Bank, not answer pictures`);
-        assert.ok(page.answers.length >= 3 && page.answers.length <= 5, `${book.id}/${review.id} Reading Cloze needs 3–5 context blanks`);
+        assert.ok(page.answers.length >= 4 && page.answers.length <= 5, `${book.id}/${review.id} Reading Cloze needs 4–5 mixed vocabulary and grammar blanks`);
         assert.equal((page.passageLines.join(" ").match(/________/g) || []).length, page.answers.length, `${book.id}/${review.id} Reading Cloze blank count must match its answers`);
         const storyWordCount = page.passageLines.join(" ").replace(/_+/g, "").trim().split(/\s+/).filter(Boolean).length;
         assert.ok(storyWordCount >= 50 && storyWordCount <= 100, `${book.id}/${review.id} Reading Cloze needs a natural 50–100 word story; got ${storyWordCount}`);

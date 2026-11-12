@@ -1155,9 +1155,9 @@
         `${c.relation} The person beside Lumi is her ________.`,
         `${c.personClue} The guest is a ________.`,
         `The cake has ${c.number} candles, so the birthday child is ________ years old.`,
-        "Everyone eats and talks together.",
+        "Everyone ________ and talks together.",
         "It is a happy family night."
-      ], [c.relative, c.person, c.age]);
+      ], [c.relative, c.person, c.age, "eats"]);
     },
     "book-1:4–6": (day) => {
       const c = storyChoice([
@@ -1170,11 +1170,11 @@
         "Lumi gets ready for class in the morning.",
         `${c.itemClue} ________.`,
         `Her school bag is ________. It is the same color as ${c.colorClue}.`,
-        "She puts her things on the desk and starts her work.",
+        "She ________ her things on the desk and starts her work.",
         `${c.feelingClue}. She is ________.`,
         "Her teacher comes over to help her.",
         "Lumi is ready to learn again."
-      ], [c.item, c.color, c.feeling]);
+      ], [c.item, c.color, "puts", c.feeling]);
     },
     "book-1:7–9": (day) => {
       const c = storyChoice([
@@ -1186,12 +1186,12 @@
       return clozeStory("A Day at the Farm", c.animal, [
         "Lumi and Ludi visit a farm with their family.",
         `${c.clothesClue}, so Ludi wears a ________.`,
-        "They walk to a small animal house.",
+        "They ________ to a small animal house.",
         `${c.animalClue}, so the animal is a ________.`,
         "Ludi watches the animal for a long time.",
         `${c.stateClue}. He is ________.`,
         "The family takes a break before going home."
-      ], [c.clothes, c.animal, c.state]);
+      ], [c.clothes, "walk", c.animal, c.state]);
     },
     "book-2:1–3": (day) => {
       const c = storyChoice([
@@ -1201,14 +1201,14 @@
         { roomItem: "window", roomClue: "The children look through it to see outside", toy: "dolls", toyClue: "small toy people", count: "eleven", number: 11 }
       ], day);
       return clozeStory("The Classroom Toy Game", c.toy, [
-        "The class plays a counting game today.",
+        "The class ________ a counting game today.",
         `${c.roomClue}. It is the ________.`,
         "Next, the teacher puts a box of toys on the table.",
         `There are ${c.number} toys, so the children write ________.`,
         `The toys are ${c.toyClue}. They are ________.`,
         "Lumi and Ludi count them one more time.",
         "Their team gets the answer right."
-      ], [c.roomItem, c.count, c.toy]);
+      ], ["plays", c.roomItem, c.count, c.toy]);
     },
     "book-2:4–6": (day) => {
       const c = storyChoice([
@@ -1220,12 +1220,12 @@
       return clozeStory("Fruit Day at School", c.fruit1, [
         "Today is Fruit Day in Lumi's classroom.",
         `The first fruit is ${c.clue1}. These are ________.`,
-        "Ludi puts another plate next to it.",
+        "Ludi ________ another plate next to it.",
         `Those fruits are ${c.clue2}. They are ________.`,
         "The class talks about the colors and tastes.",
         `After the fruit show, Lumi ${c.actionClue}. She can ________.`,
         "Everyone claps for her."
-      ], [c.fruit1, c.fruit2, c.action]);
+      ], [c.fruit1, "puts", c.fruit2, c.action]);
     },
     "book-2:7–9": (day) => {
       const c = storyChoice([
@@ -1235,14 +1235,14 @@
         { room: "bedroom", roomClue: "the room where Ludi sleeps", place: "in front of", placeClue: "The card is before the bed, not behind it", animal: "monkey", animalClue: "an animal that climbs and has a long tail" }
       ], day);
       return clozeStory("The Animal Card Hunt", c.animal, [
-        "Lumi and Ludi play an animal-card hunt at home.",
+        "Lumi and Ludi ________ an animal-card hunt at home.",
         `They go to ${c.roomClue}. They are in the ________.`,
         `${c.placeClue}. The card is ________ it.`,
         "Lumi finds the card and turns it over.",
         `It shows ${c.animalClue}. It is a ________.`,
         "Lumi says she likes this animal.",
         "Now it is Ludi's turn to hide a card."
-      ], [c.room, c.place, c.animal]);
+      ], ["play", c.room, c.place, c.animal]);
     },
     "book-3:1–3": (day) => {
       const c = storyChoice([
@@ -1254,12 +1254,12 @@
       return clozeStory("Lumi's Pet Day", c.hero, [
         "Lumi has two small pets at home.",
         `They are ${c.petClue}, so they are ________.`,
-        "Today is Pet Day at school, and Lumi brings them to class.",
+        "Today ________ Pet Day at school, and Lumi brings them to class.",
         "Her friend Ludi thinks the pets are very cute.",
         `At lunch, they share ${c.foodClue}. They eat ________.`,
         `Ludi asks, “Do you like ${c.food}?” Lumi says, “Yes, I ________.”`,
         "They have a fun day at school."
-      ], [c.pet, c.food, "do"]);
+      ], [c.pet, "is", c.food, "do"]);
     },
     "book-3:4–6": (day) => {
       const c = storyChoice([
@@ -1269,14 +1269,14 @@
         { gift: "model car", giftClue: "a small toy car for his desk", body: "mouth", bodySentence: "He opens his ________ to smile for the picture.", hair: "short", hairClue: "does not reach his ears", hero: "model car" }
       ], day);
       return clozeStory("Ludi's Birthday Photo", c.hero, [
-        "Today is Ludi's birthday, and his family has a party.",
+        "Today ________ Ludi's birthday, and his family has a party.",
         `Ludi wants ${c.giftClue}. He wants a ________.`,
         "He opens the gift and smiles.",
         c.bodySentence,
         "Lumi helps everyone get ready for a photo.",
         `Her hair ${c.hairClue}, so it is ________.`,
         "The family takes a happy birthday picture."
-      ], [c.gift, c.body, c.hair]);
+      ], ["is", c.gift, c.body, c.hair]);
     },
     "book-3:7–9": (day) => {
       const c = storyChoice([
@@ -1288,12 +1288,12 @@
       return clozeStory("Lumi and Ludi's Weekend Plan", c.hero, [
         `Today is ${c.dayClue}. It is ________.`,
         `${c.weatherClue}. The weather is ________.`,
-        "Lumi and Ludi meet at the park.",
+        "Lumi and Ludi ________ at the park.",
         `${c.sportClue}, so they play ________.`,
         "They have fun together for an hour.",
         `After that, ${c.activityClue}. They ________.`,
         "It is a great day for both friends."
-      ], [c.day, c.weather, c.sport, c.activity]);
+      ], [c.day, c.weather, "meet", c.sport, c.activity]);
     }
   };
 
@@ -1322,8 +1322,11 @@
   function clozeWordBank(unit, story, day) {
     const answerKeys = new Set(story.answers.map((answer) => String(answer).toLowerCase()));
     const grammarPairs = {
-      am: "is", are: "is", do: "does", does: "do", have: "has", has: "have",
-      is: "are", like: "likes", likes: "like", want: "wants", wants: "want",
+      am: "is", are: "is", do: "does", does: "do", eat: "eats", eats: "eat",
+      have: "has", has: "have", is: "are", like: "likes", likes: "like",
+      meet: "meets", meets: "meet", play: "plays", plays: "play", put: "puts",
+      puts: "put", visit: "visits", visits: "visit", walk: "walks", walks: "walk",
+      want: "wants", wants: "want",
       "fly a kite": "flies a kite", "go swimming": "goes swimming",
       "listen to music": "listens to music", "watch TV": "watches TV"
     };
@@ -1335,16 +1338,17 @@
           : /s$/i.test(last) && !/ss$/i.test(last) ? last.slice(0, -1) : "";
       return singular ? [...words, singular].join(" ") : "";
     };
-    const confusingForms = story.answers.flatMap((answer) => {
+    const grammarForms = story.answers.map((answer) => grammarPairs[String(answer).toLowerCase()]).filter(Boolean);
+    const numberForms = story.answers.flatMap((answer) => {
       const key = String(answer).toLowerCase();
-      const grammarPair = grammarPairs[key];
-      if (grammarPair) return [grammarPair];
+      if (grammarPairs[key]) return [];
       const singular = singularForm(answer);
       if (singular) return [singular];
       const isVocabularyNoun = (unit.vocabulary || []).some((asset) => reviewVocabularyTerms(asset)
         .some((term) => term.toLowerCase() === key));
       return isVocabularyNoun && !/\s/.test(String(answer)) ? [pluralReviewWord(String(answer))] : [];
     });
+    const confusingForms = [...grammarForms, ...numberForms];
     const candidates = (unit.vocabulary || [])
       .flatMap((asset) => reviewVocabularyTerms(asset))
       .map((word) => String(word).trim())

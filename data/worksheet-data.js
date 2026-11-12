@@ -1134,45 +1134,209 @@
     return { question: item.question, prompt, asset: item.asset, missing, expectedAnswer: `${missing} — ${answer}` };
   }
 
-  function connectedClozePage(reviewPairs, day) {
-    const seenWords = new Set();
-    const items = reviewPairs.map(clozeItem).filter((item) => {
-      const key = item.missing.toLowerCase();
-      if (seenWords.has(key)) return false;
-      seenWords.add(key);
-      return true;
-    }).slice(0, 3);
-    const contextLead = (item) => {
-      if (!item) return "They read the next clue carefully.";
-      const missing = String(item.missing || "").toLowerCase();
-      const assetWord = String(item.asset?.word || "");
-      const vocabularyForms = reviewVocabularyTerms(item.asset).map((word) => word.toLowerCase());
-      if (assetWord && vocabularyForms.includes(missing)) {
-        const singular = item.asset?.aliases?.[0]
-          || assetWord.replace(/ies$/i, "y").replace(/(?:es|s)$/i, "");
-        return `Lumi sees one ${singular} and one more in the picture.`;
-      }
-      if (/^(?:am|are|can|do|does|has|have|is|likes?|wants?)$/.test(missing)) {
-        return "Ludi reads the subject and the question carefully.";
-      }
-      return `The picture and the question give a clue about ${assetWord || "the missing word"}.`;
-    };
+  function clozeStory(title, heroWord, passageLines, answers) {
+    return { title, heroWord, passageLines, answers };
+  }
+
+  function storyChoice(options, day) {
+    return options[(Math.max(1, day) - 1) % options.length];
+  }
+
+  const REVIEW_CLOZE_BUILDERS = {
+    "book-1:1–3": (day) => {
+      const c = storyChoice([
+        { relative: "mother", relation: "She is Lumi's father's wife.", person: "student", personClue: "This child goes to school every day.", age: "six", number: 6 },
+        { relative: "father", relation: "He is Lumi's mother's husband.", person: "teacher", personClue: "This woman teaches children at school.", age: "eight", number: 8 },
+        { relative: "grandmother", relation: "She is Lumi's mother's mother.", person: "girl", personClue: "This child is Lumi. She is not a boy.", age: "seven", number: 7 },
+        { relative: "grandfather", relation: "He is Lumi's father's father.", person: "boy", personClue: "This child is Ludi. He is not a girl.", age: "nine", number: 9 }
+      ], day);
+      return clozeStory("A Family Birthday Dinner", c.relative, [
+        "Today Lumi's family has a birthday dinner.",
+        `${c.relation} The person beside Lumi is her ________.`,
+        `${c.personClue} The guest is a ________.`,
+        `The cake has ${c.number} candles, so the birthday child is ________ years old.`,
+        "Everyone eats and talks together.",
+        "It is a happy family night."
+      ], [c.relative, c.person, c.age]);
+    },
+    "book-1:4–6": (day) => {
+      const c = storyChoice([
+        { item: "pencil", itemClue: "Lumi wants to write her name, so she takes out a", color: "red", colorClue: "an apple", feeling: "happy", feelingClue: "She smiles when her work is done" },
+        { item: "eraser", itemClue: "Lumi makes a pencil mistake, so she uses an", color: "blue", colorClue: "the sky", feeling: "sad", feelingClue: "She cannot find her book, and her face goes down" },
+        { item: "ruler", itemClue: "Lumi wants to measure her book, so she uses a", color: "green", colorClue: "the grass", feeling: "happy", feelingClue: "Her friend finds the book, so Lumi smiles" },
+        { item: "book", itemClue: "Lumi wants to read a story, so she opens her", color: "yellow", colorClue: "the sun", feeling: "sad", feelingClue: "The story ends, and Lumi does not want it to stop" }
+      ], day);
+      return clozeStory("Lumi's Classroom Morning", "school bag", [
+        "Lumi gets ready for class in the morning.",
+        `${c.itemClue} ________.`,
+        `Her school bag is ________. It is the same color as ${c.colorClue}.`,
+        "She puts her things on the desk and starts her work.",
+        `${c.feelingClue}. She is ________.`,
+        "Her teacher comes over to help her.",
+        "Lumi is ready to learn again."
+      ], [c.item, c.color, c.feeling]);
+    },
+    "book-1:7–9": (day) => {
+      const c = storyChoice([
+        { clothes: "hat", clothesClue: "It goes on his head and keeps the sun away", animal: "rabbit", animalClue: "It has long ears and hops", state: "hungry", stateClue: "His stomach is empty, and he wants lunch" },
+        { clothes: "cap", clothesClue: "It is a small hat with a front", animal: "dog", animalClue: "It barks and wags its tail", state: "thirsty", stateClue: "He wants a big glass of water" },
+        { clothes: "coat", clothesClue: "It is long and covers his shirt and arms", animal: "cow", animalClue: "It is big and gives milk", state: "sleepy", stateClue: "He closes his eyes and wants to sleep" },
+        { clothes: "jacket", clothesClue: "It is a short coat over his shirt", animal: "duck", animalClue: "It has a bill and swims", state: "tired", stateClue: "He walks all day and needs to sit down" }
+      ], day);
+      return clozeStory("A Day at the Farm", c.animal, [
+        "Lumi and Ludi visit a farm with their family.",
+        `${c.clothesClue}, so Ludi wears a ________.`,
+        "They walk to a small animal house.",
+        `${c.animalClue}, so the animal is a ________.`,
+        "Ludi watches the animal for a long time.",
+        `${c.stateClue}. He is ________.`,
+        "The family takes a break before going home."
+      ], [c.clothes, c.animal, c.state]);
+    },
+    "book-2:1–3": (day) => {
+      const c = storyChoice([
+        { roomItem: "whiteboard", roomClue: "The teacher writes the first clue on it at the front of the room", toy: "blocks", toyClue: "small pieces for building a tower", count: "fifteen", number: 15 },
+        { roomItem: "television", roomClue: "The class watches a short video on it", toy: "robots", toyClue: "toy machines that can move", count: "twelve", number: 12 },
+        { roomItem: "fan", roomClue: "It moves the air and keeps the room cool", toy: "balls", toyClue: "round toys that can roll", count: "eighteen", number: 18 },
+        { roomItem: "window", roomClue: "The children look through it to see outside", toy: "dolls", toyClue: "small toy people", count: "eleven", number: 11 }
+      ], day);
+      return clozeStory("The Classroom Toy Game", c.toy, [
+        "The class plays a counting game today.",
+        `${c.roomClue}. It is the ________.`,
+        "Next, the teacher puts a box of toys on the table.",
+        `There are ${c.number} toys, so the children write ________.`,
+        `The toys are ${c.toyClue}. They are ________.`,
+        "Lumi and Ludi count them one more time.",
+        "Their team gets the answer right."
+      ], [c.roomItem, c.count, c.toy]);
+    },
+    "book-2:4–6": (day) => {
+      const c = storyChoice([
+        { fruit1: "bananas", clue1: "yellow and long", fruit2: "strawberries", clue2: "small and red", action: "sing", actionClue: "uses her voice for a song" },
+        { fruit1: "watermelons", clue1: "big, green outside, and red inside", fruit2: "kiwis", clue2: "brown outside and green inside", action: "dance", actionClue: "moves her body with the music" },
+        { fruit1: "lemons", clue1: "yellow and sour", fruit2: "mangoes", clue2: "sweet with orange-yellow skin", action: "read", actionClue: "looks at the fruit card and says the words" },
+        { fruit1: "pears", clue1: "green and smaller at the top", fruit2: "papayas", clue2: "long with orange fruit inside", action: "write", actionClue: "makes the fruit names on a poster" }
+      ], day);
+      return clozeStory("Fruit Day at School", c.fruit1, [
+        "Today is Fruit Day in Lumi's classroom.",
+        `The first fruit is ${c.clue1}. These are ________.`,
+        "Ludi puts another plate next to it.",
+        `Those fruits are ${c.clue2}. They are ________.`,
+        "The class talks about the colors and tastes.",
+        `After the fruit show, Lumi ${c.actionClue}. She can ________.`,
+        "Everyone claps for her."
+      ], [c.fruit1, c.fruit2, c.action]);
+    },
+    "book-2:7–9": (day) => {
+      const c = storyChoice([
+        { room: "garden", roomClue: "the place outside where flowers grow", place: "behind", placeClue: "The tree is in front of the card", animal: "tiger", animalClue: "an animal with black stripes" },
+        { room: "living room", roomClue: "the room where the family sits and watches TV", place: "next to", placeClue: "The card is beside the sofa", animal: "lion", animalClue: "a big animal with a mane" },
+        { room: "kitchen", roomClue: "the room where the family cooks", place: "under", placeClue: "Lumi must look below a chair", animal: "zebra", animalClue: "a black-and-white animal with stripes" },
+        { room: "bedroom", roomClue: "the room where Ludi sleeps", place: "in front of", placeClue: "The card is before the bed, not behind it", animal: "monkey", animalClue: "an animal that climbs and has a long tail" }
+      ], day);
+      return clozeStory("The Animal Card Hunt", c.animal, [
+        "Lumi and Ludi play an animal-card hunt at home.",
+        `They go to ${c.roomClue}. They are in the ________.`,
+        `${c.placeClue}. The card is ________ it.`,
+        "Lumi finds the card and turns it over.",
+        `It shows ${c.animalClue}. It is a ________.`,
+        "Lumi says she likes this animal.",
+        "Now it is Ludi's turn to hide a card."
+      ], [c.room, c.place, c.animal]);
+    },
+    "book-3:1–3": (day) => {
+      const c = storyChoice([
+        { pet: "hamsters", petClue: "small pets that run on a wheel", food: "chicken nuggets", foodClue: "small pieces of chicken", hero: "hamsters" },
+        { pet: "bunnies", petClue: "small pets with long ears that hop", food: "pizza", foodClue: "a round lunch with cheese", hero: "bunnies" },
+        { pet: "turtles", petClue: "quiet pets with hard shells", food: "salad", foodClue: "a bowl of vegetables", hero: "turtles" },
+        { pet: "birds", petClue: "pets with wings that can sing", food: "hot dogs", foodClue: "long bread with meat inside", hero: "birds" }
+      ], day);
+      return clozeStory("Lumi's Pet Day", c.hero, [
+        "Lumi has two small pets at home.",
+        `They are ${c.petClue}, so they are ________.`,
+        "Today is Pet Day at school, and Lumi brings them to class.",
+        "Her friend Ludi thinks the pets are very cute.",
+        `At lunch, they share ${c.foodClue}. They eat ________.`,
+        `Ludi asks, “Do you like ${c.food}?” Lumi says, “Yes, I ________.”`,
+        "They have a fun day at school."
+      ], [c.pet, c.food, "do"]);
+    },
+    "book-3:4–6": (day) => {
+      const c = storyChoice([
+        { gift: "bicycle", giftClue: "a new gift with two wheels", body: "eyes", bodySentence: "He looks at the gift with his two ________.", hair: "curly", hairClue: "makes soft circles", hero: "bicycle" },
+        { gift: "computer", giftClue: "a new gift with a screen and keyboard", body: "ears", bodySentence: "He hears the birthday song with his two ________.", hair: "long", hairClue: "reaches past her shoulders", hero: "computer" },
+        { gift: "kite", giftClue: "a new gift that can fly in the sky", body: "nose", bodySentence: "He smells the birthday cake with his ________.", hair: "braided", hairClue: "has two neat braids", hero: "kite" },
+        { gift: "model car", giftClue: "a small toy car for his desk", body: "mouth", bodySentence: "He opens his ________ to smile for the picture.", hair: "short", hairClue: "does not reach his ears", hero: "model car" }
+      ], day);
+      return clozeStory("Ludi's Birthday Photo", c.hero, [
+        "Today is Ludi's birthday, and his family has a party.",
+        `Ludi wants ${c.giftClue}. He wants a ________.`,
+        "He opens the gift and smiles.",
+        c.bodySentence,
+        "Lumi helps everyone get ready for a photo.",
+        `Her hair ${c.hairClue}, so it is ________.`,
+        "The family takes a happy birthday picture."
+      ], [c.gift, c.body, c.hair]);
+    },
+    "book-3:7–9": (day) => {
+      const c = storyChoice([
+        { day: "Saturday", dayClue: "the day after Friday", weather: "sunny", weatherClue: "There are no clouds, and the sun is bright", sport: "baseball", sportClue: "Ludi hits a ball with a bat", activity: "go swimming", activityClue: "they cool down in the pool", hero: "baseball" },
+        { day: "Sunday", dayClue: "the day after Saturday", weather: "windy", weatherClue: "The trees move from side to side", sport: "soccer", sportClue: "They kick a ball toward a goal", activity: "fly a kite", activityClue: "the strong wind lifts it into the sky", hero: "soccer" },
+        { day: "Monday", dayClue: "the day after Sunday", weather: "rainy", weatherClue: "Rain falls, and everyone has an umbrella", sport: "ping-pong", sportClue: "They hit a small ball across a table", activity: "watch TV", activityClue: "they stay inside and look at a show", hero: "ping-pong" },
+        { day: "Friday", dayClue: "the day before Saturday", weather: "cloudy", weatherClue: "The sky is gray, but there is no rain", sport: "badminton", sportClue: "They hit a small shuttle over a net", activity: "listen to music", activityClue: "they sit down and enjoy songs", hero: "badminton" }
+      ], day);
+      return clozeStory("Lumi and Ludi's Weekend Plan", c.hero, [
+        `Today is ${c.dayClue}. It is ________.`,
+        `${c.weatherClue}. The weather is ________.`,
+        "Lumi and Ludi meet at the park.",
+        `${c.sportClue}, so they play ________.`,
+        "They have fun together for an hour.",
+        `After that, ${c.activityClue}. They ________.`,
+        "It is a great day for both friends."
+      ], [c.day, c.weather, c.sport, c.activity]);
+    }
+  };
+
+  function storyAsset(unit, word) {
+    const wanted = String(word || "").toLowerCase();
+    const assets = unit.vocabulary || [];
+    return assets.find((asset) => {
+      const terms = reviewVocabularyTerms(asset).flatMap((term) => [term, pluralReviewWord(term)]);
+      return terms.some((term) => term.toLowerCase() === wanted);
+    }) || assets[0] || null;
+  }
+
+  function coherentReviewStory(unit, day) {
+    const ranges = unit.reviewRange === "1–9" ? ["1–3", "4–6", "7–9"] : [unit.reviewRange];
+    const range = ranges[(Math.max(1, day) - 1) % ranges.length];
+    const builder = REVIEW_CLOZE_BUILDERS[`${unit.bookId}:${range}`];
+    return builder ? builder(day) : clozeStory("A Review Day", reviewWord(unit.vocabulary?.[0]), [
+      "Lumi and Ludi work together on one review story.",
+      "They read every sentence and use the context clues.",
+      "The first missing word is ________.",
+      "They check the story from beginning to end.",
+      "Now the whole passage makes sense."
+    ], [reviewWord(unit.vocabulary?.[0])]);
+  }
+
+  function connectedClozePage(unit, day) {
+    const story = coherentReviewStory(unit, day);
+    const heroAsset = storyAsset(unit, story.heroWord);
+    const items = story.answers.map((answer, index) => ({
+      prompt: `Blank ${index + 1}: ________`,
+      expectedAnswer: `${index + 1}. ${answer}`,
+      asset: index === 0 ? heroAsset : null
+    }));
     return {
       type: "reading_cloze",
       layout: "locked_template",
-      title: day >= 4 ? (day === 5 ? "Final Reading Cloze Writing" : "Cumulative Reading Cloze Writing") : "Reading Cloze Writing",
+      title: story.title,
       instruction: "Read the whole passage. Fill in each blank from context. Then copy one complete sentence.",
       skill: "reading cloze and sentence writing",
-      passageLines: [
-        day >= 4
-          ? "Lumi and Ludi have three pictures for their final review."
-          : "Lumi and Ludi have three pictures for review.",
-        `First, look at Picture 1. ${contextLead(items[0])} They ask, “${items[0]?.question || "What is it?"}” Lumi writes, “${items[0]?.prompt || "It is ________."}”`,
-        `Next, look at Picture 2. ${contextLead(items[1])} They ask, “${items[1]?.question || "What is it?"}” Ludi writes, “${items[1]?.prompt || "It is ________."}”`,
-        `Last, look at Picture 3. ${contextLead(items[2])} They ask, “${items[2]?.question || "What is it?"}” They write, “${items[2]?.prompt || "It is ________."}”`,
-        "They read the whole passage again before class."
-      ],
-      heroAssets: items.map((item) => item.asset),
+      passageLines: story.passageLines,
+      answers: story.answers,
+      heroAssets: heroAsset ? [heroAsset] : [],
+      sceneAssets: heroAsset ? [heroAsset] : [],
       endingLines: ["Choose one completed sentence and write it below."],
       items
     };
@@ -1232,7 +1396,7 @@
     );
 
     if (day === 1) return [
-      connectedClozePage(storySource, day),
+      connectedClozePage(unit, day),
       standard("matching", "Review Matching", "Match each question to the answer that keeps the conversation correct.", matchingItems),
       standard("multiple_choice", "Review Choice Check", "Circle the correct complete answer.", answerChoices),
       connectedChainPage(chainSource, day)
@@ -1242,25 +1406,25 @@
       locked("template_picture_question", "Review: Make the Question", "Read each answer and write its question.", writingSource.map((item) => ({ prompt: `Answer: ${item.answer}`, asset: item.asset, expectedAnswer: item.question })), true),
       standard("matching", "Review Question Match", "Match each question to its complete answer.", matchingItems),
       standard("multiple_choice", "Choose the Review Question", "Circle the question that matches the answer.", questionChoices),
-      connectedClozePage(storySource, day)
+      connectedClozePage(unit, day)
     ];
 
     if (day === 3) return [
       connectedChainPage(chainSource, day),
       standard("matching", "Mixed Review Dialogue", "Match questions and answers to complete the dialogue.", matchingItems),
       standard("multiple_choice", "Mixed Grammar Check", "Circle the only correct complete question.", questionChoices),
-      connectedClozePage(storySource, day)
+      connectedClozePage(unit, day)
     ];
 
     if (day === 5) return [
-      connectedClozePage(reviewPairs.slice(0, 6), day),
+      connectedClozePage(unit, day),
       standard("matching", "Final Question and Answer Match", "Match every question to its complete answer.", matchingItems),
       standard("multiple_choice", "Final Mixed Check", "Circle the correct complete answer.", answerChoices),
       connectedChainPage(reviewPairs.slice(13, 19), day)
     ];
 
     return [
-      connectedClozePage(storySource, day),
+      connectedClozePage(unit, day),
       standard("matching", "Cumulative Dialogue", "Match each question to the best complete answer.", matchingItems),
       standard("multiple_choice", "Final Cumulative Check", "Circle the only correct question.", questionChoices),
       connectedChainPage(chainSource, day)

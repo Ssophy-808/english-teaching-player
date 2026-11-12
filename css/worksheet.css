@@ -200,6 +200,10 @@
 .wb-reading-cloze-pictures .wb-picture,
 .wb-reading-cloze-pictures .wb-visual { width: 29mm; height: 29mm; border: 0; background: transparent; object-fit: contain; }
 .wb-reading-cloze-pictures figcaption { color: #284b72; font-size: 9pt; font-weight: 800; }
+.wb-reading-cloze-pictures.is-single { grid-template-columns: 1fr; justify-items: center; margin: 2mm 0 3mm; }
+.wb-reading-cloze-pictures.is-single figure { width: 78mm; min-height: 31mm; padding: 2mm; }
+.wb-reading-cloze-pictures.is-single .wb-picture,
+.wb-reading-cloze-pictures.is-single .wb-visual { width: 34mm; height: 34mm; }
 .wb-reading-cloze-passage { margin: 4mm 0 3mm; padding: 5mm 6mm; border: 1.5px solid #333; background: #fff; }
 .wb-reading-cloze-passage p { margin: 0 0 3mm; font: inherit; font-size: 13pt; font-weight: 600; line-height: 1.75; }
 .wb-reading-cloze-passage p:last-child { margin-bottom: 0; }

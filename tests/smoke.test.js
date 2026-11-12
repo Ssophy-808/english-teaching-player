@@ -172,11 +172,9 @@ books.forEach((book) => {
     const finalReview = review.reviewRange === "1–9";
     assert.equal(review.lessons.length, finalReview ? 5 : 4, `${book.id}/${review.id} must have the correct review day count`);
     assert.equal(review.reviewSections.length, finalReview ? 9 : 3, `${book.id}/${review.id} must combine the correct source units`);
-    const expectedFirstPages = [
-      "Reading Cloze Writing", "Review: Make the Question", "Follow the Question Chain", "Cumulative Reading Cloze Writing"
-    ];
-    if (finalReview) expectedFirstPages.push("Final Reading Cloze Writing");
-    assert.deepEqual(review.lessons.map((lesson) => lesson.worksheet.pages[0].title), expectedFirstPages, `${book.id}/${review.id} must increase independence across all review days`);
+    const expectedFirstPageTypes = ["reading_cloze", "template_picture_question", "chain_questions", "reading_cloze"];
+    if (finalReview) expectedFirstPageTypes.push("reading_cloze");
+    assert.deepEqual(review.lessons.map((lesson) => lesson.worksheet.pages[0].type), expectedFirstPageTypes, `${book.id}/${review.id} must increase independence across all review days`);
     const worksheetJson = JSON.stringify(review.lessons.map((lesson) => lesson.worksheet.pages));
     assert.doesNotMatch(worksheetJson, /\[Unit\s+\d+\]/, `${book.id}/${review.id} must not label individual questions by unit number`);
     assert.match(worksheetJson, /reading_cloze/, `${book.id}/${review.id} must include a Reading Cloze writing page`);
@@ -184,8 +182,13 @@ books.forEach((book) => {
       .filter((page) => page.type === "reading_cloze")
       .forEach((page) => {
         assert.equal(page.wordBank, undefined, `${book.id}/${review.id} Reading Cloze must not provide a Word Bank`);
-        assert.ok(page.passageLines.length >= 3 && page.passageLines.length <= 5, `${book.id}/${review.id} Reading Cloze needs a 3–5 sentence passage`);
-        assert.equal(page.heroAssets.length, page.items.length, `${book.id}/${review.id} Reading Cloze needs one numbered picture per blank`);
+        assert.ok(page.passageLines.length >= 5 && page.passageLines.length <= 8, `${book.id}/${review.id} Reading Cloze needs a 5–8 sentence passage`);
+        assert.equal(page.heroAssets.length, 1, `${book.id}/${review.id} Reading Cloze needs one story picture, not one picture per blank`);
+        assert.ok(page.answers.length >= 3 && page.answers.length <= 5, `${book.id}/${review.id} Reading Cloze needs 3–5 context blanks`);
+        assert.equal((page.passageLines.join(" ").match(/________/g) || []).length, page.answers.length, `${book.id}/${review.id} Reading Cloze blank count must match its answers`);
+        const storyWordCount = page.passageLines.join(" ").replace(/_+/g, "").trim().split(/\s+/).filter(Boolean).length;
+        assert.ok(storyWordCount >= 50 && storyWordCount <= 100, `${book.id}/${review.id} Reading Cloze needs a natural 50–100 word story; got ${storyWordCount}`);
+        assert.doesNotMatch(page.passageLines.join(" "), /Picture\s*[123]|\bFirst, look|\bNext, look|\bLast, look/i, `${book.id}/${review.id} Reading Cloze must not stitch unrelated picture prompts together`);
         assert.ok(page.items.every((item) => item.prompt.includes("________")), `${book.id}/${review.id} Reading Cloze sentences need blanks`);
       });
     assert.match(worksheetJson, /chain_questions/, `${book.id}/${review.id} must include a linked question chain`);

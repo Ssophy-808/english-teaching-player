@@ -184,6 +184,7 @@ books.forEach((book) => {
         assert.ok(page.wordBank.length > page.answers.length, `${book.id}/${review.id} Reading Cloze Word Bank needs distractor words`);
         assert.ok(page.wordBank.length <= page.answers.length + 3, `${book.id}/${review.id} Reading Cloze needs only 1–3 distractors`);
         page.answers.forEach((answer) => assert.ok(page.wordBank.includes(answer), `${book.id}/${review.id} Word Bank must include ${answer}`));
+        if (page.answers.includes("do")) assert.ok(page.wordBank.includes("does"), `${book.id}/${review.id} Word Bank should contrast do and does`);
         assert.ok(page.passageLines.length >= 5 && page.passageLines.length <= 8, `${book.id}/${review.id} Reading Cloze needs a 5–8 sentence passage`);
         assert.equal(page.heroAssets.length, 0, `${book.id}/${review.id} Reading Cloze must use context and the Word Bank, not answer pictures`);
         assert.ok(page.answers.length >= 3 && page.answers.length <= 5, `${book.id}/${review.id} Reading Cloze needs 3–5 context blanks`);

@@ -1321,13 +1321,40 @@
 
   function clozeWordBank(unit, story, day) {
     const answerKeys = new Set(story.answers.map((answer) => String(answer).toLowerCase()));
+    const grammarPairs = {
+      am: "is", are: "is", do: "does", does: "do", have: "has", has: "have",
+      is: "are", like: "likes", likes: "like", want: "wants", wants: "want",
+      "fly a kite": "flies a kite", "go swimming": "goes swimming",
+      "listen to music": "listens to music", "watch TV": "watches TV"
+    };
+    const singularForm = (answer) => {
+      const words = String(answer).split(" ");
+      const last = words.pop();
+      const singular = /ies$/i.test(last) ? `${last.slice(0, -3)}y`
+        : /(?:ches|shes|xes|zes|oes)$/i.test(last) ? last.slice(0, -2)
+          : /s$/i.test(last) && !/ss$/i.test(last) ? last.slice(0, -1) : "";
+      return singular ? [...words, singular].join(" ") : "";
+    };
+    const confusingForms = story.answers.flatMap((answer) => {
+      const key = String(answer).toLowerCase();
+      const grammarPair = grammarPairs[key];
+      if (grammarPair) return [grammarPair];
+      const singular = singularForm(answer);
+      if (singular) return [singular];
+      const isVocabularyNoun = (unit.vocabulary || []).some((asset) => reviewVocabularyTerms(asset)
+        .some((term) => term.toLowerCase() === key));
+      return isVocabularyNoun && !/\s/.test(String(answer)) ? [pluralReviewWord(String(answer))] : [];
+    });
     const candidates = (unit.vocabulary || [])
       .flatMap((asset) => reviewVocabularyTerms(asset))
       .map((word) => String(word).trim())
       .filter((word, index, words) => word && !answerKeys.has(word.toLowerCase())
         && words.findIndex((candidate) => candidate.toLowerCase() === word.toLowerCase()) === index);
     const offset = candidates.length ? (Math.max(1, day) - 1) % candidates.length : 0;
-    const distractors = [...candidates.slice(offset), ...candidates.slice(0, offset)].slice(0, 2);
+    const distractors = [...confusingForms, ...candidates.slice(offset), ...candidates.slice(0, offset)]
+      .filter((word, index, words) => word && !answerKeys.has(word.toLowerCase())
+        && words.findIndex((candidate) => candidate.toLowerCase() === word.toLowerCase()) === index)
+      .slice(0, 3);
     const bank = [...story.answers, ...distractors];
     const rotateBy = bank.length ? Math.max(1, day) % bank.length : 0;
     return [...bank.slice(rotateBy), ...bank.slice(0, rotateBy)];

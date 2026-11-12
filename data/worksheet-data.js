@@ -1319,24 +1319,39 @@
     ], [reviewWord(unit.vocabulary?.[0])]);
   }
 
+  function clozeWordBank(unit, story, day) {
+    const answerKeys = new Set(story.answers.map((answer) => String(answer).toLowerCase()));
+    const candidates = (unit.vocabulary || [])
+      .flatMap((asset) => reviewVocabularyTerms(asset))
+      .map((word) => String(word).trim())
+      .filter((word, index, words) => word && !answerKeys.has(word.toLowerCase())
+        && words.findIndex((candidate) => candidate.toLowerCase() === word.toLowerCase()) === index);
+    const offset = candidates.length ? (Math.max(1, day) - 1) % candidates.length : 0;
+    const distractors = [...candidates.slice(offset), ...candidates.slice(0, offset)].slice(0, 2);
+    const bank = [...story.answers, ...distractors];
+    const rotateBy = bank.length ? Math.max(1, day) % bank.length : 0;
+    return [...bank.slice(rotateBy), ...bank.slice(0, rotateBy)];
+  }
+
   function connectedClozePage(unit, day) {
     const story = coherentReviewStory(unit, day);
-    const heroAsset = storyAsset(unit, story.heroWord);
+    const wordBank = clozeWordBank(unit, story, day);
     const items = story.answers.map((answer, index) => ({
       prompt: `Blank ${index + 1}: ________`,
       expectedAnswer: `${index + 1}. ${answer}`,
-      asset: index === 0 ? heroAsset : null
+      asset: null
     }));
     return {
       type: "reading_cloze",
       layout: "locked_template",
       title: story.title,
-      instruction: "Read the whole passage. Fill in each blank from context. Then copy one complete sentence.",
+      instruction: "Read the whole passage. Choose from the Word Bank. Some words are not used.",
       skill: "reading cloze and sentence writing",
       passageLines: story.passageLines,
       answers: story.answers,
-      heroAssets: heroAsset ? [heroAsset] : [],
-      sceneAssets: heroAsset ? [heroAsset] : [],
+      wordBank,
+      heroAssets: [],
+      sceneAssets: [],
       endingLines: ["Choose one completed sentence and write it below."],
       items
     };

@@ -77,11 +77,17 @@
   function readingCloze(page) {
     const pictures = (page.heroAssets || []).slice(0, 1).map((asset) => `
       <figure>${assetMarkup(asset, "Story picture")}</figure>`).join("");
-    const passage = (page.passageLines || []).map((line) => `<p>${escapeHtml(line)}</p>`).join("");
+    let blankNumber = 0;
+    const passage = escapeHtml((page.passageLines || []).join(" ")).replace(/________/g, () => {
+      blankNumber += 1;
+      return `<span class="wb-cloze-blank"><b>${blankNumber}</b><i></i></span>`;
+    });
+    const wordBank = (page.wordBank || []).map((word) => `<span>${escapeHtml(word)}</span>`).join("");
     const ending = (page.endingLines || []).map((line) => `<p>${escapeHtml(line)}</p>`).join("");
     return `<section class="wb-reading-cloze wb-passage-page">
+      ${wordBank ? `<div class="wb-cloze-word-bank"><strong>Word Bank</strong><div>${wordBank}</div></div>` : ""}
       ${pictures ? `<div class="wb-reading-cloze-pictures is-single">${pictures}</div>` : ""}
-      <div class="wb-reading-cloze-passage">${passage}</div>
+      <div class="wb-reading-cloze-passage"><p>${passage}</p></div>
       <div class="wb-passage-copy wb-passage-ending">${ending}</div>
       <div class="wb-reading-cloze-write"><strong>My complete sentence:</strong>${answerLines(1)}</div>
     </section>`;

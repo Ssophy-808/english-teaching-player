@@ -204,9 +204,16 @@
 .wb-reading-cloze-pictures.is-single figure { width: 78mm; min-height: 31mm; padding: 2mm; }
 .wb-reading-cloze-pictures.is-single .wb-picture,
 .wb-reading-cloze-pictures.is-single .wb-visual { width: 34mm; height: 34mm; }
+.wb-cloze-word-bank { margin: 2mm 0 3mm; padding: 3mm 4mm; border: 1.5px solid #384f75; border-radius: 2mm; background: #f4f7fb; }
+.wb-cloze-word-bank > strong { display: block; margin-bottom: 2mm; color: #1f3b65; font-size: 11pt; }
+.wb-cloze-word-bank > div { display: flex; flex-wrap: wrap; gap: 2mm 5mm; justify-content: center; }
+.wb-cloze-word-bank span { min-width: 24mm; font-size: 12pt; font-weight: 700; text-align: center; }
 .wb-reading-cloze-passage { margin: 4mm 0 3mm; padding: 5mm 6mm; border: 1.5px solid #333; background: #fff; }
-.wb-reading-cloze-passage p { margin: 0 0 3mm; font: inherit; font-size: 13pt; font-weight: 600; line-height: 1.75; }
+.wb-reading-cloze-passage p { margin: 0; font: inherit; font-size: 13pt; font-weight: 600; line-height: 2.15; }
 .wb-reading-cloze-passage p:last-child { margin-bottom: 0; }
+.wb-cloze-blank { display: inline-flex; align-items: center; gap: 1.5mm; margin: 0 1mm; vertical-align: middle; white-space: nowrap; }
+.wb-cloze-blank b { display: inline-grid; width: 6mm; height: 6mm; place-items: center; border-radius: 50%; background: #705998; color: #fff; font-size: 8.5pt; line-height: 1; }
+.wb-cloze-blank i { display: inline-block; width: 30mm; height: 6mm; border-bottom: 1.3px solid #555; }
 .wb-reading-cloze-write { margin-top: 2mm; padding: 2.5mm 4mm; border: 1.5px solid #333; }
 .wb-reading-cloze-write strong { display: block; margin-bottom: 1mm; font-size: 10.5pt; }
 .wb-reading-cloze-write .wb-answer-lines { margin: 0; }

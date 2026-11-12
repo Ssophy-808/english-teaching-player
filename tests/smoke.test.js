@@ -47,7 +47,7 @@ books.forEach((book) => {
       assert.equal(lesson.worksheet.pages.length, 4, `${lesson.id} must have four worksheet pages`);
       lesson.worksheet.pages.forEach((page) => {
         assert.ok(page.items.length > 0, `${lesson.id}/${page.type} must contain questions`);
-        assert.ok((page.sceneAssets || []).length > 0 || page.items.some((item) => item.asset?.image || item.asset?.sprite?.src || item.asset?.visual), `${lesson.id}/${page.type} must contain visible picture assets`);
+        assert.ok(page.type === "reading_cloze" || (page.sceneAssets || []).length > 0 || page.items.some((item) => item.asset?.image || item.asset?.sprite?.src || item.asset?.visual), `${lesson.id}/${page.type} must contain visible picture assets`);
         if (page.type === "sentence_transform") page.items.forEach((item) => {
           const source = item.prompt.split("→")[0].trim();
           const sourceIsNegative = /\b(?:am|is|are) not\b|\b(?:cannot|can't|do not|don't|does not|doesn't)\b/i.test(source);
@@ -181,9 +181,11 @@ books.forEach((book) => {
     review.lessons.flatMap((lesson) => lesson.worksheet.pages)
       .filter((page) => page.type === "reading_cloze")
       .forEach((page) => {
-        assert.equal(page.wordBank, undefined, `${book.id}/${review.id} Reading Cloze must not provide a Word Bank`);
+        assert.ok(page.wordBank.length > page.answers.length, `${book.id}/${review.id} Reading Cloze Word Bank needs distractor words`);
+        assert.ok(page.wordBank.length <= page.answers.length + 3, `${book.id}/${review.id} Reading Cloze needs only 1–3 distractors`);
+        page.answers.forEach((answer) => assert.ok(page.wordBank.includes(answer), `${book.id}/${review.id} Word Bank must include ${answer}`));
         assert.ok(page.passageLines.length >= 5 && page.passageLines.length <= 8, `${book.id}/${review.id} Reading Cloze needs a 5–8 sentence passage`);
-        assert.equal(page.heroAssets.length, 1, `${book.id}/${review.id} Reading Cloze needs one story picture, not one picture per blank`);
+        assert.equal(page.heroAssets.length, 0, `${book.id}/${review.id} Reading Cloze must use context and the Word Bank, not answer pictures`);
         assert.ok(page.answers.length >= 3 && page.answers.length <= 5, `${book.id}/${review.id} Reading Cloze needs 3–5 context blanks`);
         assert.equal((page.passageLines.join(" ").match(/________/g) || []).length, page.answers.length, `${book.id}/${review.id} Reading Cloze blank count must match its answers`);
         const storyWordCount = page.passageLines.join(" ").replace(/_+/g, "").trim().split(/\s+/).filter(Boolean).length;

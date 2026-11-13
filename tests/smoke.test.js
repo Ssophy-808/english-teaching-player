@@ -395,6 +395,11 @@ const book2Unit1Day1 = books.find((book) => book.id === "book-2")
 assert.ok(book2Unit1Day1.items.some((item) => item.prompt === "What is it?"), "Book 2 Unit 1 Day 1 must include a What question");
 assert.ok(book2Unit1Day1.items.some((item) => /^No, there is not\./.test(item.expectedAnswer)), "Book 2 Unit 1 Day 1 must include a negative answer");
 assert.ok(book2Unit1Day1.items.some((item) => /^Yes, there is\./.test(item.expectedAnswer)), "Book 2 Unit 1 Day 1 must include a positive answer");
+const book2Unit1Evidence = books.find((book) => book.id === "book-2")
+  .units.find((unit) => unit.id === "unit-1").lessons[1].worksheet.pages[2];
+assert.equal(book2Unit1Evidence.type, "template_picture_evidence", "Book 2 Unit 1 Day 2 must include picture evidence practice");
+assert.ok(book2Unit1Evidence.items.every((item) => /^True or false\? There is (?:a|an) /i.test(item.prompt)), "Classroom picture evidence must use natural declarative statements");
+assert.ok(book2Unit1Evidence.items.some((item) => /^True\./.test(item.expectedAnswer)) && book2Unit1Evidence.items.some((item) => /^False\./.test(item.expectedAnswer)), "Picture evidence must mix true and false answers");
 
 const mixedLanguagePages = books.flatMap((book) => book.units)
   .filter((unit) => !unit.isReview)

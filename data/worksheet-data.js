@@ -952,7 +952,14 @@
     if (day === 2) return [
       unitReadingPage(unit, bookId, pairsForDay),
       locked("template_picture_question", "Make the Question", "Look at the picture and write the matching question.", pairsForDay.map((pair) => ({ prompt: pictureQuestionPrompt(pair, bookId, unit.id), asset: pair.asset, expectedAnswer: pictureQuestionAnswer(pair, bookId, unit.id) })), true),
-      locked("template_dialogue_completion", "Complete the Dialogue", "Read each question. Write the missing complete answer.", pairsForDay.map((pair) => ({ prompt: `A: ${pair.question}  B: ____________________`, asset: pair.asset, expectedAnswer: pair.answer }))),
+      locked("template_picture_evidence", "Picture: True or False", "Look at each picture. Write True or False. If it is false, rewrite the correct complete sentence.", pairsForDay.map((pair, index) => {
+        const shownAnswer = index % 2 === 0 ? pair.answer : pairsForDay[(index + 1) % pairsForDay.length].answer;
+        return {
+          prompt: `True or false? ${shownAnswer}`,
+          asset: pair.asset,
+          expectedAnswer: `${index % 2 === 0 ? "True" : "False"}. ${pair.answer}`
+        };
+      }), true),
       locked("template_question_order", "Build the Question", "Put the words in order. Write the complete question.", pairsForDay.map((pair) => ({ prompt: scramble(pair.question), asset: pair.asset, expectedAnswer: pair.question })))
     ];
 

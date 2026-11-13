@@ -78,7 +78,7 @@ books.forEach((book) => book.units.filter((unit) => !unit.isReview).forEach((uni
   assert.ok(["template_independent_sentence", "template_mixed_answer_review"].includes(finalWritingType), `${book.id}/${unit.id} Day 4 must finish with picture sentence writing or cumulative review`);
   assert.deepEqual(unit.lessons.map((lesson) => lesson.worksheet.pages.map((page) => page.type)), [
     ["template_picture_answer", "matching", "multiple_choice", "template_fix_mistakes"],
-    ["reading_comprehension", "template_picture_question", "template_dialogue_completion", "template_question_order"],
+    ["reading_comprehension", "template_picture_question", "template_picture_evidence", "template_question_order"],
     ["template_guided_question", "template_sentence_completion", "template_mixed_correction", "template_answer_order"],
     ["template_independent_picture", "chain_questions", applicationType, finalWritingType]
   ], `${book.id}/${unit.id} must use a different activity mix on each day`);

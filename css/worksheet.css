@@ -218,6 +218,19 @@
 .wb-reading-cloze-write strong { display: block; margin-bottom: 1mm; font-size: 10.5pt; }
 .wb-reading-cloze-write .wb-answer-lines { margin: 0; }
 .wb-reading-cloze-write .wb-handwriting-row { height: 10mm; }
+.wb-reading-card { display: grid; grid-template-columns: 34mm 1fr; gap: 5mm; margin: 0 0 5mm; padding: 4mm 5mm; border: 1.5px solid #333; background: #f7fbff; }
+.wb-reading-scene { display: grid; place-items: center; }
+.wb-reading-scene figure { margin: 0; }
+.wb-reading-scene .wb-picture,
+.wb-reading-scene .wb-visual { width: 31mm; height: 31mm; border: 0; background: transparent; object-fit: contain; }
+.wb-reading-text p { margin: 0 0 1.5mm; font: inherit; font-size: 11.5pt; font-weight: 600; line-height: 1.45; }
+.wb-reading-text p:last-child { margin-bottom: 0; }
+.wb-reading-comprehension ol { display: grid; gap: 2mm; margin: 0; padding: 0; list-style: none; }
+.wb-reading-comprehension li { display: grid; grid-template-columns: 9mm 1fr; gap: 2mm; min-height: 25mm; align-items: start; }
+.wb-reading-comprehension li p { margin: 0 0 1mm; font: inherit; font-size: 11.5pt; font-weight: 700; }
+.wb-reading-number { font-size: 11.5pt; font-weight: 800; }
+.wb-reading-comprehension .wb-answer-lines { margin-top: 1mm; }
+.wb-reading-comprehension .wb-handwriting-row { height: 8mm; }
 .wb-locked-template footer { right: 13mm; bottom: 5mm; left: 13mm; color: #555; font-size: 7.5pt; font-weight: 500; }
 
 @media screen and (max-width: 900px) {

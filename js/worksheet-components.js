@@ -93,6 +93,21 @@
     </section>`;
   }
 
+  function readingComprehension(page) {
+    const picture = (page.heroAssets || []).slice(0, 1).map((asset) => `
+      <figure>${assetMarkup(asset, "Reading picture")}</figure>`).join("");
+    const passage = (page.passageLines || []).map((line) => `<p>${escapeHtml(line)}</p>`).join("");
+    const questions = (page.items || []).map((item, index) => `
+      <li><span class="wb-reading-number">${index + 1}.</span><div><p>${escapeHtml(item.prompt)}</p>${answerLines(1)}</div></li>`).join("");
+    return `<section class="wb-reading-comprehension wb-passage-page">
+      <div class="wb-reading-card">
+        ${picture ? `<div class="wb-reading-scene">${picture}</div>` : ""}
+        <div class="wb-reading-text">${passage}</div>
+      </div>
+      <ol>${questions}</ol>
+    </section>`;
+  }
+
   function chainQuestions(page) {
     const lines = page.items.map((item, index) => `<li><span class="wb-chain-step">${index + 1}</span><div><small>${escapeHtml(item.lead)}</small><p>${escapeHtml(item.prompt)}</p>${answerLines(1)}</div>${itemPicture(item, item.expectedAnswer)}</li>`).join("");
     return `<section class="wb-chain"><p class="wb-story-intro">${escapeHtml(page.intro)}</p><ol>${lines}</ol><div class="wb-chain-new"><strong>My next question:</strong>${answerLines(1)}</div></section>`;
@@ -110,6 +125,7 @@
 
   function pageBody(page) {
     if (page.type === "reading_cloze") return readingCloze(page);
+    if (page.type === "reading_comprehension") return readingComprehension(page);
     if (page.type === "story_cloze") return storyCloze(page);
     if (page.type === "chain_questions") return chainQuestions(page);
     if (page.layout === "locked_template") return lockedTemplateBody(page);

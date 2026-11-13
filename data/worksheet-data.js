@@ -794,6 +794,76 @@
     return mixed;
   }
 
+  function grammarBlank(sentence) {
+    return String(sentence).replace(/\b(there|is|are|am|do|does|has|have|can|want|wants|like|likes)\b/i, "________");
+  }
+
+  function unitReadingPage(unit, bookId, pairsForDay) {
+    if (bookId === "book-2" && unit.id === "unit-1") {
+      return {
+        type: "reading_comprehension",
+        layout: "locked_template",
+        title: "Read About Mia's Classroom",
+        instruction: "Read the whole passage. Answer each question in a complete sentence.",
+        skill: "reading for details and making an inference",
+        passageLines: [
+          "This is Mia's classroom.",
+          "There is a door next to the whiteboard, and there is a television in front of the tables.",
+          "It is hot today, but the classroom is cool because there is a fan.",
+          "Mia wants to call her mom, but there is not a telephone in the classroom.",
+          "She can watch a video, but she cannot make a phone call."
+        ],
+        heroAssets: [pairsForDay.find((pair) => worksheetWord(pair.asset) === "television")?.asset || pairsForDay[0].asset],
+        items: [
+          { prompt: "What is next to the whiteboard?", expectedAnswer: "There is a door next to the whiteboard." },
+          { prompt: "Is there a telephone in Mia's classroom?", expectedAnswer: "No, there is not." },
+          { prompt: "Why is the classroom cool?", expectedAnswer: "It is cool because there is a fan." },
+          { prompt: "What can Mia use to watch a video?", expectedAnswer: "She can use the television." }
+        ]
+      };
+    }
+    const first = pairsForDay[0];
+    const second = pairsForDay[1];
+    return {
+      type: "reading_comprehension",
+      layout: "locked_template",
+      title: "Read the Classroom Conversation",
+      instruction: "Read the connected conversation. Answer in complete sentences.",
+      skill: "reading for details and dialogue meaning",
+      passageLines: [
+        "Lumi and Ludi are talking in class.",
+        `Lumi asks, “${first.question}”`,
+        `Ludi answers, “${first.answer}”`,
+        `Then Lumi asks, “${second.question}”`,
+        `Ludi answers, “${second.answer}”`
+      ],
+      heroAssets: [first.asset],
+      items: [
+        { prompt: "Who asks the questions?", expectedAnswer: "Lumi asks the questions." },
+        { prompt: "What is Lumi's first question?", expectedAnswer: first.question },
+        { prompt: "What is Ludi's second answer?", expectedAnswer: second.answer },
+        { prompt: "Are Lumi and Ludi talking about the same lesson?", expectedAnswer: "Yes, they are." }
+      ]
+    };
+  }
+
+  function questionChainPage(pairsForDay) {
+    return {
+      type: "chain_questions",
+      layout: "locked_template",
+      title: "Keep the Conversation Going",
+      instruction: "Answer from top to bottom. Use each answer to continue the same conversation.",
+      skill: "connected questions and complete answers",
+      intro: "Lumi and Ludi are talking about the lesson. Keep their conversation going.",
+      items: pairsForDay.slice(0, 4).map((pair, index) => ({
+        prompt: pair.question,
+        lead: index === 0 ? "Lumi starts." : "Continue the conversation.",
+        asset: pair.asset,
+        expectedAnswer: pair.answer
+      }))
+    };
+  }
+
   function standardProgressivePages(unit, day, bookId) {
     const pairsForDay = standardProgressivePairs(unit, day, bookId);
     const matchPairs = pairsForDay.slice(0, 4);
@@ -837,24 +907,24 @@
     ];
 
     if (day === 2) return [
+      unitReadingPage(unit, bookId, pairsForDay),
       locked("template_picture_question", "Make the Question", "Look at the picture and write the matching question.", pairsForDay.map((pair) => ({ prompt: pictureQuestionPrompt(pair, bookId, unit.id), asset: pair.asset, expectedAnswer: pictureQuestionAnswer(pair, bookId, unit.id) })), true),
-      page("matching", "Match Questions and Answers", "Draw a line from each answer to its matching question.", matchingItems),
-      page("multiple_choice", "Choose the Question", "Read the answer. Circle the question that matches.", questionChoices),
+      locked("template_dialogue_completion", "Complete the Dialogue", "Read each question. Write the missing complete answer.", pairsForDay.map((pair) => ({ prompt: `A: ${pair.question}  B: ____________________`, asset: pair.asset, expectedAnswer: pair.answer }))),
       locked("template_question_order", "Build the Question", "Put the words in order. Write the complete question.", pairsForDay.map((pair) => ({ prompt: scramble(pair.question), asset: pair.asset, expectedAnswer: pair.question })))
     ];
 
     if (day === 3) return [
       locked("template_guided_question", "Write Your Question", "Look at the picture. Write a What question or a Yes/No question.", pairsForDay.map((pair) => ({ prompt: pictureQuestionPrompt(pair, bookId, unit.id), asset: pair.asset, expectedAnswer: pictureQuestionAnswer(pair, bookId, unit.id) })), true),
-      page("matching", "Match the Dialogue", "Match each question to the best complete answer.", matchingItems),
-      page("multiple_choice", "Choose the Question", "Circle the only correct complete question.", questionChoices),
-      locked("template_mixed_correction", "Fix the Questions", "Find the mistake. Rewrite each question correctly.", pairsForDay.map((pair) => ({ prompt: grammarError(pair.question), asset: pair.asset, expectedAnswer: pair.question })))
+      locked("template_sentence_completion", "Complete the Sentence", "Use the context to fill in the missing grammar word. Rewrite the complete sentence.", pairsForDay.map((pair) => ({ prompt: grammarBlank(pair.answer), asset: pair.asset, expectedAnswer: pair.answer }))),
+      locked("template_mixed_correction", "Fix the Questions", "Find the mistake. Rewrite each question correctly.", pairsForDay.map((pair) => ({ prompt: grammarError(pair.question), asset: pair.asset, expectedAnswer: pair.question }))),
+      locked("template_answer_order", "Build the Answer", "Put the words in order. Write the complete answer.", pairsForDay.map((pair) => ({ prompt: scramble(pair.answer), asset: pair.asset, expectedAnswer: pair.answer })))
     ];
 
     return [
       locked("template_independent_picture", "Picture Question Challenge", "Look at the picture. Write a What question or a Yes/No question.", pairsForDay.map((pair) => ({ prompt: pictureQuestionPrompt(pair, bookId, unit.id), asset: pair.asset, expectedAnswer: pictureQuestionAnswer(pair, bookId, unit.id) })), true),
-      page("matching", "Complete the Dialogue", "Match each question to the best complete answer.", matchingItems),
-      page("multiple_choice", "Final Grammar Check", "Circle the only correct question.", questionChoices),
-      locked("template_final_output", "Question Writing Review", "Read each answer and write its question.", pairsForDay.map((pair) => ({ prompt: `Answer: ${pair.answer}`, asset: pair.asset, expectedAnswer: pair.question })))
+      questionChainPage(pairsForDay),
+      locked("template_situation_response", "Situation Response", "Read each classroom situation. Write the best complete response.", pairsForDay.map((pair) => ({ prompt: `Lumi asks, “${pair.question}” What should Ludi say?`, asset: pair.asset, expectedAnswer: pair.answer }))),
+      locked("template_mini_dialogue", "Create a Mini Dialogue", "Use the picture to write one complete question and its complete answer.", pairsForDay.map((pair) => ({ prompt: `Use “${worksheetWord(pair.asset)}” in a two-line dialogue.`, asset: pair.asset, expectedAnswer: `${pair.question} ${pair.answer}` })), true)
     ];
   }
 

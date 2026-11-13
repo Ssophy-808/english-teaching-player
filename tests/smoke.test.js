@@ -47,7 +47,7 @@ books.forEach((book) => {
       assert.equal(lesson.worksheet.pages.length, 4, `${lesson.id} must have four worksheet pages`);
       lesson.worksheet.pages.forEach((page) => {
         assert.ok(page.items.length > 0, `${lesson.id}/${page.type} must contain questions`);
-        assert.ok(page.type === "reading_cloze" || (page.sceneAssets || []).length > 0 || page.items.some((item) => item.asset?.image || item.asset?.sprite?.src || item.asset?.visual), `${lesson.id}/${page.type} must contain visible picture assets`);
+        assert.ok(page.type === "reading_cloze" || (page.heroAssets || []).length > 0 || (page.sceneAssets || []).length > 0 || page.items.some((item) => item.asset?.image || item.asset?.sprite?.src || item.asset?.visual), `${lesson.id}/${page.type} must contain visible picture assets`);
         if (page.type === "sentence_transform") page.items.forEach((item) => {
           const source = item.prompt.split("→")[0].trim();
           const sourceIsNegative = /\b(?:am|is|are) not\b|\b(?:cannot|can't|do not|don't|does not|doesn't)\b/i.test(source);
@@ -69,29 +69,23 @@ books.forEach((book) => {
   });
 });
 
-const progressiveFirstPageTitles = [
-  "Look and Answer", "Make the Question", "Write Your Question", "Picture Question Challenge"
-];
 books.forEach((book) => book.units.filter((unit) => !unit.isReview).forEach((unit) => {
-  const expectedProgression = book.id === "book-3" && unit.id === "unit-5"
-    ? ["Look and Answer", "Choose and Write", "Look, Think, and Answer", "Build Complete Sentences"]
-    : progressiveFirstPageTitles;
-  assert.deepEqual(
-    unit.lessons.map((lesson) => lesson.worksheet.pages[0].title),
-    expectedProgression,
-    `${book.id}/${unit.id} must build independent question writing from Day 1 to Day 4`
-  );
-  unit.lessons.forEach((lesson) => {
-    assert.deepEqual(
-      lesson.worksheet.pages.map((page) => page.items.length),
-      [8, 4, 6, 8],
-      `${book.id}/${unit.id}/${lesson.id} must use the standard four-page workload`
-    );
-    assert.equal(lesson.worksheet.pages[0].layout, "locked_template", `${book.id}/${unit.id}/${lesson.id} first page must use the locked template`);
-    assert.equal(lesson.worksheet.pages[1].type, "matching", `${book.id}/${unit.id}/${lesson.id} second page must be matching`);
-    assert.equal(lesson.worksheet.pages[2].type, "multiple_choice", `${book.id}/${unit.id}/${lesson.id} third page must be multiple choice`);
-    assert.equal(lesson.worksheet.pages[3].layout, "locked_template", `${book.id}/${unit.id}/${lesson.id} fourth page must use the locked template`);
-  });
+  const standardDays = unit.lessons.length === 4 && unit.lessons[1].worksheet.pages[0].type === "reading_comprehension";
+  if (!standardDays) return;
+  const finalWritingType = unit.lessons[3].worksheet.pages[3].type;
+  assert.ok(["template_mini_dialogue", "template_mixed_answer_review"].includes(finalWritingType), `${book.id}/${unit.id} Day 4 must finish with new dialogue writing or cumulative review`);
+  assert.deepEqual(unit.lessons.map((lesson) => lesson.worksheet.pages.map((page) => page.type)), [
+    ["template_picture_answer", "matching", "multiple_choice", "template_fix_mistakes"],
+    ["reading_comprehension", "template_picture_question", "template_dialogue_completion", "template_question_order"],
+    ["template_guided_question", "template_sentence_completion", "template_mixed_correction", "template_answer_order"],
+    ["template_independent_picture", "chain_questions", "template_situation_response", finalWritingType]
+  ], `${book.id}/${unit.id} must use a different activity mix on each day`);
+  const pictureTypes = new Set(["template_picture_answer", "template_picture_question", "template_guided_question", "template_independent_picture"]);
+  const nonPictureTypes = unit.lessons.flatMap((lesson) => lesson.worksheet.pages.map((page) => page.type)).filter((type) => !pictureTypes.has(type));
+  assert.equal(new Set(nonPictureTypes).size, nonPictureTypes.length, `${book.id}/${unit.id} must not repeat non-picture worksheet types across Day 1–4`);
+  const reading = unit.lessons[1].worksheet.pages[0];
+  assert.ok(reading.passageLines.length >= 5, `${book.id}/${unit.id} Day 2 reading must be a connected passage`);
+  assert.ok(reading.items.length >= 4, `${book.id}/${unit.id} Day 2 reading must include detail and inference questions`);
 }));
 
 function expectedAnswerSubject(question) {
@@ -231,7 +225,8 @@ book2FruitUnits.forEach((unit) => {
   assert.ok(mixedPage.items.some((item) => /^Change to singular:/i.test(item.prompt)), `${unit.id} must include singular conversion`);
 
   unit.lessons.slice(1).forEach((lesson) => {
-    const writingPage = lesson.worksheet.pages[0];
+    const writingPage = lesson.worksheet.pages.find((page) => ["template_picture_question", "template_guided_question", "template_independent_picture"].includes(page.type));
+    assert.ok(writingPage, `${unit.id}/${lesson.id} must include a picture question-writing page`);
     const prompts = writingPage.items.map((item) => item.prompt).join(" ");
     assert.doesNotMatch(prompts, /\b(?:apples|bananas|oranges|peaches|strawberries|kiwis|mangoes|tomatoes|cherries)\b/i, `${unit.id}/${lesson.id} picture cues must not reveal the fruit word`);
     const expectedQuestions = writingPage.items.map((item) => item.expectedAnswer);

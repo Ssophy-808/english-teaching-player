@@ -480,6 +480,8 @@
   }
 
   function secondGrammarError(text) {
+    if (/^Is there\b/i.test(text)) return text.replace(/^Is there\b/i, "Are there");
+    if (/^What is it\b/i.test(text)) return text.replace(/^What is it\b/i, "What are it");
     if (/\bI am\b/i.test(text)) return text.replace(/\bI am\b/i, "I are");
     if (/\bI'm\b/i.test(text)) return text.replace(/\bI'm\b/i, "I are");
     if (/\bam I\b/i.test(text)) return text.replace(/\bam I\b/i, "are I");
@@ -794,8 +796,16 @@
     return mixed;
   }
 
-  function grammarBlank(sentence) {
-    return String(sentence).replace(/\b(there|is|are|am|do|does|has|have|can|want|wants|like|likes)\b/i, "________");
+  function grammarBlank(sentence, index = 0) {
+    const value = String(sentence);
+    const matches = [...value.matchAll(/\b(there|is|are|am|not|do|does|has|have|can|want|wants|like|likes)\b/gi)];
+    if (!matches.length) return value;
+    const match = matches[index % matches.length];
+    return `${value.slice(0, match.index)}________${value.slice(match.index + match[0].length)}`;
+  }
+
+  function articleFor(word) {
+    return /^[aeiou]/i.test(String(word).trim()) ? "an" : "a";
   }
 
   function unitReadingPage(unit, bookId, pairsForDay) {
@@ -864,6 +874,39 @@
     };
   }
 
+  function unitApplicationPage(unit, bookId, pairsForDay) {
+    if (bookId === "book-2" && unit.id === "unit-1") {
+      return {
+        type: "template_classroom_checklist",
+        layout: "locked_template",
+        title: "Read the Classroom Checklist",
+        instruction: "Read each checklist mark. Write a complete There is or There is not sentence.",
+        skill: "turning visual information into affirmative and negative statements",
+        items: pairsForDay.map((pair, index) => {
+          const word = worksheetWord(pair.asset);
+          const present = index % 2 === 0;
+          return {
+            prompt: `${word} ${present ? "✓" : "✗"} — Write a complete sentence.`,
+            asset: pair.asset,
+            expectedAnswer: `There is${present ? "" : " not"} ${articleFor(word)} ${word}.`
+          };
+        })
+      };
+    }
+    return progressivePage(
+      "template_situation_response",
+      "Situation Response",
+      "Read each situation. Write the best complete response.",
+      unit.grammarFocus || unit.topic || unit.title,
+      pairsForDay.map((pair) => ({
+        prompt: `Lumi asks, “${pair.question}” What should Ludi say?`,
+        asset: pair.asset,
+        expectedAnswer: pair.answer
+      })),
+      { layout: "locked_template" }
+    );
+  }
+
   function standardProgressivePages(unit, day, bookId) {
     const pairsForDay = standardProgressivePairs(unit, day, bookId);
     const matchPairs = pairsForDay.slice(0, 4);
@@ -915,15 +958,15 @@
 
     if (day === 3) return [
       locked("template_guided_question", "Write Your Question", "Look at the picture. Write a What question or a Yes/No question.", pairsForDay.map((pair) => ({ prompt: pictureQuestionPrompt(pair, bookId, unit.id), asset: pair.asset, expectedAnswer: pictureQuestionAnswer(pair, bookId, unit.id) })), true),
-      locked("template_sentence_completion", "Complete the Sentence", "Use the context to fill in the missing grammar word. Rewrite the complete sentence.", pairsForDay.map((pair) => ({ prompt: grammarBlank(pair.answer), asset: pair.asset, expectedAnswer: pair.answer }))),
-      locked("template_mixed_correction", "Fix the Questions", "Find the mistake. Rewrite each question correctly.", pairsForDay.map((pair) => ({ prompt: grammarError(pair.question), asset: pair.asset, expectedAnswer: pair.question }))),
+      locked("template_sentence_completion", "Complete the Sentence", "Use the context to fill in the missing grammar word. Rewrite the complete sentence.", pairsForDay.map((pair, index) => ({ prompt: grammarBlank(pair.answer, index), asset: pair.asset, expectedAnswer: pair.answer }))),
+      locked("template_mixed_correction", "Fix the Questions", "Find the mistake. Rewrite each question correctly.", pairsForDay.map((pair) => ({ prompt: secondGrammarError(pair.question), asset: pair.asset, expectedAnswer: pair.question }))),
       locked("template_answer_order", "Build the Answer", "Put the words in order. Write the complete answer.", pairsForDay.map((pair) => ({ prompt: scramble(pair.answer), asset: pair.asset, expectedAnswer: pair.answer })))
     ];
 
     return [
       locked("template_independent_picture", "Picture Question Challenge", "Look at the picture. Write a What question or a Yes/No question.", pairsForDay.map((pair) => ({ prompt: pictureQuestionPrompt(pair, bookId, unit.id), asset: pair.asset, expectedAnswer: pictureQuestionAnswer(pair, bookId, unit.id) })), true),
       questionChainPage(pairsForDay),
-      locked("template_situation_response", "Situation Response", "Read each classroom situation. Write the best complete response.", pairsForDay.map((pair) => ({ prompt: `Lumi asks, “${pair.question}” What should Ludi say?`, asset: pair.asset, expectedAnswer: pair.answer }))),
+      unitApplicationPage(unit, bookId, pairsForDay),
       locked("template_mini_dialogue", "Create a Mini Dialogue", "Use the picture to write one complete question and its complete answer.", pairsForDay.map((pair) => ({ prompt: `Use “${worksheetWord(pair.asset)}” in a two-line dialogue.`, asset: pair.asset, expectedAnswer: `${pair.question} ${pair.answer}` })), true)
     ];
   }

@@ -73,12 +73,14 @@ books.forEach((book) => book.units.filter((unit) => !unit.isReview).forEach((uni
   const standardDays = unit.lessons.length === 4 && unit.lessons[1].worksheet.pages[0].type === "reading_comprehension";
   if (!standardDays) return;
   const finalWritingType = unit.lessons[3].worksheet.pages[3].type;
+  const applicationType = unit.lessons[3].worksheet.pages[2].type;
+  assert.ok(["template_situation_response", "template_classroom_checklist"].includes(applicationType), `${book.id}/${unit.id} Day 4 must include a distinct application task`);
   assert.ok(["template_mini_dialogue", "template_mixed_answer_review"].includes(finalWritingType), `${book.id}/${unit.id} Day 4 must finish with new dialogue writing or cumulative review`);
   assert.deepEqual(unit.lessons.map((lesson) => lesson.worksheet.pages.map((page) => page.type)), [
     ["template_picture_answer", "matching", "multiple_choice", "template_fix_mistakes"],
     ["reading_comprehension", "template_picture_question", "template_dialogue_completion", "template_question_order"],
     ["template_guided_question", "template_sentence_completion", "template_mixed_correction", "template_answer_order"],
-    ["template_independent_picture", "chain_questions", "template_situation_response", finalWritingType]
+    ["template_independent_picture", "chain_questions", applicationType, finalWritingType]
   ], `${book.id}/${unit.id} must use a different activity mix on each day`);
   const pictureTypes = new Set(["template_picture_answer", "template_picture_question", "template_guided_question", "template_independent_picture"]);
   const nonPictureTypes = unit.lessons.flatMap((lesson) => lesson.worksheet.pages.map((page) => page.type)).filter((type) => !pictureTypes.has(type));
@@ -411,6 +413,14 @@ mixedLanguagePages.forEach((page) => {
     }
   });
 });
+
+books.flatMap((book) => book.units).flatMap((unit) => unit.lessons)
+  .flatMap((lesson) => lesson.worksheet.pages)
+  .filter((page) => page.type === "template_mixed_correction")
+  .forEach((page) => page.items.forEach((item) => {
+    const normalize = (value) => String(value).replace(/\s+([?.!,])/g, "$1").trim().toLowerCase();
+    assert.notEqual(normalize(item.prompt), normalize(item.expectedAnswer), `${page.title} must contain a real grammar error, not spacing only`);
+  }));
 
 [
   ["book-1", "unit-4"],

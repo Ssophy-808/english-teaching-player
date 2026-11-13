@@ -224,8 +224,11 @@ book2FruitUnits.forEach((unit) => {
   assert.ok(day1Questions.some((question) => /^Are (?:these|those)\b/i.test(question)), `${unit.id} must include Are these/those questions`);
 
   const mixedPage = unit.lessons[0].worksheet.pages[3];
-  assert.equal(mixedPage.items.filter((item) => /^Fix:/i.test(item.prompt)).length, 5, `${unit.id} must limit repeated correction items to five`);
-  assert.equal(mixedPage.items.filter((item) => /^(?:Put in order|Change to plural|Change to singular):/i.test(item.prompt)).length, 3, `${unit.id} must use the lower section for reorder and number-form practice`);
+  assert.ok(mixedPage.items.some((item) => /^Fix the answer:/i.test(item.prompt)), `${unit.id} must include answer correction`);
+  assert.ok(mixedPage.items.some((item) => /^Fix the question:/i.test(item.prompt)), `${unit.id} must include question correction`);
+  assert.ok(mixedPage.items.some((item) => /^Put (?:the question|the answer) in order:/i.test(item.prompt)), `${unit.id} must include sentence reordering`);
+  assert.ok(mixedPage.items.some((item) => /^Change to plural:/i.test(item.prompt)), `${unit.id} must include plural conversion`);
+  assert.ok(mixedPage.items.some((item) => /^Change to singular:/i.test(item.prompt)), `${unit.id} must include singular conversion`);
 
   unit.lessons.slice(1).forEach((lesson) => {
     const writingPage = lesson.worksheet.pages[0];
@@ -389,6 +392,41 @@ assert.deepEqual(
   { ...routeContext.LessonRoutes.parse("/english-teaching-player/literacy/book1/unit4/") },
   { literacy: true, literacyBookId: "book-1", literacyUnitId: "unit-4", bookId: "", unitId: "", day: 0 }
 );
+
+const book2Unit1Day1 = books.find((book) => book.id === "book-2")
+  .units.find((unit) => unit.id === "unit-1").lessons[0].worksheet.pages[0];
+assert.ok(book2Unit1Day1.items.some((item) => item.prompt === "What is it?"), "Book 2 Unit 1 Day 1 must include a What question");
+assert.ok(book2Unit1Day1.items.some((item) => /^No, there is not\./.test(item.expectedAnswer)), "Book 2 Unit 1 Day 1 must include a negative answer");
+assert.ok(book2Unit1Day1.items.some((item) => /^Yes, there is\./.test(item.expectedAnswer)), "Book 2 Unit 1 Day 1 must include a positive answer");
+
+const mixedLanguagePages = books.flatMap((book) => book.units)
+  .filter((unit) => !unit.isReview)
+  .flatMap((unit) => unit.lessons)
+  .flatMap((lesson) => lesson.worksheet.pages)
+  .filter((page) => page.type === "template_fix_mistakes");
+mixedLanguagePages.forEach((page) => {
+  const directions = new Set(page.items.map((item) => item.prompt.split(":")[0]));
+  assert.ok(directions.size >= 3, `${page.title} must mix at least three correction or reordering task types`);
+  page.items.forEach((item) => {
+    if (/^Fix (?:the answer|the question):/i.test(item.prompt)) {
+      assert.notEqual(item.prompt.split(":").slice(1).join(":").trim(), item.expectedAnswer, `${page.title} correction prompt must contain a real error`);
+    }
+    if (/^Put (?:the answer|the question) in order:/i.test(item.prompt)) {
+      assert.match(item.prompt, /\//, `${page.title} reorder prompt must visibly scramble the words`);
+    }
+  });
+});
+
+[
+  ["book-1", "unit-4"],
+  ["book-2", "unit-2"],
+  ["book-2", "unit-6"]
+].forEach(([bookId, unitId]) => {
+  const page = books.find((book) => book.id === bookId).units.find((unit) => unit.id === unitId).lessons[0].worksheet.pages[0];
+  const answers = page.items.map((item) => item.expectedAnswer);
+  assert.ok(answers.some((answer) => /^Yes,/i.test(answer)), `${bookId}/${unitId} must include a positive answer`);
+  assert.ok(answers.some((answer) => /^No,/i.test(answer)), `${bookId}/${unitId} must include a negative answer`);
+});
 
 const phonicsContext = { window: {} };
 vm.runInNewContext(require("node:fs").readFileSync(path.join(root, "data/phonics-data.js"), "utf8"), phonicsContext);

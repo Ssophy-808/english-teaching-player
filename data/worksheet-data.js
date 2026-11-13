@@ -615,10 +615,17 @@
         ["How old is she?", `She is ${age}.`], ["How old are you?", `I am ${age}.`]
       ]);
     }
-    if (key === "book-1/unit-4") return pick([
-      [`Are you ${word}?`, `Yes, I am. I am ${word}.`], [`Is she ${word}?`, `Yes, she is. She is ${word}.`],
-      [`Is he ${word}?`, `Yes, he is. He is ${word}.`], [`Are you ${word}?`, `Yes, I am. I am ${word}.`]
-    ]);
+    if (key === "book-1/unit-4") {
+      const adjectives = ["sad", "happy", "chubby", "thin", "young", "old", "short", "tall", "cute"];
+      const wordIndex = Math.max(0, adjectives.indexOf(word.toLowerCase()));
+      const differentWord = adjectives[(wordIndex + 3) % adjectives.length];
+      return [
+        { question: `Are you ${word}?`, answer: `Yes, I am. I am ${word}.` },
+        { question: `Is she ${word}?`, answer: `Yes, she is. She is ${word}.` },
+        { question: `Is he ${differentWord}?`, answer: `No, he is not. He is ${word}.` },
+        { question: `Is she ${differentWord}?`, answer: `No, she is not. She is ${word}.` }
+      ][slot];
+    }
     if (key === "book-1/unit-5") return slot % 2
       ? { question: `Is it ${article} ${word}?`, answer: `Yes, it is. It is ${article} ${word}.` }
       : { question: "What is it?", answer: `It is ${article} ${word}.` };
@@ -636,8 +643,26 @@
       [`Are they ${word}?`, `Yes, they are. They are ${word}.`], [`Are we ${word}?`, `Yes, we are. We are ${word}.`]
     ]);
 
-    if (key === "book-2/unit-1") return { question: `Is there ${article} ${word}?`, answer: `Yes, there is. There is ${article} ${word}.` };
-    if (key === "book-2/unit-2") return { question: `Are there ${word} books?`, answer: `Yes, there are. There are ${word} books.` };
+    if (key === "book-2/unit-1") {
+      const classroomWords = ["door", "window", "television", "speaker", "whiteboard", "trash can", "table", "fan", "telephone", "blackboard"];
+      const wordIndex = Math.max(0, classroomWords.indexOf(word.toLowerCase()));
+      const differentWord = classroomWords[(wordIndex + 3) % classroomWords.length];
+      const differentArticle = reviewArticle(differentWord);
+      return [
+        { question: `Is there ${article} ${word}?`, answer: `Yes, there is. There is ${article} ${word}.` },
+        { question: "What is it?", answer: `It is ${article} ${word}.` },
+        { question: `Is there ${differentArticle} ${differentWord}?`, answer: `No, there is not. There is ${article} ${word}.` },
+        { question: `Is there ${article} ${word}?`, answer: `Yes, there is. There is ${article} ${word}.` }
+      ][slot];
+    }
+    if (key === "book-2/unit-2") {
+      const numberWords = ["eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen", "twenty"];
+      const wordIndex = Math.max(0, numberWords.indexOf(word.toLowerCase()));
+      const differentWord = numberWords[(wordIndex + 2) % numberWords.length];
+      return slot % 2 === 0
+        ? { question: `Are there ${word} books?`, answer: `Yes, there are. There are ${word} books.` }
+        : { question: `Are there ${differentWord} books?`, answer: `No, there are not. There are ${word} books.` };
+    }
     if (key === "book-2/unit-3") {
       const count = ((index + day) % 9) + 2;
       return { question: `How many ${plural} are there?`, answer: `There are ${count} ${plural}.` };
@@ -654,7 +679,17 @@
       { question: "What are these?", answer: `These are ${plural}.` },
       { question: "What are those?", answer: `Those are ${plural}.` }
     ][slot];
-    if (key === "book-2/unit-6") return { question: `Can you ${word}?`, answer: `Yes, I can. I can ${word}.` };
+    if (key === "book-2/unit-6") {
+      const actions = ["jump", "read", "write", "type", "dance", "sing", "run", "swim"];
+      const wordIndex = Math.max(0, actions.indexOf(word.toLowerCase()));
+      const differentWord = actions[(wordIndex + 3) % actions.length];
+      return [
+        { question: `Can you ${word}?`, answer: `Yes, I can. I can ${word}.` },
+        { question: `Can you ${differentWord}?`, answer: `No, I can't. I can ${word}.` },
+        { question: `Can he ${word}?`, answer: `Yes, he can. He can ${word}.` },
+        { question: `Can she ${differentWord}?`, answer: `No, she can't. She can ${word}.` }
+      ][slot];
+    }
     if (key === "book-2/unit-7") return { question: "Where is the book?", answer: `It is ${/^between$/i.test(word) ? "between the desk and the chair" : `${word} the desk`}.` };
     if (key === "book-2/unit-8") return pick([
       ["Where are you?", `I am in the ${word}.`], ["Where is he?", `He is in the ${word}.`],
@@ -741,24 +776,22 @@
   }
 
   function mixedCorrectionItems(pairsForDay, bookId, unitId) {
-    const corrections = pairsForDay.slice(0, 5).map((pair) => ({
-      prompt: `Fix: ${grammarError(pair.answer)}`,
-      asset: pair.asset,
-      expectedAnswer: pair.answer
-    }));
-    if (!isFruitQuestionUnit(bookId, unitId)) {
-      return corrections.concat(pairsForDay.slice(5, 8).map((pair) => ({
-        prompt: `Put in order: ${scramble(pair.question)}`,
-        asset: pair.asset,
-        expectedAnswer: pair.question
-      })));
-    }
-    const [sixth, seventh, eighth] = pairsForDay.slice(5, 8);
-    return corrections.concat([
-      { prompt: `Put in order: ${scramble(sixth.question)}`, asset: sixth.asset, expectedAnswer: sixth.question },
-      { prompt: `Change to plural: ${worksheetWord(seventh.asset)} → __________`, asset: seventh.asset, expectedAnswer: worksheetPlural(seventh.asset) },
-      { prompt: `Change to singular: ${worksheetPlural(eighth.asset)} → __________`, asset: eighth.asset, expectedAnswer: worksheetWord(eighth.asset) }
-    ]);
+    const mixed = pairsForDay.map((pair, index) => {
+      const firstAnswer = pair.answer.match(/^[^.!?]+[.!?]/)?.[0] || pair.answer;
+      const modes = [
+        { prompt: `Fix the answer: ${grammarError(pair.answer)}`, expectedAnswer: pair.answer },
+        { prompt: `Put the question in order: ${scramble(pair.question)}`, expectedAnswer: pair.question },
+        { prompt: `Fix the question: ${secondGrammarError(pair.question)}`, expectedAnswer: pair.question },
+        { prompt: `Put the answer in order: ${scramble(firstAnswer)}`, expectedAnswer: firstAnswer }
+      ];
+      return { ...modes[index % modes.length], asset: pair.asset };
+    });
+    if (!isFruitQuestionUnit(bookId, unitId)) return mixed;
+    const seventh = pairsForDay[6];
+    const eighth = pairsForDay[7];
+    mixed[6] = { prompt: `Change to plural: ${worksheetWord(seventh.asset)} → __________`, asset: seventh.asset, expectedAnswer: worksheetPlural(seventh.asset) };
+    mixed[7] = { prompt: `Change to singular: ${worksheetPlural(eighth.asset)} → __________`, asset: eighth.asset, expectedAnswer: worksheetWord(eighth.asset) };
+    return mixed;
   }
 
   function standardProgressivePages(unit, day, bookId) {
@@ -797,10 +830,8 @@
       page("multiple_choice", "Choose the Answer", "Look at the picture. Circle the correct complete answer.", answerChoices),
       locked(
         "template_fix_mistakes",
-        isFruitQuestionUnit(bookId, unit.id) ? "Fix, Reorder, and Change" : "Fix and Reorder",
-        isFruitQuestionUnit(bookId, unit.id)
-          ? "Fix Questions 1–5. Then reorder the sentence and change singular or plural forms."
-          : "Fix Questions 1–5. Then put the remaining questions in order.",
+        "Mixed Language Practice",
+        "Follow each direction. Fix mistakes, reorder words, or change the word form.",
         mixedCorrectionItems(pairsForDay, bookId, unit.id)
       )
     ];

@@ -75,14 +75,14 @@ books.forEach((book) => book.units.filter((unit) => !unit.isReview).forEach((uni
   const finalWritingType = unit.lessons[3].worksheet.pages[3].type;
   const applicationType = unit.lessons[3].worksheet.pages[2].type;
   assert.ok(["template_situation_response", "template_classroom_checklist"].includes(applicationType), `${book.id}/${unit.id} Day 4 must include a distinct application task`);
-  assert.ok(["template_independent_sentence", "template_mixed_answer_review"].includes(finalWritingType), `${book.id}/${unit.id} Day 4 must finish with picture sentence writing or cumulative review`);
+  assert.ok(["multiple_choice", "template_mixed_answer_review"].includes(finalWritingType), `${book.id}/${unit.id} Day 4 must finish with a mixed choice review or cumulative review`);
   assert.deepEqual(unit.lessons.map((lesson) => lesson.worksheet.pages.map((page) => page.type)), [
     ["template_picture_answer", "matching", "multiple_choice", "template_fix_mistakes"],
-    ["reading_comprehension", "template_picture_question", "template_picture_evidence", "template_question_order"],
-    ["template_guided_question", "template_sentence_completion", "template_mixed_correction", "template_answer_order"],
+    ["reading_comprehension", "template_picture_question", "multiple_choice", "template_question_order"],
+    ["template_guided_question", "multiple_choice", "template_mixed_correction", "template_answer_order"],
     ["template_independent_picture", "chain_questions", applicationType, finalWritingType]
   ], `${book.id}/${unit.id} must use a different activity mix on each day`);
-  const pictureTypes = new Set(["template_picture_answer", "template_picture_question", "template_guided_question", "template_independent_picture"]);
+  const pictureTypes = new Set(["template_picture_answer", "template_picture_question", "template_guided_question", "template_independent_picture", "multiple_choice"]);
   const nonPictureTypes = unit.lessons.flatMap((lesson) => lesson.worksheet.pages.map((page) => page.type)).filter((type) => !pictureTypes.has(type));
   assert.equal(new Set(nonPictureTypes).size, nonPictureTypes.length, `${book.id}/${unit.id} must not repeat non-picture worksheet types across Day 1–4`);
   const reading = unit.lessons[1].worksheet.pages[0];
@@ -395,11 +395,10 @@ const book2Unit1Day1 = books.find((book) => book.id === "book-2")
 assert.ok(book2Unit1Day1.items.some((item) => item.prompt === "What is it?"), "Book 2 Unit 1 Day 1 must include a What question");
 assert.ok(book2Unit1Day1.items.some((item) => /^No, there is not\./.test(item.expectedAnswer)), "Book 2 Unit 1 Day 1 must include a negative answer");
 assert.ok(book2Unit1Day1.items.some((item) => /^Yes, there is\./.test(item.expectedAnswer)), "Book 2 Unit 1 Day 1 must include a positive answer");
-const book2Unit1Evidence = books.find((book) => book.id === "book-2")
-  .units.find((unit) => unit.id === "unit-1").lessons[1].worksheet.pages[2];
-assert.equal(book2Unit1Evidence.type, "template_picture_evidence", "Book 2 Unit 1 Day 2 must include picture evidence practice");
-assert.ok(book2Unit1Evidence.items.every((item) => /^True or false\? There is (?:a|an) /i.test(item.prompt)), "Classroom picture evidence must use natural declarative statements");
-assert.ok(book2Unit1Evidence.items.some((item) => /^True\./.test(item.expectedAnswer)) && book2Unit1Evidence.items.some((item) => /^False\./.test(item.expectedAnswer)), "Picture evidence must mix true and false answers");
+const removedWorksheetTitles = new Set(["Complete the Sentence", "Picture Sentence Writing", "Picture: True or False"]);
+books.flatMap((book) => book.units).flatMap((unit) => unit.lessons)
+  .flatMap((lesson) => lesson.worksheet.pages)
+  .forEach((page) => assert.ok(!removedWorksheetTitles.has(page.title), `${page.title} must be removed from worksheets`));
 
 const mixedLanguagePages = books.flatMap((book) => book.units)
   .filter((unit) => !unit.isReview)

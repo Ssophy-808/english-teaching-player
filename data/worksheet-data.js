@@ -930,6 +930,16 @@
       asset: pair.asset,
       expectedAnswer: pair.answer
     }));
+    const pictureSentenceChoices = pairsForDay.slice(0, 6).map((pair, index) => ({
+      prompt: "Which complete sentence matches the picture?",
+      choices: [
+        pair.answer,
+        pairsForDay[(index + 1) % pairsForDay.length].answer,
+        grammarError(pair.answer)
+      ],
+      asset: pair.asset,
+      expectedAnswer: pair.answer
+    }));
     const page = (type, title, instruction, items, options = {}) => progressivePage(
       type, title, instruction, skill, items, options
     );
@@ -952,26 +962,13 @@
     if (day === 2) return [
       unitReadingPage(unit, bookId, pairsForDay),
       locked("template_picture_question", "Make the Question", "Look at the picture and write the matching question.", pairsForDay.map((pair) => ({ prompt: pictureQuestionPrompt(pair, bookId, unit.id), asset: pair.asset, expectedAnswer: pictureQuestionAnswer(pair, bookId, unit.id) })), true),
-      locked("template_picture_evidence", "Picture: True or False", "Look at each picture. Write True or False. If it is false, rewrite the correct complete sentence.", pairsForDay.map((pair, index) => {
-        const classroomObject = bookId === "book-2" && unit.id === "unit-1";
-        const word = worksheetWord(pair.asset);
-        const wrongWord = worksheetWord(pairsForDay[(index + 1) % pairsForDay.length].asset);
-        const shownAnswer = classroomObject
-          ? `There is ${articleFor(index % 2 === 0 ? word : wrongWord)} ${index % 2 === 0 ? word : wrongWord}.`
-          : (index % 2 === 0 ? pair.answer : pairsForDay[(index + 1) % pairsForDay.length].answer);
-        const correctAnswer = classroomObject ? `There is ${articleFor(word)} ${word}.` : pair.answer;
-        return {
-          prompt: `True or false? ${shownAnswer}`,
-          asset: pair.asset,
-          expectedAnswer: `${index % 2 === 0 ? "True" : "False"}. ${correctAnswer}`
-        };
-      }), true),
+      page("multiple_choice", "Choose the Picture Sentence", "Look at each picture. Circle the complete sentence that matches.", pictureSentenceChoices),
       locked("template_question_order", "Build the Question", "Put the words in order. Write the complete question.", pairsForDay.map((pair) => ({ prompt: scramble(pair.question), asset: pair.asset, expectedAnswer: pair.question })))
     ];
 
     if (day === 3) return [
       locked("template_guided_question", "Write Your Question", "Look at the picture. Write a What question or a Yes/No question.", pairsForDay.map((pair) => ({ prompt: pictureQuestionPrompt(pair, bookId, unit.id), asset: pair.asset, expectedAnswer: pictureQuestionAnswer(pair, bookId, unit.id) })), true),
-      locked("template_sentence_completion", "Complete the Sentence", "Use the context to fill in the missing grammar word. Rewrite the complete sentence.", pairsForDay.map((pair, index) => ({ prompt: grammarBlank(pair.answer, index), asset: pair.asset, expectedAnswer: pair.answer }))),
+      page("multiple_choice", "Choose the Correct Grammar", "Look at the picture. Circle the only grammatically correct complete sentence.", answerChoices),
       locked("template_mixed_correction", "Fix the Questions", "Find the mistake. Rewrite each question correctly.", pairsForDay.map((pair) => ({ prompt: secondGrammarError(pair.question), asset: pair.asset, expectedAnswer: pair.question }))),
       locked("template_answer_order", "Build the Answer", "Put the words in order. Write the complete answer.", pairsForDay.map((pair) => ({ prompt: scramble(pair.answer), asset: pair.asset, expectedAnswer: pair.answer })))
     ];
@@ -980,7 +977,7 @@
       locked("template_independent_picture", "Picture Question Challenge", "Look at the picture. Write a What question or a Yes/No question.", pairsForDay.map((pair) => ({ prompt: pictureQuestionPrompt(pair, bookId, unit.id), asset: pair.asset, expectedAnswer: pictureQuestionAnswer(pair, bookId, unit.id) })), true),
       questionChainPage(pairsForDay),
       unitApplicationPage(unit, bookId, pairsForDay),
-      locked("template_independent_sentence", "Picture Sentence Writing", "Look at each picture. Use the cue word to write one complete sentence.", pairsForDay.map((pair) => ({ prompt: `Use “${worksheetWord(pair.asset)}” in one complete sentence.`, asset: pair.asset, expectedAnswer: pair.answer })), true)
+      page("multiple_choice", "Mixed Choice Review", "Look at each picture. Circle the best complete sentence.", pictureSentenceChoices)
     ];
   }
 

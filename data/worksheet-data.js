@@ -967,7 +967,7 @@
       locked("template_independent_picture", "Picture Question Challenge", "Look at the picture. Write a What question or a Yes/No question.", pairsForDay.map((pair) => ({ prompt: pictureQuestionPrompt(pair, bookId, unit.id), asset: pair.asset, expectedAnswer: pictureQuestionAnswer(pair, bookId, unit.id) })), true),
       questionChainPage(pairsForDay),
       unitApplicationPage(unit, bookId, pairsForDay),
-      locked("template_mini_dialogue", "Create a Mini Dialogue", "Use the picture to write one complete question and its complete answer.", pairsForDay.map((pair) => ({ prompt: `Use “${worksheetWord(pair.asset)}” in a two-line dialogue.`, asset: pair.asset, expectedAnswer: `${pair.question} ${pair.answer}` })), true)
+      locked("template_independent_sentence", "Picture Sentence Writing", "Look at each picture. Use the cue word to write one complete sentence.", pairsForDay.map((pair) => ({ prompt: `Use “${worksheetWord(pair.asset)}” in one complete sentence.`, asset: pair.asset, expectedAnswer: pair.answer })), true)
     ];
   }
 

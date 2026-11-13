@@ -75,7 +75,7 @@ books.forEach((book) => book.units.filter((unit) => !unit.isReview).forEach((uni
   const finalWritingType = unit.lessons[3].worksheet.pages[3].type;
   const applicationType = unit.lessons[3].worksheet.pages[2].type;
   assert.ok(["template_situation_response", "template_classroom_checklist"].includes(applicationType), `${book.id}/${unit.id} Day 4 must include a distinct application task`);
-  assert.ok(["template_mini_dialogue", "template_mixed_answer_review"].includes(finalWritingType), `${book.id}/${unit.id} Day 4 must finish with new dialogue writing or cumulative review`);
+  assert.ok(["template_independent_sentence", "template_mixed_answer_review"].includes(finalWritingType), `${book.id}/${unit.id} Day 4 must finish with picture sentence writing or cumulative review`);
   assert.deepEqual(unit.lessons.map((lesson) => lesson.worksheet.pages.map((page) => page.type)), [
     ["template_picture_answer", "matching", "multiple_choice", "template_fix_mistakes"],
     ["reading_comprehension", "template_picture_question", "template_dialogue_completion", "template_question_order"],

@@ -147,7 +147,7 @@
       const rotated = chosen.map((item) => item.answer).slice(1).concat(chosen.length ? chosen[0].answer : []);
       return chosen.map((item, index) => ({ asset: assetFor(item.answer, vocabulary, index), left: item.question, right: rotated[index], expectedAnswer: `${item.question} → ${item.answer}` }));
     }
-    if (type === "write_question") return qa.slice(0, 4).map((item, index) => ({ asset: assetFor(item.answer, vocabulary, index), prompt: `Answer: ${item.answer}`, expectedAnswer: item.question, lines: 2 }));
+    if (type === "write_question") return qa.slice(0, 4).map((item, index) => ({ asset: assetFor(item.answer, vocabulary, index), prompt: item.answer, expectedAnswer: item.question, lines: 2 }));
     if (type === "write_answer") return qa.slice(0, 4).map((item, index) => ({ asset: assetFor(item.answer, vocabulary, index), subjectCue: item.question, starter: "", expectedAnswer: item.answer, lines: 1 }));
     if (type === "fix_mistakes") return sentenceValues.slice(0, 4).map((sentence, index) => ({ asset: assetFor(sentence, vocabulary, index), prompt: wrongSentence(sentence), expectedAnswer: sentence, lines: 2 }));
     if (type === "unscramble") return sentencePool(unit).slice(0, 4).map((sentence, index) => ({ asset: assetFor(sentence, vocabulary, index), prompt: scramble(sentence), expectedAnswer: sentence, lines: 2 }));
@@ -808,6 +808,11 @@
     return /^[aeiou]/i.test(String(word).trim()) ? "an" : "a";
   }
 
+  function finalAnswerNoun(answer, fallback) {
+    const matches = [...String(answer).matchAll(/\b(?:is|are)\s+([^.!?]+)/gi)];
+    return (matches.at(-1)?.[1] || worksheetWord(fallback) || "fruit").trim();
+  }
+
   function unitReadingPage(unit, bookId, pairsForDay) {
     if (bookId === "book-2" && unit.id === "unit-1") {
       return {
@@ -834,6 +839,33 @@
     }
     const first = pairsForDay[0];
     const second = pairsForDay[1];
+    if (isFruitQuestionUnit(bookId, unit.id)) {
+      const firstFruit = finalAnswerNoun(first.answer, first.asset);
+      const secondFruit = finalAnswerNoun(second.answer, second.asset);
+      const firstDistance = /\bthose\b/i.test(first.question) ? "far from Lumi" : "close to Lumi";
+      const agreesWithSecond = /^Yes,/i.test(second.answer);
+      return {
+        type: "reading_comprehension",
+        layout: "locked_template",
+        title: "Read the Fruit Conversation",
+        instruction: "Read the whole conversation. Answer the questions about its meaning.",
+        skill: "reading for fruit details and demonstrative clues",
+        passageLines: [
+          "Lumi and Ludi are looking at two fruit pictures in class.",
+          `Lumi points to the first picture and asks, “${first.question}”`,
+          `Ludi looks carefully and answers, “${first.answer}”`,
+          `Next, Lumi points to another picture and asks, “${second.question}”`,
+          `Ludi answers, “${second.answer}”`
+        ],
+        heroAssets: [first.asset],
+        items: [
+          { prompt: "Which fruit does Ludi identify first?", expectedAnswer: `Ludi identifies ${firstFruit} first.` },
+          { prompt: "Is the first fruit close to Lumi or far away?", expectedAnswer: `The first fruit is ${firstDistance}.` },
+          { prompt: "Which fruit does Ludi identify next?", expectedAnswer: `Ludi identifies ${secondFruit} next.` },
+          { prompt: "Does Ludi agree with Lumi about the second fruit?", expectedAnswer: agreesWithSecond ? "Yes, Ludi agrees." : "No, Ludi does not agree." }
+        ]
+      };
+    }
     return {
       type: "reading_comprehension",
       layout: "locked_template",
@@ -849,10 +881,10 @@
       ],
       heroAssets: [first.asset],
       items: [
-        { prompt: "Who asks the questions?", expectedAnswer: "Lumi asks the questions." },
-        { prompt: "What is Lumi's first question?", expectedAnswer: first.question },
-        { prompt: "What is Ludi's second answer?", expectedAnswer: second.answer },
-        { prompt: "Are Lumi and Ludi talking about the same lesson?", expectedAnswer: "Yes, they are." }
+        { prompt: "What does Ludi tell Lumi about the first picture?", expectedAnswer: first.answer },
+        { prompt: "What does Ludi tell Lumi about the second picture?", expectedAnswer: second.answer },
+        { prompt: "Does Ludi answer both questions?", expectedAnswer: "Yes, Ludi answers both questions." },
+        { prompt: "Are both pictures connected to the same lesson topic?", expectedAnswer: "Yes, they are." }
       ]
     };
   }
@@ -872,6 +904,10 @@
         expectedAnswer: pair.answer
       }))
     };
+  }
+
+  function unitSkillLabel(unit) {
+    return [unit.grammarFocus, unit.topic, unit.title].find((value) => typeof value === "string" && value.trim()) || "English practice";
   }
 
   function unitApplicationPage(unit, bookId, pairsForDay) {
@@ -897,13 +933,13 @@
       "template_situation_response",
       "Situation Response",
       "Read each situation. Write the best complete response.",
-      unit.grammarFocus || unit.topic || unit.title,
+      unitSkillLabel(unit),
       pairsForDay.map((pair) => ({
         prompt: `Lumi asks, “${pair.question}” What should Ludi say?`,
         asset: pair.asset,
         expectedAnswer: pair.answer
       })),
-      { layout: "locked_template" }
+      { layout: "locked_template", showPictures: true }
     );
   }
 
@@ -911,7 +947,7 @@
     const pairsForDay = standardProgressivePairs(unit, day, bookId);
     const matchPairs = pairsForDay.slice(0, 4);
     const rotated = rotateAnswers(matchPairs);
-    const skill = unit.grammarFocus || unit.topic || unit.title;
+    const skill = unitSkillLabel(unit);
     const matchingItems = matchPairs.map((pair, index) => ({
       left: pair.question,
       right: rotated[index],
@@ -961,20 +997,20 @@
 
     if (day === 2) return [
       unitReadingPage(unit, bookId, pairsForDay),
-      locked("template_picture_question", "Make the Question", "Look at the picture and write the matching question.", pairsForDay.map((pair) => ({ prompt: pictureQuestionPrompt(pair, bookId, unit.id), asset: pair.asset, expectedAnswer: pictureQuestionAnswer(pair, bookId, unit.id) })), true),
+      locked("template_picture_question", "Make the Question", "Read each answer. Write the matching question.", pairsForDay.map((pair) => ({ prompt: pair.answer, asset: pair.asset, expectedAnswer: pictureQuestionAnswer(pair, bookId, unit.id) })), true),
       page("multiple_choice", "Choose the Picture Sentence", "Look at each picture. Circle the complete sentence that matches.", pictureSentenceChoices),
       locked("template_question_order", "Build the Question", "Put the words in order. Write the complete question.", pairsForDay.map((pair) => ({ prompt: scramble(pair.question), asset: pair.asset, expectedAnswer: pair.question })))
     ];
 
     if (day === 3) return [
-      locked("template_guided_question", "Write Your Question", "Look at the picture. Write a What question or a Yes/No question.", pairsForDay.map((pair) => ({ prompt: pictureQuestionPrompt(pair, bookId, unit.id), asset: pair.asset, expectedAnswer: pictureQuestionAnswer(pair, bookId, unit.id) })), true),
+      locked("template_guided_question", "Write Your Question", "Read each answer. Write the matching question.", pairsForDay.map((pair) => ({ prompt: pair.answer, asset: pair.asset, expectedAnswer: pictureQuestionAnswer(pair, bookId, unit.id) })), true),
       page("multiple_choice", "Choose the Correct Grammar", "Look at the picture. Circle the only grammatically correct complete sentence.", answerChoices),
       locked("template_mixed_correction", "Fix the Questions", "Find the mistake. Rewrite each question correctly.", pairsForDay.map((pair) => ({ prompt: secondGrammarError(pair.question), asset: pair.asset, expectedAnswer: pair.question }))),
       locked("template_answer_order", "Build the Answer", "Put the words in order. Write the complete answer.", pairsForDay.map((pair) => ({ prompt: scramble(pair.answer), asset: pair.asset, expectedAnswer: pair.answer })))
     ];
 
     return [
-      locked("template_independent_picture", "Picture Question Challenge", "Look at the picture. Write a What question or a Yes/No question.", pairsForDay.map((pair) => ({ prompt: pictureQuestionPrompt(pair, bookId, unit.id), asset: pair.asset, expectedAnswer: pictureQuestionAnswer(pair, bookId, unit.id) })), true),
+      locked("template_independent_picture", "Picture Question Challenge", "Read each answer. Write the matching question.", pairsForDay.map((pair) => ({ prompt: pair.answer, asset: pair.asset, expectedAnswer: pictureQuestionAnswer(pair, bookId, unit.id) })), true),
       questionChainPage(pairsForDay),
       unitApplicationPage(unit, bookId, pairsForDay),
       page("multiple_choice", "Mixed Choice Review", "Look at each picture. Circle the best complete sentence.", pictureSentenceChoices)
@@ -1813,6 +1849,26 @@
     }
   }
 
+  function normalizeQuestionWritingPages(pages) {
+    const writingTypes = new Set([
+      "write_question",
+      "template_picture_question",
+      "template_guided_question",
+      "template_independent_picture",
+      "template_final_output"
+    ]);
+    pages.forEach((page) => {
+      const writesQuestions = writingTypes.has(page.type)
+        && page.items.length > 0
+        && page.items.every((item) => /\?$/.test(String(item.expectedAnswer || "").trim()));
+      if (!writesQuestions) return;
+      page.instruction = "Read each answer. Write the matching question.";
+      page.items.forEach((item) => {
+        item.prompt = String(item.prompt || "").replace(/^Answer:\s*/i, "").trim();
+      });
+    });
+  }
+
   function attach(catalog) {
     (catalog || []).forEach((book) => book.units.forEach((unit) => unit.lessons.forEach((lesson, lessonIndex) => {
       const day = Number(String(lesson.day || lessonIndex + 1).match(/\d+/)?.[0]) || lessonIndex + 1;
@@ -1830,6 +1886,7 @@
         pages[3] = cumulativeMixedAnswerPage(book, unit);
       }
       applyRepresentativeQuestionTypes(book.id, unit.id, day, pages);
+      normalizeQuestionWritingPages(pages);
       lesson.worksheet = { ...(lesson.worksheet || {}), day, unitTitle: unit.title, pages };
     })));
   }

@@ -239,7 +239,7 @@ book2FruitUnits.forEach((unit) => {
     const writingPage = lesson.worksheet.pages.find((page) => ["template_picture_question", "template_guided_question", "template_independent_picture"].includes(page.type));
     assert.ok(writingPage, `${unit.id}/${lesson.id} must include a picture question-writing page`);
     const prompts = writingPage.items.map((item) => item.prompt).join(" ");
-    assert.doesNotMatch(prompts, /\b(?:apples|bananas|oranges|peaches|strawberries|kiwis|mangoes|tomatoes|cherries)\b/i, `${unit.id}/${lesson.id} picture cues must not reveal the fruit word`);
+    assert.match(prompts, /\b(?:apples|bananas|oranges|peaches|strawberries|kiwis|mangoes|tomatoes|cherries|pears|watermelons|lemons|melons|grapes|papayas|guavas)\b/i, `${unit.id}/${lesson.id} must provide complete fruit answers for students to turn into questions`);
     const expectedQuestions = writingPage.items.map((item) => item.expectedAnswer);
     assert.ok(expectedQuestions.some((question) => /^What are (?:these|those)\?/i.test(question)), `${unit.id}/${lesson.id} must practise What questions`);
     assert.ok(expectedQuestions.some((question) => /^Are (?:these|those)\b/i.test(question)), `${unit.id}/${lesson.id} must practise Yes/No questions`);
@@ -411,6 +411,49 @@ const removedWorksheetTitles = new Set(["Complete the Sentence", "Picture Senten
 books.flatMap((book) => book.units).flatMap((unit) => unit.lessons)
   .flatMap((lesson) => lesson.worksheet.pages)
   .forEach((page) => assert.ok(!removedWorksheetTitles.has(page.title), `${page.title} must be removed from worksheets`));
+
+const questionWritingTypes = new Set([
+  "write_question",
+  "template_picture_question",
+  "template_guided_question",
+  "template_independent_picture",
+  "template_final_output"
+]);
+const questionWritingPages = books.flatMap((book) => book.units).flatMap((unit) => unit.lessons)
+  .flatMap((lesson) => lesson.worksheet.pages)
+  .filter((page) => questionWritingTypes.has(page.type)
+    && page.items.length > 0
+    && page.items.every((item) => /\?$/.test(String(item.expectedAnswer || "").trim())));
+questionWritingPages.forEach((page) => {
+  assert.equal(page.instruction, "Read each answer. Write the matching question.", `${page.title} must tell students to build a question from an answer`);
+  page.items.forEach((item) => {
+    assert.doesNotMatch(item.prompt, /^(?:Answer:|Look at|Write (?:a|the)|Use )/i, `${page.title} items must show only the given answer, without a direction cue`);
+    assert.match(item.prompt, /[.!?]$/, `${page.title} must provide a complete answer sentence`);
+  });
+});
+
+const situationResponsePages = books.flatMap((book) => book.units).flatMap((unit) => unit.lessons)
+  .flatMap((lesson) => lesson.worksheet.pages)
+  .filter((page) => page.type === "template_situation_response");
+situationResponsePages.forEach((page) => {
+  assert.equal(page.showPictures, true, `${page.title} must display the picture needed to judge the response`);
+  assert.ok(page.items.every((item) => item.asset?.image || item.asset?.sprite?.src || item.asset?.visual), `${page.title} must give every situation a visible picture`);
+});
+
+const comprehensionPages = books.flatMap((book) => book.units).flatMap((unit) => unit.lessons)
+  .flatMap((lesson) => lesson.worksheet.pages)
+  .filter((page) => page.type === "reading_comprehension");
+comprehensionPages.forEach((page) => {
+  const prompts = page.items.map((item) => item.prompt).join(" ");
+  assert.doesNotMatch(prompts, /Who asks the questions|What is .* first question|What is .* second answer/i, `${page.title} must ask about the passage content, not ask students to copy dialogue labels`);
+});
+book2FruitUnits.flatMap((unit) => unit.lessons)
+  .flatMap((lesson) => lesson.worksheet.pages)
+  .filter((page) => page.title === "Read the Fruit Conversation")
+  .forEach((page) => {
+    assert.ok(page.items.some((item) => /close|far/i.test(item.prompt)), "Fruit reading must include a demonstrative-clue inference question");
+    assert.ok(page.items.some((item) => /agree/i.test(item.prompt)), "Fruit reading must check the meaning of the Yes/No response");
+  });
 
 const mixedLanguagePages = books.flatMap((book) => book.units)
   .filter((unit) => !unit.isReview)

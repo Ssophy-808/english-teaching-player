@@ -47,7 +47,8 @@ books.forEach((book) => {
       assert.equal(lesson.worksheet.pages.length, 4, `${lesson.id} must have four worksheet pages`);
       lesson.worksheet.pages.forEach((page) => {
         assert.ok(page.items.length > 0, `${lesson.id}/${page.type} must contain questions`);
-        assert.ok(page.type === "reading_cloze" || (page.heroAssets || []).length > 0 || (page.sceneAssets || []).length > 0 || page.items.some((item) => item.asset?.image || item.asset?.sprite?.src || item.asset?.visual), `${lesson.id}/${page.type} must contain visible picture assets`);
+        const textContextTypes = new Set(["choose_next_line", "put_dialogue_in_order", "read_find_mistake", "use_information", "change_one_part", "which_sentence_not_fit", "complete_information"]);
+        assert.ok(page.type === "reading_cloze" || textContextTypes.has(page.type) || (page.heroAssets || []).length > 0 || (page.sceneAssets || []).length > 0 || page.items.some((item) => item.asset?.image || item.asset?.sprite?.src || item.asset?.visual), `${lesson.id}/${page.type} must contain visible picture assets or a shared text context`);
         if (page.type === "sentence_transform") page.items.forEach((item) => {
           const source = item.prompt.split("→")[0].trim();
           const sourceIsNegative = /\b(?:am|is|are) not\b|\b(?:cannot|can't|do not|don't|does not|doesn't)\b/i.test(source);
@@ -74,14 +75,22 @@ books.forEach((book) => book.units.filter((unit) => !unit.isReview).forEach((uni
   if (!standardDays) return;
   const finalWritingType = unit.lessons[3].worksheet.pages[3].type;
   const applicationType = unit.lessons[3].worksheet.pages[2].type;
-  assert.ok(["template_situation_response", "template_classroom_checklist"].includes(applicationType), `${book.id}/${unit.id} Day 4 must include a distinct application task`);
+  assert.ok(["template_situation_response", "template_classroom_checklist", "use_information"].includes(applicationType), `${book.id}/${unit.id} Day 4 must include a distinct application task`);
   assert.ok(["multiple_choice", "template_mixed_answer_review"].includes(finalWritingType), `${book.id}/${unit.id} Day 4 must finish with a mixed choice review or cumulative review`);
-  assert.deepEqual(unit.lessons.map((lesson) => lesson.worksheet.pages.map((page) => page.type)), [
+  const expectedMix = [
     ["template_picture_answer", "matching", "multiple_choice", "template_fix_mistakes"],
     ["reading_comprehension", "template_picture_question", "multiple_choice", "template_question_order"],
     ["template_guided_question", "multiple_choice", "template_mixed_correction", "template_answer_order"],
     ["template_independent_picture", "chain_questions", applicationType, finalWritingType]
-  ], `${book.id}/${unit.id} must use a different activity mix on each day`);
+  ];
+  const representativeSlot = {
+    "book-1/unit-1": [1, 2, "which_sentence_not_fit"],
+    "book-1/unit-3": [1, 2, "complete_information"],
+    "book-1/unit-6": [1, 2, "put_dialogue_in_order"],
+    "book-2/unit-2": [2, 2, "change_one_part"]
+  }[`${book.id}/${unit.id}`];
+  if (representativeSlot) expectedMix[representativeSlot[0]][representativeSlot[1]] = representativeSlot[2];
+  assert.deepEqual(unit.lessons.map((lesson) => lesson.worksheet.pages.map((page) => page.type)), expectedMix, `${book.id}/${unit.id} must use a different activity mix on each day`);
   const pictureTypes = new Set(["template_picture_answer", "template_picture_question", "template_guided_question", "template_independent_picture", "multiple_choice"]);
   const nonPictureTypes = unit.lessons.flatMap((lesson) => lesson.worksheet.pages.map((page) => page.type)).filter((type) => !pictureTypes.has(type));
   assert.equal(new Set(nonPictureTypes).size, nonPictureTypes.length, `${book.id}/${unit.id} must not repeat non-picture worksheet types across Day 1–4`);
@@ -283,7 +292,10 @@ book3FirstFourUnits.slice(0, 3).forEach((unit) => {
     assert.equal(lesson.worksheet.pages[0].layout, "locked_template", `${lesson.id} writing page must use the locked template`);
     assert.equal(lesson.worksheet.pages[3].layout, "locked_template", `${lesson.id} final writing page must use the locked template`);
     assert.equal(lesson.worksheet.pages[1].type, "matching", `${lesson.id} must retain matching`);
-    assert.equal(lesson.worksheet.pages[2].type, "multiple_choice", `${lesson.id} must retain multiple choice`);
+    const allowedChoiceType = unit.id === "unit-2" && lesson === unit.lessons[1]
+      ? ["multiple_choice", "choose_next_line"]
+      : ["multiple_choice"];
+    assert.ok(allowedChoiceType.includes(lesson.worksheet.pages[2].type), `${lesson.id} must retain a choice-based task`);
   });
 });
 assert.equal(book3Unit4Lessons[1].worksheet.pages[0].title, "Make the Question", "Day 2 must begin independent question construction");
@@ -416,6 +428,51 @@ mixedLanguagePages.forEach((page) => {
       assert.match(item.prompt, /\//, `${page.title} reorder prompt must visibly scramble the words`);
     }
   });
+});
+
+const representativeTypes = [
+  "choose_next_line",
+  "put_dialogue_in_order",
+  "read_find_mistake",
+  "use_information",
+  "change_one_part",
+  "which_sentence_not_fit",
+  "complete_information"
+];
+const representativePages = books.flatMap((book) => book.units)
+  .flatMap((unit) => unit.lessons)
+  .flatMap((lesson) => lesson.worksheet.pages)
+  .filter((page) => representativeTypes.includes(page.type));
+assert.deepEqual(
+  representativePages.map((page) => page.type).sort(),
+  [...representativeTypes].sort(),
+  "Each new grammar-fit question type must appear once as a representative example, not as a bulk rollout"
+);
+const representativePage = (bookId, unitId, day, type) => books.find((book) => book.id === bookId)
+  .units.find((unit) => unit.id === unitId).lessons[day - 1].worksheet.pages.find((page) => page.type === type);
+
+const identityFit = representativePage("book-1", "unit-1", 2, "which_sentence_not_fit");
+assert.ok(identityFit.items.every((item) => item.situationLines.length >= 2 && item.choices.includes(item.expectedAnswer)), "Identity context questions must use multiple clues and one answer that does not fit");
+
+const ageFit = representativePage("book-1", "unit-3", 2, "complete_information");
+assert.ok(ageFit.dialogueLines.length >= 4 && ageFit.cards.every((card) => card.fields.some((field) => field.label === "Age")), "Age practice must extract information from one continuous conversation into profile cards");
+
+const colorFit = representativePage("book-1", "unit-6", 2, "put_dialogue_in_order");
+assert.ok(colorFit.items.every((item) => item.lines.length >= 3 && item.lines.length <= 5), "Color dialogue ordering must use three to five connected lines");
+
+const likesFit = representativePage("book-3", "unit-2", 2, "choose_next_line");
+assert.ok(likesFit.items.every((item) => item.contextLines.length >= 2 && item.choices.includes(item.expectedAnswer)), "Do/does next-line questions must depend on at least two previous dialogue lines");
+
+const hasFit = representativePage("book-3", "unit-5", 3, "read_find_mistake");
+assert.ok(hasFit.items.every((item) => item.dialogueLines.length >= 3 && /\bhas\b/.test(item.expectedAnswer)), "Has/have corrections must be embedded in a short dialogue");
+
+const thereIsFit = representativePage("book-2", "unit-1", 4, "use_information");
+assert.ok(thereIsFit.information.length >= 4 && thereIsFit.items.every((item) => /^Is there\b/.test(item.prompt)), "There is practice must use one shared classroom information set");
+
+const agreementFit = representativePage("book-2", "unit-2", 3, "change_one_part");
+assert.ok(agreementFit.items.every((item) => item.source !== item.expectedAnswer && /\b(?:is|are)\b/i.test(item.expectedAnswer)), "Change One Part must require meaningful singular/plural agreement changes");
+representativePages.forEach((page) => {
+  assert.ok(page.items.every((item) => item.expectedAnswer), `${page.title} must have a judgeable teacher answer`);
 });
 
 books.flatMap((book) => book.units).flatMap((unit) => unit.lessons)

@@ -123,7 +123,49 @@
     return `<ol class="wb-template-list">${page.items.map((item, index) => lockedTemplateItem(item, index, showPictures)).join("")}</ol>`;
   }
 
+  function dialogueBlock(lines, className = "") {
+    return `<div class="wb-dialogue-block ${className}">${(lines || []).map((line) => `<p>${escapeHtml(line)}</p>`).join("")}</div>`;
+  }
+
+  function choiceLetters(choices) {
+    return `<ol class="wb-context-choices">${(choices || []).map((choice, index) => `<li><span>${String.fromCharCode(65 + index)}</span>${escapeHtml(choice)}</li>`).join("")}</ol>`;
+  }
+
+  function contextChoicePage(page, lineKey) {
+    return `<ol class="wb-context-list">${page.items.map((item, index) => `<li><span class="wb-template-number">${index + 1}.</span>${dialogueBlock(item[lineKey] || item.contextLines || item.situationLines)}${choiceLetters(item.choices)}</li>`).join("")}</ol><div class="wb-context-write"><strong>Write one complete answer.</strong>${answerLines(1)}</div>`;
+  }
+
+  function dialogueOrder(page) {
+    return `<ol class="wb-order-list">${page.items.map((item, index) => `<li><span class="wb-template-number">${index + 1}.</span>${dialogueBlock(item.lines, "wb-order-lines")}<div class="wb-order-answer"><strong>Order:</strong> ____ → ____ → ____ → ____</div></li>`).join("")}</ol><div class="wb-context-write"><strong>Write the complete conversation.</strong>${answerLines(1)}</div>`;
+  }
+
+  function findDialogueMistake(page) {
+    return `<ol class="wb-mistake-list">${page.items.map((item, index) => `<li><span class="wb-template-number">${index + 1}.</span>${dialogueBlock(item.dialogueLines)}${answerLines(1)}</li>`).join("")}</ol>`;
+  }
+
+  function useInformation(page) {
+    const facts = (page.information || []).map((fact) => `<li><span>${escapeHtml(fact.label)}</span><b>${escapeHtml(fact.value)}</b></li>`).join("");
+    const questions = page.items.map((item, index) => `<li><span class="wb-template-number">${index + 1}.</span><p>${escapeHtml(item.prompt)}</p>${answerLines(1)}</li>`).join("");
+    return `<section class="wb-information-page"><div class="wb-information-card"><h2>${escapeHtml(page.informationTitle || "Information")}</h2><ul>${facts}</ul></div><ol class="wb-information-questions">${questions}</ol></section>`;
+  }
+
+  function changeOnePart(page) {
+    return `<ol class="wb-change-list">${page.items.map((item, index) => `<li><span class="wb-template-number">${index + 1}.</span><p class="wb-change-source">${escapeHtml(item.source)}</p><p class="wb-change-direction">${escapeHtml(item.directive)}</p>${answerLines(1)}</li>`).join("")}</ol>`;
+  }
+
+  function completeInformation(page) {
+    const cards = (page.cards || []).map((card) => `<section><h3>${escapeHtml(card.title)}</h3>${(card.fields || []).map((field) => `<p><strong>${escapeHtml(field.label)}:</strong><i></i></p>`).join("")}</section>`).join("");
+    return `<section class="wb-complete-info">${dialogueBlock(page.dialogueLines)}<div class="wb-info-cards">${cards}</div><div class="wb-context-write"><strong>Write one complete sentence about a student.</strong>${answerLines(1)}</div></section>`;
+  }
+
   function pageBody(page) {
+    if (page.type === "choose_next_line") return contextChoicePage(page, "contextLines");
+    if (page.type === "which_sentence_not_fit") return contextChoicePage(page, "situationLines");
+    if (page.type === "put_dialogue_in_order") return dialogueOrder(page);
+    if (page.type === "read_find_mistake") return findDialogueMistake(page);
+    if (page.type === "use_information") return useInformation(page);
+    if (page.type === "change_one_part") return changeOnePart(page);
+    if (page.type === "complete_information") return completeInformation(page);
     if (page.type === "reading_cloze") return readingCloze(page);
     if (page.type === "reading_comprehension") return readingComprehension(page);
     if (page.type === "story_cloze") return storyCloze(page);

@@ -1631,6 +1631,188 @@
     ];
   }
 
+  function applyRepresentativeQuestionTypes(bookId, unitId, day, pages) {
+    if (bookId === "book-1" && unitId === "unit-1" && day === 2) {
+      pages[2] = {
+        type: "which_sentence_not_fit",
+        layout: "locked_template",
+        title: "Which Sentence Does Not Fit?",
+        instruction: "Read the situation. Choose the sentence that does not belong.",
+        skill: "am / is / are · identity and context",
+        items: [
+          {
+            situationLines: ["Ludi: “Hello. I am Ludi.”", "Ludi: “I am a boy and a student.”"],
+            choices: ["I am Ludi.", "I am a student.", "I am a teacher."],
+            expectedAnswer: "I am a teacher."
+          },
+          {
+            situationLines: ["Lumi: “Hello. I am Lumi.”", "Lumi: “I am a girl and a student.”"],
+            choices: ["I am Lumi.", "I am a girl.", "I am a man."],
+            expectedAnswer: "I am a man."
+          },
+          {
+            situationLines: ["Ms. Wang: “Hello. I am Ms. Wang.”", "Ms. Wang: “I am a woman and a teacher.”"],
+            choices: ["I am Ms. Wang.", "I am a teacher.", "I am a boy."],
+            expectedAnswer: "I am a boy."
+          }
+        ]
+      };
+    }
+
+    if (bookId === "book-1" && unitId === "unit-3" && day === 2) {
+      pages[2] = {
+        type: "complete_information",
+        layout: "locked_template",
+        title: "Complete the Information",
+        instruction: "Read the conversation. Complete the missing information on the card.",
+        skill: "age questions · reading for details",
+        dialogueLines: [
+          "Ludi: Hello. I am Ludi. What is your name?",
+          "Lumi: I am Lumi.",
+          "Ludi: How old are you, Lumi?",
+          "Lumi: I am eight years old. How old are you?",
+          "Ludi: I am nine years old."
+        ],
+        cards: [
+          { title: "Student 1", fields: [{ label: "Name", value: "Lumi" }, { label: "Age", value: "eight" }] },
+          { title: "Student 2", fields: [{ label: "Name", value: "Ludi" }, { label: "Age", value: "nine" }] }
+        ],
+        items: [
+          { prompt: "Student 1 — Name", expectedAnswer: "Lumi" },
+          { prompt: "Student 1 — Age", expectedAnswer: "eight" },
+          { prompt: "Student 2 — Name", expectedAnswer: "Ludi" },
+          { prompt: "Student 2 — Age", expectedAnswer: "nine" }
+        ]
+      };
+    }
+
+    if (bookId === "book-1" && unitId === "unit-6" && day === 2) {
+      pages[2] = {
+        type: "put_dialogue_in_order",
+        layout: "locked_template",
+        title: "Put the Dialogue in Order",
+        instruction: "Put the sentences in the correct order to make a complete conversation.",
+        skill: "color questions · dialogue sequence",
+        items: [
+          {
+            lines: ["A. It is red.", "B. What color is your pen?", "C. Thank you.", "D. My pen is red, too."],
+            expectedAnswer: "B → A → D → C"
+          },
+          {
+            lines: ["A. No, it is not.", "B. It is yellow.", "C. Is your book green?", "D. What color is it?"],
+            expectedAnswer: "C → A → D → B"
+          }
+        ]
+      };
+    }
+
+    if (bookId === "book-3" && unitId === "unit-2" && day === 2) {
+      pages[2] = {
+        type: "choose_next_line",
+        layout: "locked_template",
+        title: "Choose the Next Line",
+        instruction: "Read the conversation. Choose the best next line.",
+        skill: "do / does · likes and dialogue meaning",
+        items: [
+          {
+            contextLines: ["Lumi: Do you like pizza?", "Ludi: No, I don't. I like hamburgers."],
+            choices: ["I like hamburgers, too.", "She likes pizza.", "Does he like tea?"],
+            expectedAnswer: "I like hamburgers, too."
+          },
+          {
+            contextLines: ["Ludi: Does Lumi like tea?", "Nova: No, she doesn't. She likes juice."],
+            choices: ["I like juice, too.", "Yes, he does.", "They like pizza."],
+            expectedAnswer: "I like juice, too."
+          },
+          {
+            contextLines: ["Nova: Does Milo like sandwiches?", "Lumi: Yes, he does."],
+            choices: ["He likes sandwiches.", "No, I don't.", "She likes milk."],
+            expectedAnswer: "He likes sandwiches."
+          },
+          {
+            contextLines: ["Lumi: Do you like tea?", "Nova: Yes, I do."],
+            choices: ["I like tea, too.", "He likes pizza.", "No, she doesn't."],
+            expectedAnswer: "I like tea, too."
+          },
+          {
+            contextLines: ["Nova: Does Ludi like milk?", "Lumi: No, he doesn't. He likes juice."],
+            choices: ["He likes juice.", "I don't like pizza.", "She likes milk."],
+            expectedAnswer: "He likes juice."
+          },
+          {
+            contextLines: ["Ludi: Do Lumi and Nova like pizza?", "Milo: Yes, they do."],
+            choices: ["They like pizza.", "He doesn't like tea.", "I like hamburgers."],
+            expectedAnswer: "They like pizza."
+          }
+        ]
+      };
+    }
+
+    if (bookId === "book-3" && unitId === "unit-5" && day === 3) {
+      pages[2] = {
+        type: "read_find_mistake",
+        layout: "locked_template",
+        title: "Read and Find the Mistake",
+        instruction: "Read the conversation. Find the sentence with a mistake and rewrite it correctly.",
+        skill: "has / have · Who has...?",
+        items: [
+          {
+            dialogueLines: ["Lumi: Who has two long arms?", "Ludi: Milo have two long arms.", "Lumi: Thank you."],
+            expectedAnswer: "Milo has two long arms."
+          },
+          {
+            dialogueLines: ["Lumi: Who has one tooth?", "Ludi: Nova has one teeth.", "Lumi: I see Nova."],
+            expectedAnswer: "Nova has one tooth."
+          },
+          {
+            dialogueLines: ["Lumi: Who has six ears?", "Ludi: Willa have six ears.", "Lumi: Willa is over there."],
+            expectedAnswer: "Willa has six ears."
+          }
+        ]
+      };
+    }
+
+    if (bookId === "book-2" && unitId === "unit-1" && day === 4) {
+      pages[2] = {
+        type: "use_information",
+        layout: "locked_template",
+        title: "Use the Information",
+        instruction: "Read the information. Answer each question with a complete sentence.",
+        skill: "There is / There is not · shared classroom information",
+        informationTitle: "Mia's Classroom List",
+        information: [
+          { label: "door", value: "✓" },
+          { label: "fan", value: "✓" },
+          { label: "television", value: "✓" },
+          { label: "telephone", value: "✗" },
+          { label: "trash can", value: "✗" }
+        ],
+        items: [
+          { prompt: "Is there a door in Mia's classroom?", expectedAnswer: "Yes, there is." },
+          { prompt: "Is there a fan in Mia's classroom?", expectedAnswer: "Yes, there is." },
+          { prompt: "Is there a telephone in Mia's classroom?", expectedAnswer: "No, there is not." },
+          { prompt: "Is there a trash can in Mia's classroom?", expectedAnswer: "No, there is not." }
+        ]
+      };
+    }
+
+    if (bookId === "book-2" && unitId === "unit-2" && day === 3) {
+      pages[2] = {
+        type: "change_one_part",
+        layout: "locked_template",
+        title: "Change One Part",
+        instruction: "Change the sentence as directed. Make all necessary changes.",
+        skill: "There is / There are · number and plural agreement",
+        items: [
+          { source: "There is one book.", directive: "Change ‘one book’ to ‘fifteen books.’", expectedAnswer: "There are fifteen books." },
+          { source: "There are twelve pens.", directive: "Change ‘twelve pens’ to ‘one pen.’", expectedAnswer: "There is one pen." },
+          { source: "Are there thirteen erasers?", directive: "Change ‘thirteen erasers’ to ‘one eraser.’", expectedAnswer: "Is there one eraser?" },
+          { source: "Is there one ruler?", directive: "Change ‘one ruler’ to ‘twenty rulers.’", expectedAnswer: "Are there twenty rulers?" }
+        ]
+      };
+    }
+  }
+
   function attach(catalog) {
     (catalog || []).forEach((book) => book.units.forEach((unit) => unit.lessons.forEach((lesson, lessonIndex) => {
       const day = Number(String(lesson.day || lessonIndex + 1).match(/\d+/)?.[0]) || lessonIndex + 1;
@@ -1647,6 +1829,7 @@
       if (!unit.isReview && teachingUnitIndex > 0 && day === 4) {
         pages[3] = cumulativeMixedAnswerPage(book, unit);
       }
+      applyRepresentativeQuestionTypes(book.id, unit.id, day, pages);
       lesson.worksheet = { ...(lesson.worksheet || {}), day, unitTitle: unit.title, pages };
     })));
   }

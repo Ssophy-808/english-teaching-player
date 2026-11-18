@@ -41,25 +41,15 @@
   function renderBooks() {
     selectedBook = null;
     selectedUnit = null;
-    libraryTitle.textContent = "Choose a book";
-    libraryPath.textContent = "Book → Unit → Lesson";
+    libraryTitle.textContent = "選擇每日練習卷";
+    libraryPath.textContent = "Book → Unit → Day 1–Day 4";
     libraryGrid.innerHTML = catalog.map((book, index) => cardMarkup({
       number: index + 1,
       title: book.title,
       subtitle: book.units.length ? `${book.subtitle} · ${book.units.filter((unit) => !unit.isReview).length} units + ${book.units.filter((unit) => unit.isReview).length} reviews` : `${book.subtitle} · Coming soon`,
       action: `book:${book.id}`,
       comingSoon: !book.units.length
-    })).join("") + cardMarkup({
-      number: "SIO 2",
-      title: "Sound It Out",
-      subtitle: "Phonics Practice · 12 interactive units",
-      action: "phonics:sio2"
-    }) + cardMarkup({
-      number: "THINK",
-      title: "素養題練習",
-      subtitle: "Context Clues · 情境推理與短閱讀",
-      action: "literacy:book1-unit4"
-    });
+    })).join("");
     scrollToTop();
   }
 
@@ -70,14 +60,14 @@
   function renderUnits(book) {
     selectedBook = book;
     selectedUnit = null;
-    libraryTitle.textContent = "Choose a unit";
+    libraryTitle.textContent = "選擇 Unit";
     libraryPath.textContent = book.title;
     const displayUnits = book.units.map((unit, index) => ({ unit, index }))
       .sort((a, b) => (a.unit.displayOrder ?? (a.index + 1)) - (b.unit.displayOrder ?? (b.index + 1)));
     libraryGrid.innerHTML = backCard("books", "All books") + displayUnits.map(({ unit, index }) => cardMarkup({
       number: unit.isReview ? unit.reviewLabel : index + 1,
       title: `${unit.title} · ${unit.topic}`,
-      subtitle: `${unit.lessons.length} lesson${unit.lessons.length === 1 ? "" : "s"}`,
+      subtitle: unit.isReview ? `${unit.lessons.length} 天複習卷` : "Day 1–Day 4 練習卷",
       action: `unit:${unit.id}`,
       comingSoon: !unit.lessons.length
     })).join("");
@@ -87,16 +77,15 @@
   function renderLessons(book, unit) {
     selectedBook = book;
     selectedUnit = unit;
-    libraryTitle.textContent = "Choose a lesson";
+    libraryTitle.textContent = "選擇 Day 練習卷";
     libraryPath.textContent = `${book.title}  /  ${unit.title} ${unit.topic}`;
     libraryGrid.innerHTML = backCard(`book:${book.id}`, "All units") + unit.lessons.map((lesson, index) => {
-      const minutes = lesson.phases?.reduce((sum, phase) => sum + (Number(phase.duration) || 0), 0)
-        ?? lesson.steps.reduce((sum, step) => sum + (Number(step.duration) || 0), 0);
+      const pages = lesson.worksheet?.pages?.length || Object.keys(lesson.worksheet?.blocks || {}).length || 0;
       return cardMarkup({
-        number: index + 1,
-        title: lesson.title,
-        subtitle: `${lesson.day || "Lesson"} · ${lesson.steps.length} steps · ${minutes} min${lesson.dailyHandout ? " · 每日講義 4 面" : ""}`,
-        action: `lesson:${lesson.id}`
+        number: dayNumber(lesson, index),
+        title: `Day ${dayNumber(lesson, index)} 練習卷`,
+        subtitle: `${pages || 4} pages · 學生版與教師答案版`,
+        action: `worksheet:${lesson.id}`
       });
     }).join("");
     scrollToTop();
@@ -181,6 +170,14 @@
     if (type === "lesson" && selectedBook && selectedUnit) {
       const lesson = selectedUnit.lessons.find((item) => item.id === id);
       if (lesson) openLesson(selectedBook, selectedUnit, lesson);
+    }
+    if (type === "worksheet" && selectedBook && selectedUnit) {
+      const lesson = selectedUnit.lessons.find((item) => item.id === id);
+      if (lesson?.worksheet) {
+        const context = buildLessonContext(selectedBook, selectedUnit, lesson);
+        window.WorksheetBuilder?.setLesson(context);
+        window.WorksheetBuilder?.open();
+      }
     }
     if (type === "phonics") {
       window.LessonRoutes.navigate(window.LessonRoutes.phonicsPathFor(id, "unit1"));

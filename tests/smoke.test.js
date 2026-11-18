@@ -3,6 +3,12 @@ const path = require("node:path");
 const vm = require("node:vm");
 
 const root = path.resolve(__dirname, "..");
+const worksheetHomeHtml = require("node:fs").readFileSync(path.join(root, "index.html"), "utf8");
+const worksheetHomeSource = require("node:fs").readFileSync(path.join(root, "js/app.js"), "utf8");
+assert.match(worksheetHomeHtml, /<section class="library" aria-labelledby="library-title">/, "Day 1–Day 4 worksheet library must remain visible on the home page");
+assert.match(worksheetHomeHtml, /自選出卷（獨立功能）/, "Custom test builder must have a separate entry point");
+assert.match(worksheetHomeSource, /action: `worksheet:\$\{lesson\.id\}`/, "Day cards must open the original worksheet builder directly");
+assert.match(worksheetHomeSource, /window\.WorksheetBuilder\?\.open\(\)/, "Day worksheet entry must not depend on the lesson player");
 global.window = global;
 require(path.join(root, "data/book1.js"));
 require(path.join(root, "data/book1-activities.js"));

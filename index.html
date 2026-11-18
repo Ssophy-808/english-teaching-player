@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#2b59c3">
-    <meta name="description" content="Come to Live and Sound It Out worksheet and test builder.">
-    <title>English Worksheet Builder</title>
+    <meta name="description" content="Day 1–Day 4 worksheets and a separate custom test builder.">
+    <title>English Worksheet Center</title>
     <script>
       (function () {
         const match = location.pathname.match(/^(.*?\/)(?:book\d+(?:\/unit\d+)?(?:\/day\d+)?|phonics\/[^/]+(?:\/[^/]+)?|literacy\/[^/]+(?:\/[^/]+)?)\/?$/i);
@@ -24,12 +24,12 @@
     <main id="home-view" class="view" aria-labelledby="home-title">
       <header class="home-hero">
         <div>
-          <p class="eyebrow">WORKSHEET + TEST BUILDER</p>
-          <h1 id="home-title">English Worksheet Builder</h1>
-          <p class="hero-copy">選擇 Come to Live 與 Sound It Out 單元，合併成一份可列印練習卷。</p>
+          <p class="eyebrow">DAILY WORKSHEETS + CUSTOM TESTS</p>
+          <h1 id="home-title">English Worksheet Center</h1>
+          <p class="hero-copy">原本的 Day 1–Day 4 練習卷保留；需要混合單元時，再另外使用自選出卷。</p>
         </div>
         <div class="home-actions">
-          <button id="test-builder-button" class="button button-primary test-builder-button" type="button">🗂 開始製作練習卷</button>
+          <button id="test-builder-button" class="button button-primary test-builder-button" type="button">🗂 自選出卷（獨立功能）</button>
           <button id="continue-button" class="button button-primary continue-button" type="button" hidden>
             <span>Continue Lesson</span>
             <small id="continue-label"></small>
@@ -37,11 +37,11 @@
         </div>
       </header>
 
-      <section class="library" aria-labelledby="library-title" hidden>
+      <section class="library" aria-labelledby="library-title">
         <div class="section-heading">
           <div>
-            <p class="eyebrow">LESSON LIBRARY</p>
-            <h2 id="library-title">Choose a book</h2>
+            <p class="eyebrow">DAY 1–DAY 4 WORKSHEETS</p>
+            <h2 id="library-title">選擇每日練習卷</h2>
           </div>
           <p id="library-path" class="library-path" aria-live="polite"></p>
         </div>
@@ -278,6 +278,6 @@
     <script src="js/phonics-practice.js?v=2" defer></script>
     <script src="js/literacy-practice.js?v=1" defer></script>
     <script src="js/player.js?v=7" defer></script>
-    <script src="js/app.js?v=8" defer></script>
+    <script src="js/app.js?v=9" defer></script>
   </body>
 </html>

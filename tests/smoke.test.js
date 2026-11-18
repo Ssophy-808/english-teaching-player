@@ -12,11 +12,25 @@ require(path.join(root, "data/book3.js"));
 require(path.join(root, "data/book3-review.js"));
 require(path.join(root, "data/review-units.js"));
 require(path.join(root, "data/practice-data.js"));
+require(path.join(root, "data/phonics-data.js"));
+require(path.join(root, "data/listening-data.js"));
+
+assert.match(global.LISTENING_CONFIG.publicPlayerUrl, /^https:\/\//, "Listening QR codes must use a public HTTPS player URL");
+const listeningItems = Object.values(global.LISTENING_ITEMS || {});
+assert.ok(listeningItems.some((item) => item.kind === "context"), "Come to Live listening data must exist");
+assert.ok(listeningItems.some((item) => item.kind === "phonics-word"), "Sound It Out listening data must exist");
+listeningItems.forEach((item) => {
+  assert.equal(item.choices.length, 3, `${item.source} listening must have three choices`);
+  assert.equal(item.choices.filter((choice) => choice === item.answer).length, 1, `${item.source} listening must have exactly one correct choice`);
+  assert.ok(item.transcript.length >= 2, `${item.source} listening must include a teacher transcript`);
+  assert.ok(require("node:fs").existsSync(path.join(root, item.audio)), `${item.audio} must exist`);
+});
 
 const passportSnapshot = JSON.stringify(global.CURRICULUM_BOOKS.map((book) =>
   book.units.map((unit) => unit.passportSentences || [])));
 require(path.join(root, "data/course-schema.js"));
 require(path.join(root, "js/teaching-flow.js"));
+require(path.join(root, "data/worksheet-unit-packs.js"));
 require(path.join(root, "data/worksheet-data.js"));
 require(path.join(root, "js/worksheet-components.js"));
 
@@ -48,7 +62,7 @@ books.forEach((book) => {
       lesson.worksheet.pages.forEach((page) => {
         assert.ok(page.items.length > 0, `${lesson.id}/${page.type} must contain questions`);
         const textContextTypes = new Set(["choose_next_line", "put_dialogue_in_order", "read_find_mistake", "use_information", "change_one_part", "which_sentence_not_fit", "complete_information"]);
-        assert.ok(page.type === "reading_cloze" || textContextTypes.has(page.type) || (page.heroAssets || []).length > 0 || (page.sceneAssets || []).length > 0 || page.items.some((item) => item.asset?.image || item.asset?.sprite?.src || item.asset?.visual), `${lesson.id}/${page.type} must contain visible picture assets or a shared text context`);
+        assert.ok(page.type === "reading_cloze" || textContextTypes.has(page.type) || page.fruitScene || (page.heroAssets || []).length > 0 || (page.sceneAssets || []).length > 0 || page.items.some((item) => item.asset?.image || item.asset?.sprite?.src || item.asset?.visual), `${lesson.id}/${page.type} must contain visible picture assets or a shared text context`);
         if (page.type === "sentence_transform") page.items.forEach((item) => {
           const source = item.prompt.split("→")[0].trim();
           const sourceIsNegative = /\b(?:am|is|are) not\b|\b(?:cannot|can't|do not|don't|does not|doesn't)\b/i.test(source);
@@ -81,7 +95,7 @@ books.forEach((book) => book.units.filter((unit) => !unit.isReview).forEach((uni
     ["template_picture_answer", "matching", "multiple_choice", "template_fix_mistakes"],
     ["reading_comprehension", "template_picture_question", "multiple_choice", "template_question_order"],
     ["template_guided_question", "multiple_choice", "template_mixed_correction", "template_answer_order"],
-    ["template_independent_picture", "chain_questions", applicationType, finalWritingType]
+    ["template_independent_picture", "answer_questions", applicationType, finalWritingType]
   ];
   const representativeSlot = {
     "book-1/unit-1": [1, 2, "which_sentence_not_fit"],
@@ -95,8 +109,10 @@ books.forEach((book) => book.units.filter((unit) => !unit.isReview).forEach((uni
   const nonPictureTypes = unit.lessons.flatMap((lesson) => lesson.worksheet.pages.map((page) => page.type)).filter((type) => !pictureTypes.has(type));
   assert.equal(new Set(nonPictureTypes).size, nonPictureTypes.length, `${book.id}/${unit.id} must not repeat non-picture worksheet types across Day 1–4`);
   const reading = unit.lessons[1].worksheet.pages[0];
-  assert.ok(reading.passageLines.length >= 5, `${book.id}/${unit.id} Day 2 reading must be a connected passage`);
-  assert.ok(reading.items.length >= 4, `${book.id}/${unit.id} Day 2 reading must include detail and inference questions`);
+  const readingRange = book.id === "book-2" ? [3, 4] : [4, 6];
+  const minimumQuestions = book.id === "book-2" ? 2 : 3;
+  assert.ok(reading.passageLines.length >= readingRange[0] && reading.passageLines.length <= readingRange[1], `${book.id}/${unit.id} Day 2 reading must contain ${readingRange[0]}–${readingRange[1]} short sentences`);
+  assert.ok(reading.items.length >= minimumQuestions, `${book.id}/${unit.id} Day 2 reading must include at least ${minimumQuestions} clear content questions`);
 }));
 
 function expectedAnswerSubject(question) {
@@ -145,7 +161,7 @@ books.forEach((book) => book.units.forEach((unit) => unit.lessons.forEach((lesso
 })));
 
 const book1Unit4 = books.find((book) => book.id === "book-1").units.find((unit) => unit.id === "unit-4");
-assert.deepEqual(book1Unit4.lessons[0].worksheet.pages.map((page) => page.items.length), [8, 4, 6, 8], "Book 1 Unit 4 must use the full standard worksheet format");
+assert.ok(book1Unit4.lessons[0].worksheet.pages.every((page) => page.items.length >= 4 && page.items.length <= 8), "Book 1 Unit 4 must keep a useful, de-duplicated standard worksheet set");
 const book1Unit4FirstPage = global.WorksheetComponents.studentPage(book1Unit4.lessons[0], book1Unit4.lessons[0].worksheet.pages[0], 0, 4);
 assert.match(book1Unit4FirstPage, /wb-locked-template/, "Book 1 Unit 4 must use the same locked writing template as Book 3 Unit 4");
 assert.match(book1Unit4FirstPage, /Look and Answer/, "Book 1 Unit 4 must retain the Book 3 Unit 4 page-title position");
@@ -157,7 +173,7 @@ books.forEach((book) => {
   teachingUnits.slice(1).forEach((unit) => {
     const reviewPage = unit.lessons[3].worksheet.pages[3];
     assert.equal(reviewPage.title, "Mixed Question and Answer Review", `${book.id}/${unit.id} Day 4 must end with a mixed review worksheet`);
-    assert.equal(reviewPage.items.length, 8, `${book.id}/${unit.id} mixed review must contain eight questions`);
+    assert.ok(reviewPage.items.length >= 3 && reviewPage.items.length <= 8, `${book.id}/${unit.id} mixed review must keep only the available non-repeating questions`);
     assert.ok(reviewPage.items.every((item) => /\?$/.test(item.prompt)), `${book.id}/${unit.id} mixed review must give complete questions`);
     assert.ok(reviewPage.items.every((item) => item.asset?.image || item.asset?.sprite?.src || item.asset?.visual), `${book.id}/${unit.id} mixed review must give a picture for every question`);
     assert.ok(reviewPage.items.every((item) => !/^Answer:/i.test(item.prompt)), `${book.id}/${unit.id} mixed review must ask children to write answers, not questions`);
@@ -177,7 +193,7 @@ books.forEach((book) => {
     const finalReview = review.reviewRange === "1–9";
     assert.equal(review.lessons.length, finalReview ? 5 : 4, `${book.id}/${review.id} must have the correct review day count`);
     assert.equal(review.reviewSections.length, finalReview ? 9 : 3, `${book.id}/${review.id} must combine the correct source units`);
-    const expectedFirstPageTypes = ["reading_cloze", "template_picture_question", "chain_questions", "reading_cloze"];
+    const expectedFirstPageTypes = ["reading_cloze", "template_picture_question", "answer_questions", "reading_cloze"];
     if (finalReview) expectedFirstPageTypes.push("reading_cloze");
     assert.deepEqual(review.lessons.map((lesson) => lesson.worksheet.pages[0].type), expectedFirstPageTypes, `${book.id}/${review.id} must increase independence across all review days`);
     const worksheetJson = JSON.stringify(review.lessons.map((lesson) => lesson.worksheet.pages));
@@ -192,14 +208,16 @@ books.forEach((book) => {
         if (page.answers.includes("do")) assert.ok(page.wordBank.includes("does"), `${book.id}/${review.id} Word Bank should contrast do and does`);
         assert.ok(page.passageLines.length >= 5 && page.passageLines.length <= 8, `${book.id}/${review.id} Reading Cloze needs a 5–8 sentence passage`);
         assert.equal(page.heroAssets.length, 0, `${book.id}/${review.id} Reading Cloze must use context and the Word Bank, not answer pictures`);
-        assert.ok(page.answers.length >= 4 && page.answers.length <= 5, `${book.id}/${review.id} Reading Cloze needs 4–5 mixed vocabulary and grammar blanks`);
+        assert.ok(page.answers.length >= 3 && page.answers.length <= 5, `${book.id}/${review.id} Reading Cloze needs 3–5 focused vocabulary and grammar blanks`);
         assert.equal((page.passageLines.join(" ").match(/________/g) || []).length, page.answers.length, `${book.id}/${review.id} Reading Cloze blank count must match its answers`);
         const storyWordCount = page.passageLines.join(" ").replace(/_+/g, "").trim().split(/\s+/).filter(Boolean).length;
-        assert.ok(storyWordCount >= 50 && storyWordCount <= 100, `${book.id}/${review.id} Reading Cloze needs a natural 50–100 word story; got ${storyWordCount}`);
+        const storyRanges = { "book-1": [20, 40], "book-2": [20, 50], "book-3": [20, 60] };
+        const [minimumWords, maximumWords] = storyRanges[book.id];
+        assert.ok(storyWordCount >= minimumWords && storyWordCount <= maximumWords, `${book.id}/${review.id} Reading Cloze must fit its book-level text length; got ${storyWordCount}`);
         assert.doesNotMatch(page.passageLines.join(" "), /Picture\s*[123]|\bFirst, look|\bNext, look|\bLast, look/i, `${book.id}/${review.id} Reading Cloze must not stitch unrelated picture prompts together`);
         assert.ok(page.items.every((item) => item.prompt.includes("________")), `${book.id}/${review.id} Reading Cloze sentences need blanks`);
       });
-    assert.match(worksheetJson, /chain_questions/, `${book.id}/${review.id} must include a linked question chain`);
+    assert.match(worksheetJson, /answer_questions/, `${book.id}/${review.id} must include complete question-and-answer practice`);
   });
 });
 
@@ -288,7 +306,7 @@ book3FirstFourUnits.slice(0, 3).forEach((unit) => {
     "Look and Answer", "Make the Question", "Write Your Question", "Picture Question Challenge"
   ], `${unit.id} must build question-writing independence from Day 1 to Day 4`);
   unit.lessons.forEach((lesson) => {
-    assert.deepEqual(lesson.worksheet.pages.map((page) => page.items.length), [8, 4, 6, 8], `${lesson.id} must keep the fixed four-page workload`);
+    assert.ok(lesson.worksheet.pages.every((page) => page.items.length >= 3 && page.items.length <= 8), `${lesson.id} must keep a useful four-page workload without repeated filler`);
     assert.equal(lesson.worksheet.pages[0].layout, "locked_template", `${lesson.id} writing page must use the locked template`);
     assert.equal(lesson.worksheet.pages[3].layout, "locked_template", `${lesson.id} final writing page must use the locked template`);
     assert.equal(lesson.worksheet.pages[1].type, "matching", `${lesson.id} must retain matching`);
@@ -449,10 +467,14 @@ comprehensionPages.forEach((page) => {
 });
 book2FruitUnits.flatMap((unit) => unit.lessons)
   .flatMap((lesson) => lesson.worksheet.pages)
-  .filter((page) => page.title === "Read the Fruit Conversation")
+  .filter((page) => page.type === "reading_comprehension")
   .forEach((page) => {
-    assert.ok(page.items.some((item) => /close|far/i.test(item.prompt)), "Fruit reading must include a demonstrative-clue inference question");
-    assert.ok(page.items.some((item) => /agree/i.test(item.prompt)), "Fruit reading must check the meaning of the Yes/No response");
+    assert.ok(page.passageLines.length >= 3 && page.passageLines.length <= 4, "Book 2 fruit reading must use three to four short sentences");
+    assert.ok((page.heroAssets || []).length >= 2, "Fruit reading must display the fruit used by the passage");
+    assert.ok(page.items.some((item) => /^What are these\?/i.test(item.prompt)), "Fruit reading must ask a direct these question");
+    assert.ok(page.items.some((item) => /^What are those\?/i.test(item.prompt)), "Fruit reading must ask a direct those question");
+    assert.doesNotMatch(JSON.stringify(page), /\bnear\b|\bfar\b/i, "Book 2 fruit reading must not use untaught near/far language");
+    assert.doesNotMatch(JSON.stringify(page), /identify|agree|infer|why|how do you know/i, "Book 2 fruit reading must not use advanced inference or explanation language");
   });
 
 const mixedLanguagePages = books.flatMap((book) => book.units)
@@ -462,7 +484,7 @@ const mixedLanguagePages = books.flatMap((book) => book.units)
   .filter((page) => page.type === "template_fix_mistakes");
 mixedLanguagePages.forEach((page) => {
   const directions = new Set(page.items.map((item) => item.prompt.split(":")[0]));
-  assert.ok(directions.size >= 3, `${page.title} must mix at least three correction or reordering task types`);
+  assert.ok(directions.size >= Math.min(3, page.items.length), `${page.title} must mix its available correction or reordering task types`);
   page.items.forEach((item) => {
     if (/^Fix (?:the answer|the question):/i.test(item.prompt)) {
       assert.notEqual(item.prompt.split(":").slice(1).join(":").trim(), item.expectedAnswer, `${page.title} correction prompt must contain a real error`);

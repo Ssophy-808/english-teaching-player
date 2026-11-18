@@ -1,0 +1,16 @@
+:root { color-scheme: light; font-family: Arial, "Noto Sans TC", sans-serif; color: #17233a; background: #eef4fb; }
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; padding: 24px 14px; }
+.listening-player { width: min(720px, 100%); margin: 0 auto; }
+.listening-player header { padding: 28px; background: #17325c; color: #fff; border-radius: 24px; box-shadow: 0 12px 32px rgba(23, 50, 92, .18); }
+.listening-player header p { margin: 0 0 8px; font-size: 13px; font-weight: 800; letter-spacing: .18em; }
+.listening-player h1 { margin: 0 0 8px; font-size: clamp(32px, 8vw, 52px); }
+.listening-player header span { font-size: 18px; }
+.listening-tracks { display: grid; gap: 16px; margin-top: 20px; }
+.listening-track { display: grid; grid-template-columns: 58px 1fr; gap: 16px; align-items: start; padding: 20px; background: #fff; border: 2px solid #d9e6f4; border-radius: 20px; }
+.track-number { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 50%; background: #2e61c9; color: #fff; font-size: 26px; font-weight: 800; }
+.listening-track h2 { margin: 2px 0 6px; font-size: 25px; }
+.listening-track p { margin: 0 0 14px; font-size: 17px; line-height: 1.5; }
+.listening-track audio { width: 100%; min-height: 48px; }
+.listening-note, .listening-error { margin: 20px 4px; font-size: 15px; line-height: 1.5; color: #46556c; }
+@media (max-width: 480px) { .listening-player header { padding: 22px; } .listening-track { grid-template-columns: 44px 1fr; padding: 16px; } .track-number { width: 42px; height: 42px; font-size: 22px; } }

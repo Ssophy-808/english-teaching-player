@@ -5,15 +5,35 @@
   const TYPES = [
     ["vocab-image", "看圖寫單字", 2], ["image-sentence", "看圖問答", 2],
     ["choice", "文法選擇題", 2], ["sentence-choice", "選出正確句", 2],
-    ["fill", "單／雙空格填空", 2], ["error", "改錯題", 2],
-    ["reorder", "句子重組", 2], ["transform", "句型轉換", 2], ["dialogue", "情境對話", 1]
+    ["error", "改錯題", 2], ["reorder", "句子重組", 2], ["transform", "句型轉換", 2],
+    ["reading", "短文閱讀", 1], ["cloze", "複習克漏字", 1],
+    ["listening-context", "情境聽力", 1], ["phonics-listening", "Sound It Out 聽辨", 1],
+    ["phonics-choice", "Sound It Out 音組選擇", 2], ["phonics-odd", "Sound It Out 找不同", 2]
   ];
+  const SECTION_META = {
+    "vocab-image": { title: "Look and Write", instruction: "Look at each picture. Write the word." },
+    "image-sentence": { title: "Look and Answer", instruction: "Look at each picture. Write a complete answer." },
+    choice: { title: "Choose the Answer", instruction: "Choose the best answer." },
+    "sentence-choice": { title: "Choose the Correct Sentence", instruction: "Choose the correct complete sentence." },
+    error: { title: "Find the Mistake", instruction: "Find the mistake and rewrite the whole sentence." },
+    reorder: { title: "Put the Words in Order", instruction: "Put the words in the correct order." },
+    transform: { title: "Change the Sentence", instruction: "Rewrite each sentence as directed." },
+    reading: { title: "Read and Answer", instruction: "Read the passage. Answer each question." },
+    cloze: { title: "Reading Cloze", instruction: "Read the passage and complete the blanks." },
+    "listening-context": { title: "Listen and Choose", instruction: "Scan the QR code. Listen to each track and choose the best answer." },
+    "phonics-listening": { title: "Sound It Out Listening", instruction: "Scan the QR code. Listen to each track and choose the word you hear." },
+    "phonics-choice": { title: "Sound It Out", instruction: "Choose the word with the correct sound or spelling." },
+    "phonics-odd": { title: "Which Word Does Not Belong?", instruction: "Choose the word that does not belong." }
+  };
+  const CHINESE_NUMBERS = ["一", "二", "三", "四", "五", "六", "七", "八", "九", "十", "十一", "十二"];
   const catalog = window.COURSE_CATALOG || [];
+  const phonicsCourse = (window.PHONICS_COURSES || [])[0] || { units: [] };
   const modal = document.getElementById("test-builder-modal");
   const preview = document.getElementById("test-preview");
   const empty = document.getElementById("test-builder-empty");
   const bookSelect = document.getElementById("test-book");
   const unitList = document.getElementById("test-units");
+  const phonicsUnitList = document.getElementById("test-phonics-units");
   const typeList = document.getElementById("test-types");
   let mode = "student";
   let questions = [];
@@ -45,6 +65,11 @@
       units = book.units.slice(0, last + 1);
     }
     return units;
+  }
+
+  function selectedPhonicsUnits() {
+    const selected = [...phonicsUnitList.querySelectorAll("input:checked")].map((input) => input.value);
+    return phonicsCourse.units.filter((unit) => selected.includes(unit.id));
   }
 
   function tagged(unit, unitIndex, data) { return { ...data, id: `q-${++serial}`, unitLabel: `Unit ${unitIndex + 1}`, points: 2 }; }
@@ -237,7 +262,51 @@
     return null;
   }
 
-  function buildPools(units) {
+  function addPhonicsQuestions(result, units) {
+    units.forEach((unit) => {
+      const unitLabel = `Sound It Out Unit ${unit.number}`;
+      const bySound = Object.groupBy(unit.words || [], (word) => word.vowelType);
+      Object.entries(bySound).forEach(([sound, words]) => {
+        const otherWords = Object.entries(bySound).filter(([otherSound]) => otherSound !== sound).flatMap(([, values]) => values);
+        if (!words.length || otherWords.length < 2) return;
+        const correct = words[0].word;
+        const distractors = shuffle(otherWords.map((word) => word.word)).filter((word) => word !== correct).slice(0, 2);
+        if (distractors.length === 2) result["phonics-choice"].push({
+          id: `q-${++serial}`, type: "phonics-choice", label: "Sound It Out", unitLabel,
+          prompt: `Which word has the ${unit.soundLabels?.[sound] || sound} sound?`,
+          answer: correct, choices: shuffle([correct, ...distractors]), points: 2, difficulty: 1, lines: 0
+        });
+        if (words.length >= 2 && otherWords.length) {
+          const odd = otherWords[0].word;
+          result["phonics-odd"].push({
+            id: `q-${++serial}`, type: "phonics-odd", label: "Sound It Out", unitLabel,
+            prompt: `Which word does not belong with the ${unit.soundLabels?.[sound] || sound} group?`,
+            answer: odd, choices: shuffle([words[0].word, words[1].word, odd]), points: 2, difficulty: 2, lines: 0
+          });
+        }
+      });
+      (unit.patterns || []).forEach((pattern) => {
+        const correct = pattern.words?.[0];
+        const distractors = (unit.words || []).filter((word) => word.pattern !== pattern.id).map((word) => word.word);
+        if (!correct || distractors.length < 2) return;
+        result["phonics-choice"].push({
+          id: `q-${++serial}`, type: "phonics-choice", label: "Sound It Out", unitLabel,
+          prompt: `Which word uses the ${pattern.display} spelling?`,
+          answer: correct, choices: shuffle([correct, ...shuffle(distractors).slice(0, 2)]), points: 2, difficulty: 2, lines: 0
+        });
+      });
+      const listeningId = Object.keys(window.LISTENING_ITEMS || {}).find((id) => window.LISTENING_ITEMS[id].source === `${phonicsCourse.id}/${unit.id}`);
+      const listening = window.LISTENING_ITEMS?.[listeningId];
+      if (listening) result["phonics-listening"].push({
+        id: `q-${++serial}`, type: "phonics-listening", label: "Sound It Out Listening", unitLabel,
+        listeningId, prompt: listening.question, answer: listening.answer,
+        choices: [...listening.choices], transcript: [...listening.transcript],
+        audio: listening.audio, points: 2, difficulty: 1, lines: 0
+      });
+    });
+  }
+
+  function buildPools(units, phonicsUnits = []) {
     const result = Object.fromEntries(TYPES.map(([id]) => [id, []]));
     units.forEach((unit) => {
       const book = selectedBook();
@@ -246,6 +315,29 @@
       const words = data.vocabulary || [];
       const sentences = (data.mainSentences || []).filter(Boolean);
       const pairedAnswerIndexes = new Set();
+      const reading = window.UNIT_PACKS?.[`${book.id}/${unit.id}`]?.reading;
+      Object.entries(window.LISTENING_ITEMS || {})
+        .filter(([, item]) => item.source === `${book.id}/${unit.id}` && item.kind === "context")
+        .forEach(([listeningId, item]) => {
+          result["listening-context"].push(tagged(unit, unitIndex, {
+            type: "listening-context", label: "情境聽力", listeningId,
+            prompt: item.question, answer: item.answer, choices: [...item.choices],
+            transcript: [...item.transcript], audio: item.audio, lines: 0, difficulty: 2
+          }));
+        });
+      (reading?.questions || []).forEach((question) => {
+        result.reading.push(tagged(unit, unitIndex, {
+          type: "reading", label: "短文閱讀",
+          prompt: `${reading.title}\n${reading.lines.join(" ")}\n\n${question.q}`,
+          answer: question.a, lines: 2, difficulty: 2
+        }));
+      });
+      const clozePage = unit.lessons?.flatMap((lesson) => lesson.worksheet?.pages || []).find((page) => page.type === "reading_cloze");
+      if (clozePage) result.cloze.push(tagged(unit, unitIndex, {
+        type: "cloze", label: "複習克漏字",
+        prompt: `Word Bank: ${(clozePage.wordBank || []).join(" · ")}\n\n${(clozePage.passageLines || []).join(" ")}`,
+        answer: (clozePage.answers || []).join(" / "), lines: 2, difficulty: 2
+      }));
       words.forEach((word) => {
         result["vocab-image"].push(tagged(unit, unitIndex, { type: "vocab-image", label: "看圖寫單字", prompt: "Look and write the word.", answer: word.word, asset: word, lines: 1, difficulty: 1 }));
       });
@@ -270,28 +362,14 @@
         if (grammar) result.choice.push(tagged(unit, unitIndex, { type: "choice", label: "文法選擇題", ...grammar, lines: 0 }));
         const completeChoice = sentenceChoice(sentence);
         if (completeChoice) result["sentence-choice"].push(tagged(unit, unitIndex, { type: "sentence-choice", label: "選出正確句", ...completeChoice, lines: 0 }));
-        const tokens = sentence.replace(/[?.!,]/g, "").split(/\s+/).filter((token) => token.length > 1);
-        const target = (word?.word || tokens[Math.max(0, tokens.length - 1)] || "").replace("(s)", "");
-        if (target && sentence.toLowerCase().includes(target.toLowerCase())) result.fill.push(tagged(unit, unitIndex, { type: "fill", label: "填空題", prompt: sentence.replace(new RegExp(target.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i"), "________"), answer: target, lines: 1, difficulty: 1 }));
-        if (grammar && target && grammar.answer.toLowerCase() !== target.toLowerCase()) {
-          const grammarBlank = grammar.prompt.split("\n").pop().replace("___", "________");
-          const doubleBlank = grammarBlank.replace(new RegExp(target.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i"), "________");
-          if ((doubleBlank.match(/________/g) || []).length >= 2) result.fill.push(tagged(unit, unitIndex, {
-            type: "fill", label: "雙線索填空", prompt: `${doubleBlank}\nComplete both blanks and rewrite the full sentence.`,
-            answer: sentence, lines: 2, difficulty: 3
-          }));
-        }
         wrongVariants(sentence).slice(0, 2).forEach((wrong) => result.error.push(tagged(unit, unitIndex, { type: "error", label: "改錯題", prompt: `Find the mistake and rewrite the whole sentence: ${wrong}`, answer: sentence, lines: 2, difficulty: 2 })));
         const ordered = sentence.replace(/([?.!,])/g, " $1").split(/\s+/).filter(Boolean);
         result.reorder.push(tagged(unit, unitIndex, { type: "reorder", label: "句子重組", prompt: `Put in order: ${shuffle(ordered).join(" / ")}`, answer: sentence, lines: 2, difficulty: 2 }));
         const transformed = negativeOrQuestion(sentence);
         if (transformed) result.transform.push(tagged(unit, unitIndex, { type: "transform", label: "句型轉換", ...transformed, lines: 2, difficulty: 3 }));
-        if (pair) {
-          result.dialogue.push(tagged(unit, unitIndex, { type: "dialogue", label: "完成回答", prompt: `A: ${pair.question}\nB: ____________________`, answer: pair.answer, lines: 2, difficulty: 3 }));
-          result.dialogue.push(tagged(unit, unitIndex, { type: "dialogue", label: "寫出問句", prompt: `A: ____________________\nB: ${pair.answer}`, answer: pair.question, lines: 2, difficulty: 3 }));
-        }
       });
     });
+    addPhonicsQuestions(result, phonicsUnits);
     Object.keys(result).forEach((type) => {
       const seen = new Set();
       result[type] = result[type].filter((question) => {
@@ -332,6 +410,7 @@
       units: [...unitList.querySelectorAll("input:checked")].map((input) => input.value),
       difficulty: document.getElementById("test-difficulty").value,
       spiral: document.getElementById("test-spiral").checked,
+      phonicsUnits: [...phonicsUnitList.querySelectorAll("input:checked")].map((input) => input.value),
       counts: Object.fromEntries(TYPES.map(([id]) => [id, Math.max(0, Number(document.querySelector(`[data-type-count="${id}"]`).value) || 0)]))
     };
   }
@@ -339,9 +418,10 @@
   function generate() {
     const settings = config();
     const units = selectedUnits();
-    if (!units.length) { empty.textContent = "請至少選擇一個 Unit。"; return; }
+    const phonicsUnits = selectedPhonicsUnits();
+    if (!units.length && !phonicsUnits.length) { empty.textContent = "請至少選擇一個 Come to Live 或 Sound It Out Unit。"; return; }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
-    pools = buildPools(units);
+    pools = buildPools(units, phonicsUnits);
     questions = [];
     TYPES.forEach(([type]) => {
       const wanted = settings.counts[type];
@@ -350,38 +430,108 @@
       if (settings.difficulty === "challenge") candidates = candidates.filter((q) => q.difficulty >= 2);
       selectDiverse(candidates, wanted, questions).forEach((question, index) => questions.push({ ...question, id: `exam-${type}-${index}-${Date.now()}-${serial++}` }));
     });
-    questions = shuffle(questions);
     mode = "student";
     render();
   }
 
+  function displayPrompt(question) {
+    const prompt = String(question.prompt || "");
+    if (question.type === "vocab-image") return "";
+    if (question.type === "image-sentence") return prompt.replace(/^Question:\s*/i, "");
+    if (question.type === "error") return prompt.replace(/^Find the mistake and rewrite the whole sentence:\s*/i, "");
+    if (question.type === "reorder") return prompt.replace(/^Put in order:\s*/i, "");
+    if (question.type === "sentence-choice") return prompt.replace(/^Choose the only correct complete sentence\.?\s*/i, "");
+    if (question.type === "choice") return prompt.replace(/^Choose the correct grammar word\.?\s*/i, "");
+    return prompt;
+  }
+
+  function groupedSections(list = questions) {
+    let sectionIndex = 0;
+    return TYPES.map(([type]) => {
+      const items = list.filter((question) => question.type === type);
+      if (!items.length) return null;
+      const meta = SECTION_META[type] || { title: type, instruction: "" };
+      const listeningItems = items.filter((question) => question.listeningId);
+      const playerBase = window.LISTENING_CONFIG?.publicPlayerUrl || "";
+      const playbackUrl = listeningItems.length && playerBase
+        ? `${playerBase}?items=${encodeURIComponent(listeningItems.map((question) => question.listeningId).join(","))}`
+        : "";
+      const section = {
+        type,
+        number: CHINESE_NUMBERS[sectionIndex] || String(sectionIndex + 1),
+        title: meta.title,
+        instruction: meta.instruction,
+        playbackUrl,
+        items: items.map((question, itemIndex) => ({
+          ...question,
+          displayPrompt: `${question.listeningId ? `Track ${itemIndex + 1}. ` : ""}${displayPrompt(question)}`,
+          itemNumber: itemIndex + 1
+        }))
+      };
+      sectionIndex += 1;
+      return section;
+    }).filter(Boolean);
+  }
+
+  function paginateSections(sections, capacity = 4) {
+    const pages = [];
+    let page = { sections: [], count: 0 };
+    sections.forEach((section) => {
+      let offset = 0;
+      while (offset < section.items.length) {
+        if (page.count >= capacity) { pages.push(page); page = { sections: [], count: 0 }; }
+        const available = capacity - page.count;
+        const take = Math.min(available, section.items.length - offset);
+        page.sections.push({ ...section, continued: offset > 0, items: section.items.slice(offset, offset + take) });
+        page.count += take;
+        offset += take;
+      }
+    });
+    if (page.sections.length) pages.push(page);
+    return pages;
+  }
+
   function lines(count) { return Array.from({ length: count || 0 }, () => `<span class="worksheet-answer-line" aria-hidden="true"></span>`).join(""); }
-  function questionMarkup(question, index) {
+  function questionMarkup(question) {
     const choices = question.choices?.length ? `<div class="test-question-choices">${question.choices.map((choice, i) => `<span>(${String.fromCharCode(65 + i)}) ${esc(choice)}</span>`).join("")}</div>` : "";
-    const prompt = question.prompt ? `<p>${esc(question.prompt)}</p>` : "";
+    const prompt = question.displayPrompt ? `<p>${esc(question.displayPrompt)}</p>` : "";
     const givenAnswer = question.givenAnswer ? `<p class="test-given-answer"><strong>Answer:</strong> ${esc(question.givenAnswer)}</p>` : "";
     return `<article class="test-question" data-question-id="${esc(question.id)}">
-      <div class="test-question-number">${index + 1}</div><div class="test-question-content"><small>${esc(question.label)} · ${esc(question.unitLabel)}</small>${assetMarkup(question.asset)}${prompt}${choices}${lines(question.lines)}${givenAnswer}</div>
+      <div class="test-question-number">${question.itemNumber}.</div><div class="test-question-content"><div class="test-question-top">${assetMarkup(question.asset)}<div class="test-question-text">${prompt}${choices}${givenAnswer}</div></div>${lines(question.lines)}</div>
       <label class="test-points no-print"><input data-points type="number" min="1" max="20" value="${question.points}"> 分</label>
       <div class="test-question-actions no-print"><button data-replace type="button">換一題</button><button data-remove type="button">刪除</button></div>
     </article>`;
   }
 
-  function examPage(items, page, startIndex, pageTotal) {
+  function sectionMarkup(section) {
+    const qr = section.playbackUrl && !section.continued
+      ? `<a class="test-listening-qr" href="${esc(section.playbackUrl)}" target="_blank" rel="noopener"><img src="${esc(qrImageUrl(section.playbackUrl))}" alt="Listening QR code"><span>Scan to listen</span></a>`
+      : "";
+    return `<section class="test-exam-section"><header class="test-section-heading${qr ? " has-qr" : ""}"><div><h2>${esc(section.number)}、${esc(section.title)}${section.continued ? "（續）" : ""}</h2>${section.continued ? "" : `<p>${esc(section.instruction)}</p>`}</div>${qr}</header>${section.items.map(questionMarkup).join("")}</section>`;
+  }
+
+  function qrImageUrl(value) {
+    return `https://quickchart.io/qr?size=180&margin=1&text=${encodeURIComponent(value)}`;
+  }
+
+  function examPage(pageData, page, pageTotal) {
     const settings = config();
     const total = questions.reduce((sum, q) => sum + Number(q.points || 0), 0);
-    const unitNames = selectedUnits().map((unit) => unit.title).join(" · ");
+    const unitNames = [
+      ...selectedUnits().map((unit) => unit.title),
+      ...selectedPhonicsUnits().map((unit) => `SIO ${unit.number} ${unit.title}`)
+    ].join(" · ");
     return `<section class="test-page">
-      <header class="test-page-header"><div><span>${esc(selectedBook().title)} · ${esc(unitNames)}</span><h1>${esc(settings.title)}</h1></div><strong>${page} / ${pageTotal}</strong></header>
-      <div class="worksheet-name-row"><span>Name 姓名：________________</span><span>Class 班級：____________</span><span>Score 成績：____ / ${total}</span></div>
-      <div class="test-question-list">${items.map((q, i) => questionMarkup(q, startIndex + i)).join("")}</div>
-      <footer><span>English Teaching Player · Test Bank</span><span>Check your answers carefully.</span></footer>
+      <header class="test-page-header"><span>${esc(selectedBook().title)} · ${esc(unitNames)} · ${page}/${pageTotal}</span><h1>${esc(settings.title)}</h1><strong>Name: __________________</strong></header>
+      <div class="worksheet-name-row"><span>Class 班級：____________</span><span>Score 成績：____ / ${total}</span></div>
+      <div class="test-question-list">${pageData.sections.map(sectionMarkup).join("")}</div>
+      <footer><span>English Worksheet Builder</span><span>Check your answers carefully.</span></footer>
     </section>`;
   }
 
-  function answerPage(items, page, startIndex, pageTotal) {
+  function answerPage(pageSections, page, pageTotal) {
     const total = questions.reduce((sum, q) => sum + Number(q.points || 0), 0);
-    return `<section class="test-page test-answer-page"><header class="test-page-header"><div><span>TEACHER ANSWER KEY · ${page} / ${pageTotal}</span><h1>${esc(config().title)}</h1></div><strong>${total} pts</strong></header><div class="test-answer-grid">${items.map((q, i) => `<article><b>${startIndex + i + 1}. ${esc(q.answer)}</b><small>${esc(q.label)} · ${q.points} 分</small></article>`).join("")}</div></section>`;
+    return `<section class="test-page test-answer-page"><header class="test-page-header"><span>TEACHER ANSWER KEY · ${page}/${pageTotal}</span><h1>${esc(config().title)}</h1><strong>${total} pts</strong></header><div class="test-answer-sections">${pageSections.map((section) => `<section><h2>${esc(section.number)}、${esc(section.title)}</h2><div class="test-answer-grid">${section.items.map((q) => `<article><b>${q.itemNumber}. ${esc(q.answer)}</b>${q.transcript?.length ? `<p><strong>Transcript:</strong> ${esc(q.transcript.join(" "))}</p>` : ""}</article>`).join("")}</div></section>`).join("")}</div></section>`;
   }
 
   function render() {
@@ -389,15 +539,14 @@
     document.getElementById("test-student-mode").classList.toggle("is-active", mode === "student");
     document.getElementById("test-answer-mode").classList.toggle("is-active", mode === "answer");
     if (!questions.length) { preview.innerHTML = ""; return; }
-    const pages = [];
-    for (let index = 0; index < questions.length; index += 6) pages.push(questions.slice(index, index + 6));
-    const answerPages = [];
-    for (let index = 0; index < questions.length; index += 24) answerPages.push(questions.slice(index, index + 24));
+    const sections = groupedSections();
+    const pages = paginateSections(sections, 4);
+    const answerPages = paginateSections(sections, 20);
     document.getElementById("test-student-mode").textContent = `學生考卷 · ${pages.length} pages`;
     document.getElementById("test-answer-mode").textContent = `教師答案 · ${answerPages.length} pages`;
     preview.innerHTML = mode === "student"
-      ? pages.map((items, index) => examPage(items, index + 1, index * 6, pages.length)).join("")
-      : answerPages.map((items, index) => answerPage(items, index + 1, index * 24, answerPages.length)).join("");
+      ? pages.map((pageData, index) => examPage(pageData, index + 1, pages.length)).join("")
+      : answerPages.map((pageData, index) => answerPage(pageData.sections, index + 1, answerPages.length)).join("");
   }
 
   async function exportWord() {
@@ -411,8 +560,12 @@
         mode,
         title: config().title,
         bookTitle: selectedBook().title,
-        unitNames: selectedUnits().map((unit) => unit.title).join(" · "),
-        questions
+        unitNames: [
+          ...selectedUnits().map((unit) => unit.title),
+          ...selectedPhonicsUnits().map((unit) => `SIO ${unit.number} ${unit.title}`)
+        ].join(" · "),
+        questions,
+        sections: groupedSections()
       });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -436,11 +589,16 @@
     unitList.innerHTML = book.units.map((unit, index) => `<label><input type="checkbox" value="${esc(unit.id)}" ${saved.includes(unit.id) || (!saved.length && index === 0) ? "checked" : ""}> Unit ${index + 1} · ${esc(unit.topic)}</label>`).join("");
   }
 
+  function renderPhonicsUnits(saved = []) {
+    phonicsUnitList.innerHTML = phonicsCourse.units.map((unit) => `<label><input type="checkbox" value="${esc(unit.id)}" ${saved.includes(unit.id) ? "checked" : ""}> Unit ${unit.number} · ${esc(unit.title)}</label>`).join("");
+  }
+
   function init() {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null") || {};
     bookSelect.innerHTML = catalog.map((book) => `<option value="${esc(book.id)}">${esc(book.title)}</option>`).join("");
     if (catalog.some((book) => book.id === saved.bookId)) bookSelect.value = saved.bookId;
     renderUnits(saved.units || []);
+    renderPhonicsUnits(saved.phonicsUnits || []);
     typeList.innerHTML = TYPES.map(([id, label, defaultCount]) => `<label><span>${label}</span><input data-type-count="${id}" type="number" min="0" max="10" value="${saved.counts?.[id] ?? defaultCount}"></label>`).join("");
     if (saved.title) document.getElementById("test-title").value = saved.title;
     if (saved.difficulty) document.getElementById("test-difficulty").value = saved.difficulty;
@@ -453,12 +611,10 @@
   bookSelect.addEventListener("change", () => renderUnits());
   document.getElementById("test-generate").addEventListener("click", generate);
   document.getElementById("test-regenerate").addEventListener("click", generate);
-  document.getElementById("test-shuffle").addEventListener("click", () => { questions = shuffle(questions); render(); });
+  document.getElementById("test-shuffle").addEventListener("click", () => { questions = groupedSections().flatMap((section) => shuffle(section.items).map(({ displayPrompt: _displayPrompt, itemNumber: _itemNumber, ...question }) => question)); render(); });
   document.getElementById("test-student-mode").addEventListener("click", () => { mode = "student"; render(); });
   document.getElementById("test-answer-mode").addEventListener("click", () => { mode = "answer"; render(); });
   document.getElementById("test-word").addEventListener("click", exportWord);
-  document.getElementById("test-print").addEventListener("click", () => { document.body.classList.add("printing-exam"); window.print(); });
-  window.addEventListener("afterprint", () => document.body.classList.remove("printing-exam"));
   preview.addEventListener("click", (event) => {
     const card = event.target.closest("[data-question-id]"); if (!card) return;
     const index = questions.findIndex((q) => q.id === card.dataset.questionId); if (index < 0) return;

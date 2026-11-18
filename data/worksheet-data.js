@@ -27,6 +27,14 @@
     big_picture: "Study the whole picture board. Answer every question in a complete sentence.",
     sentence_transform: "Change each sentence as directed. Write the complete new sentence."
   };
+  const BOOK_PROFILES = {
+    "book-1": { sentenceWords: 6, scrambleChunks: 5, answerSentences: 1, readingLines: 0 },
+    "book-2": { sentenceWords: 8, scrambleChunks: 6, answerSentences: 2, readingLines: 4 },
+    "book-3": { sentenceWords: 10, scrambleChunks: 8, answerSentences: 2, readingLines: 6 },
+    "book-4": { sentenceWords: 12, scrambleChunks: 9, answerSentences: 2, readingLines: 8 },
+    "book-5": { sentenceWords: 14, scrambleChunks: 9, answerSentences: 2, readingLines: 10 },
+    "book-6": { sentenceWords: 15, scrambleChunks: 9, answerSentences: 2, readingLines: 12 }
+  };
 
   function vocabularyItems(unit) {
     if (window.TeachingFlow?.vocabularyItems) return window.TeachingFlow.vocabularyItems(unit.vocabulary || []);
@@ -93,11 +101,41 @@
     return rule ? sentence.replace(rule[0], rule[1]) : sentence.replace(/\.$/, "").concat(" ?");
   }
 
-  function scramble(sentence) {
-    const punctuation = sentence.match(/[?.!]$/)?.[0] || "";
-    const words = sentence.replace(/[?.!]$/, "").split(/\s+/);
-    const pivot = Math.max(1, Math.floor(words.length / 2));
-    return [...words.slice(pivot), ...words.slice(0, pivot), punctuation].filter(Boolean).join(" / ");
+  function firstSentence(text) {
+    return String(text || "").trim().match(/^.*?[.!?](?=\s|$)/)?.[0] || String(text || "").trim();
+  }
+
+  function oneSentenceAnswer(text) {
+    const value = String(text || "").trim();
+    const marker = value.match(/^(Yes|No),/i)?.[1];
+    const sentences = value.match(/[^.!?]+[.!?]/g)?.map((sentence) => sentence.trim()) || [value];
+    if (sentences.length < 2) return value;
+    const last = sentences.at(-1);
+    return marker ? `${marker}, ${last.charAt(0).toLowerCase()}${last.slice(1)}` : last;
+  }
+
+  function scramble(sentence, bookId = "book-6") {
+    const source = firstSentence(sentence);
+    const punctuation = source.match(/[?.!]$/)?.[0] || "";
+    const words = source.replace(/[?.!]$/, "").trim().split(/\s+/).filter(Boolean);
+    const maxChunks = BOOK_PROFILES[bookId]?.scrambleChunks || BOOK_PROFILES["book-6"].scrambleChunks;
+    const wordChunkLimit = Math.max(1, maxChunks - (punctuation ? 1 : 0));
+    const chunks = [];
+    for (let index = 0; index < words.length;) {
+      const slotsLeft = Math.min(wordChunkLimit - chunks.length, words.length - index);
+      const take = Math.ceil((words.length - index) / Math.max(1, slotsLeft));
+      chunks.push(words.slice(index, index + take).join(" "));
+      index += take;
+    }
+    let seed = [...source].reduce((value, character) => ((value * 31) + character.charCodeAt(0)) >>> 0, 2166136261);
+    const shuffled = chunks.slice();
+    for (let index = shuffled.length - 1; index > 0; index -= 1) {
+      seed = ((seed * 1664525) + 1013904223) >>> 0;
+      const target = seed % (index + 1);
+      [shuffled[index], shuffled[target]] = [shuffled[target], shuffled[index]];
+    }
+    if (shuffled.length > 1 && shuffled.every((chunk, index) => chunk === chunks[index])) shuffled.push(shuffled.shift());
+    return [...shuffled, punctuation].filter(Boolean).join(" / ");
   }
 
   function negative(sentence) {
@@ -150,7 +188,7 @@
     if (type === "write_question") return qa.slice(0, 4).map((item, index) => ({ asset: assetFor(item.answer, vocabulary, index), prompt: item.answer, expectedAnswer: item.question, lines: 2 }));
     if (type === "write_answer") return qa.slice(0, 4).map((item, index) => ({ asset: assetFor(item.answer, vocabulary, index), subjectCue: item.question, starter: "", expectedAnswer: item.answer, lines: 1 }));
     if (type === "fix_mistakes") return sentenceValues.slice(0, 4).map((sentence, index) => ({ asset: assetFor(sentence, vocabulary, index), prompt: wrongSentence(sentence), expectedAnswer: sentence, lines: 2 }));
-    if (type === "unscramble") return sentencePool(unit).slice(0, 4).map((sentence, index) => ({ asset: assetFor(sentence, vocabulary, index), prompt: scramble(sentence), expectedAnswer: sentence, lines: 2 }));
+    if (type === "unscramble") return sentencePool(unit).slice(0, 4).map((sentence, index) => ({ asset: assetFor(sentence, vocabulary, index), prompt: scramble(sentence, unit.bookId), expectedAnswer: firstSentence(sentence), lines: 2 }));
     if (type === "sentence_transform") return sentenceValues.filter(canTransform).slice(0, 4).map((sentence, index) => {
       const direction = isNegative(sentence) ? "affirmative" : "negative";
       return { asset: assetFor(sentence, vocabulary, index), prompt: `${sentence}  →  Change to ${direction}.`, expectedAnswer: direction === "negative" ? negative(sentence) : positive(sentence), lines: 2 };
@@ -476,7 +514,10 @@
       [/\bsome\b/i, "any"]
     ];
     const rule = rules.find(([pattern]) => pattern.test(text));
-    return rule ? text.replace(rule[0], rule[1]) : text.replace(/[?.!]$/, " ?");
+    if (rule) return text.replace(rule[0], rule[1]);
+    if (/\ban\b/i.test(text)) return text.replace(/\ban\b/i, "a");
+    if (/\ba\b/i.test(text)) return text.replace(/\ba\b/i, "an");
+    return text.replace(/\b([A-Za-z]+)([?.!]?)$/, (_, word, mark) => `${/s$/i.test(word) ? word.slice(0, -1) : `${word}s`}${mark}`);
   }
 
   function secondGrammarError(text) {
@@ -493,7 +534,11 @@
     if (/\bdo\b/i.test(text)) return text.replace(/\bdo\b/i, "does").replace(/\b(like|want)\b/i, "$1s");
     if (/\blikes\b/i.test(text)) return text.replace(/\blikes\b/i, "does like");
     if (/\bwants\b/i.test(text)) return text.replace(/\bwants\b/i, "does want");
-    return text.replace(/[?.!]$/, "");
+    if (/\bThere is\b/i.test(text)) return text.replace(/\bThere is\b/gi, "There are");
+    if (/\bThere are\b/i.test(text)) return text.replace(/\bThere are\b/gi, "There is");
+    if (/\ban\b/i.test(text)) return text.replace(/\ban\b/i, "a");
+    if (/\ba\b/i.test(text)) return text.replace(/\ba\b/i, "an");
+    return text.replace(/\b([A-Za-z]+)([?.!]?)$/, (_, word, mark) => `${/s$/i.test(word) ? word.slice(0, -1) : `${word}s`}${mark}`);
   }
 
   function choicesFor(correct) {
@@ -503,9 +548,25 @@
       const wrongHelper = /does/i.test(helper) ? (helper.includes("n't") ? "don't" : "do") : (helper.includes("n't") ? "doesn't" : "does");
       return [correct, `${yesNo}, ${subject} ${wrongHelper}.`, `${yesNo}, ${subject} not.`];
     }
-    const values = [correct, grammarError(correct), secondGrammarError(correct)];
-    const unique = [...new Set(values)];
-    if (unique.length < 3) unique.push(correct.replace(/[?.!]$/, "s."));
+    const normalized = (value) => String(value).toLowerCase().replace(/[^a-z0-9']+/g, " ").trim();
+    const candidates = [
+      correct,
+      grammarError(correct),
+      secondGrammarError(correct),
+      correct.replace(/\b(is|am|are)\b/i, (verb) => ({ is: "are", am: "is", are: "is" })[verb.toLowerCase()]),
+      correct.replace(/\b(has|have)\b/i, (verb) => /has/i.test(verb) ? "have" : "has"),
+      correct.replace(/\b(do|does)\b/i, (verb) => /does/i.test(verb) ? "do" : "does"),
+      correct.replace(/\b(a|an)\b/i, (article) => /an/i.test(article) ? "a" : "an"),
+      correct.replace(/\b([A-Za-z]+)([?.!]?)$/, (_, word, mark) => `${/s$/i.test(word) ? word.slice(0, -1) : `${word}s`}${mark}`),
+      correct.replace(/\b(I|you|he|she|we|they)\b/i, (subject) => ({ i: "he", you: "she", he: "they", she: "we", we: "he", they: "she" })[subject.toLowerCase()])
+    ];
+    const seen = new Set();
+    const unique = candidates.filter((value) => {
+      const key = normalized(value);
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
     return unique.slice(0, 3);
   }
 
@@ -557,7 +618,7 @@
       locked("template_picture_question", "Make the Question", "Look at the picture and answer cue. Write the matching question.", pairsForDay.map((pair) => ({ prompt: `Answer: ${pair.answer}`, asset: pair.asset, expectedAnswer: pair.question })), true),
       progressivePage("matching", "Match Questions and Answers", "Draw a line from each answer to its matching question.", profile.skill, matchingItems),
       progressivePage("multiple_choice", "Choose the Question", "Read the answer. Circle the question that matches.", profile.skill, questionChoices),
-      locked("template_question_order", "Build the Question", "Put the words in order. Write the complete question.", pairsForDay.map((pair) => ({ prompt: scramble(pair.question), asset: pair.asset, expectedAnswer: pair.question })))
+      locked("template_question_order", "Build the Question", "Put the words in order. Write the complete question.", pairsForDay.map((pair) => ({ prompt: scramble(pair.question, "book-3"), asset: pair.asset, expectedAnswer: firstSentence(pair.question) })))
     ];
 
     if (day === 3) return [
@@ -601,10 +662,16 @@
     const slot = (index + day - 1) % 4;
     const pick = (values) => ({ question: values[slot][0], answer: values[slot][1] });
 
-    if (key === "book-1/unit-1") return pick([
-      ["Who are you?", `I am ${article} ${word}.`], [`Are you ${article} ${word}?`, `Yes, I am. I am ${article} ${word}.`],
-      ["Who am I?", `You are ${article} ${word}.`], [`Am I ${article} ${word}?`, `Yes, you are. You are ${article} ${word}.`]
-    ]);
+    if (key === "book-1/unit-1") {
+      const contrasts = { boy: "girl", girl: "boy", man: "woman", woman: "man", student: "teacher", teacher: "student" };
+      const positive = slot % 2 === 0;
+      const questionWord = positive ? word : (contrasts[word.toLowerCase()] || word);
+      const questionArticle = reviewArticle(questionWord);
+      return {
+        question: `Are you ${questionArticle} ${questionWord}?`,
+        answer: positive ? `Yes, I am ${article} ${word}.` : `No, I am ${article} ${word}.`
+      };
+    }
     if (key === "book-1/unit-2") {
       if (/^me$/i.test(word)) return { question: "Who is this?", answer: "This is me." };
       const female = /^(grandmother|mother|aunt|sister)$/i.test(word);
@@ -746,15 +813,26 @@
     const vocabulary = vocabularyItems(unit);
     const offset = (day - 1) * 2;
     const sourceUnit = { ...unit, bookId };
-    return Array.from({ length: 8 }, (_, index) => {
+    const candidates = Array.from({ length: Math.min(8, vocabulary.length) }, (_, index) => {
       const asset = vocabulary[(index + offset) % Math.max(vocabulary.length, 1)] || {};
       const pair = unitPairForVocabulary(bookId, unit.id, asset, index + offset, day)
         || reviewPairForVocabulary(sourceUnit, unit, asset, index + offset);
       return {
         ...pair,
+        answer: bookId === "book-1" ? oneSentenceAnswer(pair.answer) : pair.answer,
         asset,
-        cue: `Answer: ${pair.answer}`
+        cue: `Answer: ${bookId === "book-1" ? oneSentenceAnswer(pair.answer) : pair.answer}`
       };
+    });
+    const prompts = new Set();
+    const answers = new Set();
+    return candidates.filter((pair) => {
+      const promptKey = String(pair.question || "").trim().toLowerCase();
+      const answerKey = String(pair.answer || "").trim().toLowerCase();
+      if (!promptKey || !answerKey || prompts.has(promptKey) || answers.has(answerKey)) return false;
+      prompts.add(promptKey);
+      answers.add(answerKey);
+      return true;
     });
   }
 
@@ -782,17 +860,17 @@
       const firstAnswer = pair.answer.match(/^[^.!?]+[.!?]/)?.[0] || pair.answer;
       const modes = [
         { prompt: `Fix the answer: ${grammarError(pair.answer)}`, expectedAnswer: pair.answer },
-        { prompt: `Put the question in order: ${scramble(pair.question)}`, expectedAnswer: pair.question },
+        { prompt: `Put the question in order: ${scramble(pair.question, bookId)}`, expectedAnswer: firstSentence(pair.question) },
         { prompt: `Fix the question: ${secondGrammarError(pair.question)}`, expectedAnswer: pair.question },
-        { prompt: `Put the answer in order: ${scramble(firstAnswer)}`, expectedAnswer: firstAnswer }
+        { prompt: `Put the answer in order: ${scramble(firstAnswer, bookId)}`, expectedAnswer: firstSentence(firstAnswer) }
       ];
       return { ...modes[index % modes.length], asset: pair.asset };
     });
     if (!isFruitQuestionUnit(bookId, unitId)) return mixed;
-    const seventh = pairsForDay[6];
-    const eighth = pairsForDay[7];
-    mixed[6] = { prompt: `Change to plural: ${worksheetWord(seventh.asset)} → __________`, asset: seventh.asset, expectedAnswer: worksheetPlural(seventh.asset) };
-    mixed[7] = { prompt: `Change to singular: ${worksheetPlural(eighth.asset)} → __________`, asset: eighth.asset, expectedAnswer: worksheetWord(eighth.asset) };
+    const pluralPair = pairsForDay.at(-2);
+    const singularPair = pairsForDay.at(-1);
+    if (pluralPair) mixed[mixed.length - 2] = { prompt: `Change to plural: ${worksheetWord(pluralPair.asset)} → __________`, asset: pluralPair.asset, expectedAnswer: worksheetPlural(pluralPair.asset) };
+    if (singularPair) mixed[mixed.length - 1] = { prompt: `Change to singular: ${worksheetPlural(singularPair.asset)} → __________`, asset: singularPair.asset, expectedAnswer: worksheetWord(singularPair.asset) };
     return mixed;
   }
 
@@ -814,92 +892,35 @@
   }
 
   function unitReadingPage(unit, bookId, pairsForDay) {
-    if (bookId === "book-2" && unit.id === "unit-1") {
-      return {
-        type: "reading_comprehension",
-        layout: "locked_template",
-        title: "Read About Mia's Classroom",
-        instruction: "Read the whole passage. Answer each question in a complete sentence.",
-        skill: "reading for details and making an inference",
-        passageLines: [
-          "This is Mia's classroom.",
-          "There is a door next to the whiteboard, and there is a television in front of the tables.",
-          "It is hot today, but the classroom is cool because there is a fan.",
-          "Mia wants to call her mom, but there is not a telephone in the classroom.",
-          "She can watch a video, but she cannot make a phone call."
-        ],
-        heroAssets: [pairsForDay.find((pair) => worksheetWord(pair.asset) === "television")?.asset || pairsForDay[0].asset],
-        items: [
-          { prompt: "What is next to the whiteboard?", expectedAnswer: "There is a door next to the whiteboard." },
-          { prompt: "Is there a telephone in Mia's classroom?", expectedAnswer: "No, there is not." },
-          { prompt: "Why is the classroom cool?", expectedAnswer: "It is cool because there is a fan." },
-          { prompt: "What can Mia use to watch a video?", expectedAnswer: "She can use the television." }
-        ]
-      };
-    }
-    const first = pairsForDay[0];
-    const second = pairsForDay[1];
-    if (isFruitQuestionUnit(bookId, unit.id)) {
-      const firstFruit = finalAnswerNoun(first.answer, first.asset);
-      const secondFruit = finalAnswerNoun(second.answer, second.asset);
-      const firstDistance = /\bthose\b/i.test(first.question) ? "far from Lumi" : "close to Lumi";
-      const agreesWithSecond = /^Yes,/i.test(second.answer);
-      return {
-        type: "reading_comprehension",
-        layout: "locked_template",
-        title: "Read the Fruit Conversation",
-        instruction: "Read the whole conversation. Answer the questions about its meaning.",
-        skill: "reading for fruit details and demonstrative clues",
-        passageLines: [
-          "Lumi and Ludi are looking at two fruit pictures in class.",
-          `Lumi points to the first picture and asks, “${first.question}”`,
-          `Ludi looks carefully and answers, “${first.answer}”`,
-          `Next, Lumi points to another picture and asks, “${second.question}”`,
-          `Ludi answers, “${second.answer}”`
-        ],
-        heroAssets: [first.asset],
-        items: [
-          { prompt: "Which fruit does Ludi identify first?", expectedAnswer: `Ludi identifies ${firstFruit} first.` },
-          { prompt: "Is the first fruit close to Lumi or far away?", expectedAnswer: `The first fruit is ${firstDistance}.` },
-          { prompt: "Which fruit does Ludi identify next?", expectedAnswer: `Ludi identifies ${secondFruit} next.` },
-          { prompt: "Does Ludi agree with Lumi about the second fruit?", expectedAnswer: agreesWithSecond ? "Yes, Ludi agrees." : "No, Ludi does not agree." }
-        ]
-      };
-    }
+    const reading = window.UNIT_PACKS?.[`${bookId}/${unit.id}`]?.reading;
+    if (!reading) return null;
+    const heroAssets = (reading.heroWords || []).map((heroWord) => pairsForDay.find((pair) => {
+      const word = worksheetWord(pair.asset).toLowerCase();
+      const target = String(heroWord).toLowerCase();
+      return word === target || word.startsWith(target) || target.startsWith(word);
+    })?.asset).filter(Boolean);
+    if (!heroAssets.length && pairsForDay[0]?.asset) heroAssets.push(pairsForDay[0].asset);
     return {
       type: "reading_comprehension",
       layout: "locked_template",
-      title: "Read the Classroom Conversation",
-      instruction: "Read the connected conversation. Answer in complete sentences.",
-      skill: "reading for details and dialogue meaning",
-      passageLines: [
-        "Lumi and Ludi are talking in class.",
-        `Lumi asks, “${first.question}”`,
-        `Ludi answers, “${first.answer}”`,
-        `Then Lumi asks, “${second.question}”`,
-        `Ludi answers, “${second.answer}”`
-      ],
-      heroAssets: [first.asset],
-      items: [
-        { prompt: "What does Ludi tell Lumi about the first picture?", expectedAnswer: first.answer },
-        { prompt: "What does Ludi tell Lumi about the second picture?", expectedAnswer: second.answer },
-        { prompt: "Does Ludi answer both questions?", expectedAnswer: "Yes, Ludi answers both questions." },
-        { prompt: "Are both pictures connected to the same lesson topic?", expectedAnswer: "Yes, they are." }
-      ]
+      title: reading.title,
+      instruction: "Read the passage. Answer each question with a complete sentence.",
+      skill: reading.skill,
+      passageLines: reading.lines.slice(),
+      heroAssets,
+      items: reading.questions.map((question) => ({ prompt: question.q, expectedAnswer: question.a }))
     };
   }
 
   function questionChainPage(pairsForDay) {
     return {
-      type: "chain_questions",
+      type: "answer_questions",
       layout: "locked_template",
-      title: "Keep the Conversation Going",
-      instruction: "Answer from top to bottom. Use each answer to continue the same conversation.",
-      skill: "connected questions and complete answers",
-      intro: "Lumi and Ludi are talking about the lesson. Keep their conversation going.",
-      items: pairsForDay.slice(0, 4).map((pair, index) => ({
+      title: "Answer the Questions",
+      instruction: "Read each question. Write a complete answer.",
+      skill: "questions and complete answers",
+      items: pairsForDay.slice(0, 4).map((pair) => ({
         prompt: pair.question,
-        lead: index === 0 ? "Lumi starts." : "Continue the conversation.",
         asset: pair.asset,
         expectedAnswer: pair.answer
       }))
@@ -966,16 +987,27 @@
       asset: pair.asset,
       expectedAnswer: pair.answer
     }));
-    const pictureSentenceChoices = pairsForDay.slice(0, 6).map((pair, index) => ({
-      prompt: "Which complete sentence matches the picture?",
-      choices: [
+    const pictureSentenceChoices = pairsForDay.slice(0, 6).map((pair) => {
+      const normalized = (value) => String(value).toLowerCase().replace(/[^a-z0-9']+/g, " ").trim();
+      const seen = new Set();
+      const choices = [
         pair.answer,
-        pairsForDay[(index + 1) % pairsForDay.length].answer,
-        grammarError(pair.answer)
-      ],
-      asset: pair.asset,
-      expectedAnswer: pair.answer
-    }));
+        ...pairsForDay.filter((other) => other !== pair).map((other) => other.answer),
+        ...choicesFor(pair.answer)
+      ].filter((choice) => {
+        const key = normalized(choice);
+        if (!key || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      }).slice(0, 3);
+      const word = worksheetWord(pair.asset);
+      return {
+        prompt: `Choose the complete sentence for ${reviewArticle(word)} ${word}.`,
+        choices,
+        asset: pair.asset,
+        expectedAnswer: pair.answer
+      };
+    });
     const page = (type, title, instruction, items, options = {}) => progressivePage(
       type, title, instruction, skill, items, options
     );
@@ -996,17 +1028,20 @@
     ];
 
     if (day === 2) return [
-      unitReadingPage(unit, bookId, pairsForDay),
+      unitReadingPage(unit, bookId, pairsForDay) || locked("template_picture_answer", "Look and Answer", "Look at each picture. Write a complete answer.", pairsForDay.map((pair) => ({ prompt: pair.question, asset: pair.asset, expectedAnswer: pair.answer })), true),
       locked("template_picture_question", "Make the Question", "Read each answer. Write the matching question.", pairsForDay.map((pair) => ({ prompt: pair.answer, asset: pair.asset, expectedAnswer: pictureQuestionAnswer(pair, bookId, unit.id) })), true),
       page("multiple_choice", "Choose the Picture Sentence", "Look at each picture. Circle the complete sentence that matches.", pictureSentenceChoices),
-      locked("template_question_order", "Build the Question", "Put the words in order. Write the complete question.", pairsForDay.map((pair) => ({ prompt: scramble(pair.question), asset: pair.asset, expectedAnswer: pair.question })))
+      locked("template_question_order", "Build the Question", "Put the words in order. Write the complete question.", pairsForDay.map((pair) => ({ prompt: scramble(pair.question, bookId), asset: pair.asset, expectedAnswer: firstSentence(pair.question) })))
     ];
 
     if (day === 3) return [
       locked("template_guided_question", "Write Your Question", "Read each answer. Write the matching question.", pairsForDay.map((pair) => ({ prompt: pair.answer, asset: pair.asset, expectedAnswer: pictureQuestionAnswer(pair, bookId, unit.id) })), true),
       page("multiple_choice", "Choose the Correct Grammar", "Look at the picture. Circle the only grammatically correct complete sentence.", answerChoices),
       locked("template_mixed_correction", "Fix the Questions", "Find the mistake. Rewrite each question correctly.", pairsForDay.map((pair) => ({ prompt: secondGrammarError(pair.question), asset: pair.asset, expectedAnswer: pair.question }))),
-      locked("template_answer_order", "Build the Answer", "Put the words in order. Write the complete answer.", pairsForDay.map((pair) => ({ prompt: scramble(pair.answer), asset: pair.asset, expectedAnswer: pair.answer })))
+      locked("template_answer_order", "Build the Answer", "Put the words in order. Write the first complete answer sentence.", pairsForDay.map((pair) => {
+        const answer = firstSentence(pair.answer);
+        return { prompt: scramble(answer, bookId), asset: pair.asset, expectedAnswer: answer };
+      }))
     ];
 
     return [
@@ -1034,7 +1069,7 @@
       const asset = vocabulary[(used + currentIndex) % Math.max(vocabulary.length, 1)] || {};
       const pair = unitPairForVocabulary(book.id, sourceUnit.id, asset, index + currentIndex + used, 1)
         || reviewPairForVocabulary({ ...currentUnit, bookId: book.id }, sourceUnit, asset, index);
-      return { prompt: pair.question, asset, expectedAnswer: pair.answer };
+      return { prompt: pair.question, asset, expectedAnswer: book.id === "book-1" ? oneSentenceAnswer(pair.answer) : pair.answer };
     });
     return progressivePage(
       "template_mixed_answer_review",
@@ -1214,6 +1249,7 @@
     if (directPair) {
       return {
         ...directPair,
+        answer: unit.bookId === "book-1" ? oneSentenceAnswer(directPair.answer) : directPair.answer,
         asset,
         section: section.title,
         cue: `Answer: ${directPair.answer}`
@@ -1333,158 +1369,79 @@
   }
 
   const REVIEW_CLOZE_BUILDERS = {
-    "book-1:1–3": (day) => {
-      const c = storyChoice([
-        { relative: "mother", relation: "She is Lumi's father's wife.", person: "student", personClue: "This child goes to school every day.", age: "six", number: 6 },
-        { relative: "father", relation: "He is Lumi's mother's husband.", person: "teacher", personClue: "This woman teaches children at school.", age: "eight", number: 8 },
-        { relative: "grandmother", relation: "She is Lumi's mother's mother.", person: "girl", personClue: "This child is Lumi. She is not a boy.", age: "seven", number: 7 },
-        { relative: "grandfather", relation: "He is Lumi's father's father.", person: "boy", personClue: "This child is Ludi. He is not a girl.", age: "nine", number: 9 }
-      ], day);
-      return clozeStory("A Family Birthday Dinner", c.relative, [
-        "Today Lumi's family has a birthday dinner.",
-        `${c.relation} The person beside Lumi is her ________.`,
-        `${c.personClue} The guest is a ________.`,
-        `The cake has ${c.number} candles, so the birthday child is ________ years old.`,
-        "Everyone ________ and talks together.",
-        "It is a happy family night."
-      ], [c.relative, c.person, c.age, "eats"]);
-    },
-    "book-1:4–6": (day) => {
-      const c = storyChoice([
-        { item: "pencil", itemClue: "Lumi wants to write her name, so she takes out a", color: "red", colorClue: "an apple", feeling: "happy", feelingClue: "She smiles when her work is done" },
-        { item: "eraser", itemClue: "Lumi makes a pencil mistake, so she uses an", color: "blue", colorClue: "the sky", feeling: "sad", feelingClue: "She cannot find her book, and her face goes down" },
-        { item: "ruler", itemClue: "Lumi wants to measure her book, so she uses a", color: "green", colorClue: "the grass", feeling: "happy", feelingClue: "Her friend finds the book, so Lumi smiles" },
-        { item: "book", itemClue: "Lumi wants to read a story, so she opens her", color: "yellow", colorClue: "the sun", feeling: "sad", feelingClue: "The story ends, and Lumi does not want it to stop" }
-      ], day);
-      return clozeStory("Lumi's Classroom Morning", "school bag", [
-        "Lumi gets ready for class in the morning.",
-        `${c.itemClue} ________.`,
-        `Her school bag is ________. It is the same color as ${c.colorClue}.`,
-        "She ________ her things on the desk and starts her work.",
-        `${c.feelingClue}. She is ________.`,
-        "Her teacher comes over to help her.",
-        "Lumi is ready to learn again."
-      ], [c.item, c.color, "puts", c.feeling]);
-    },
-    "book-1:7–9": (day) => {
-      const c = storyChoice([
-        { clothes: "hat", clothesClue: "It goes on his head and keeps the sun away", animal: "rabbit", animalClue: "It has long ears and hops", state: "hungry", stateClue: "His stomach is empty, and he wants lunch" },
-        { clothes: "cap", clothesClue: "It is a small hat with a front", animal: "dog", animalClue: "It barks and wags its tail", state: "thirsty", stateClue: "He wants a big glass of water" },
-        { clothes: "coat", clothesClue: "It is long and covers his shirt and arms", animal: "cow", animalClue: "It is big and gives milk", state: "sleepy", stateClue: "He closes his eyes and wants to sleep" },
-        { clothes: "jacket", clothesClue: "It is a short coat over his shirt", animal: "duck", animalClue: "It has a bill and swims", state: "tired", stateClue: "He walks all day and needs to sit down" }
-      ], day);
-      return clozeStory("A Day at the Farm", c.animal, [
-        "Lumi and Ludi visit a farm with their family.",
-        `${c.clothesClue}, so Ludi wears a ________.`,
-        "They ________ to a small animal house.",
-        `${c.animalClue}, so the animal is a ________.`,
-        "Ludi watches the animal for a long time.",
-        `${c.stateClue}. He is ________.`,
-        "The family takes a break before going home."
-      ], [c.clothes, "walk", c.animal, c.state]);
-    },
-    "book-2:1–3": (day) => {
-      const c = storyChoice([
-        { roomItem: "whiteboard", roomClue: "The teacher writes the first clue on it at the front of the room", toy: "blocks", toyClue: "small pieces for building a tower", count: "fifteen", number: 15 },
-        { roomItem: "television", roomClue: "The class watches a short video on it", toy: "robots", toyClue: "toy machines that can move", count: "twelve", number: 12 },
-        { roomItem: "fan", roomClue: "It moves the air and keeps the room cool", toy: "balls", toyClue: "round toys that can roll", count: "eighteen", number: 18 },
-        { roomItem: "window", roomClue: "The children look through it to see outside", toy: "dolls", toyClue: "small toy people", count: "eleven", number: 11 }
-      ], day);
-      return clozeStory("The Classroom Toy Game", c.toy, [
-        "The class ________ a counting game today.",
-        `${c.roomClue}. It is the ________.`,
-        "Next, the teacher puts a box of toys on the table.",
-        `There are ${c.number} toys, so the children write ________.`,
-        `The toys are ${c.toyClue}. They are ________.`,
-        "Lumi and Ludi count them one more time.",
-        "Their team gets the answer right."
-      ], ["plays", c.roomItem, c.count, c.toy]);
-    },
-    "book-2:4–6": (day) => {
-      const c = storyChoice([
-        { fruit1: "bananas", clue1: "yellow and long", fruit2: "strawberries", clue2: "small and red", action: "sing", actionClue: "uses her voice for a song" },
-        { fruit1: "watermelons", clue1: "big, green outside, and red inside", fruit2: "kiwis", clue2: "brown outside and green inside", action: "dance", actionClue: "moves her body with the music" },
-        { fruit1: "lemons", clue1: "yellow and sour", fruit2: "mangoes", clue2: "sweet with orange-yellow skin", action: "read", actionClue: "looks at the fruit card and says the words" },
-        { fruit1: "pears", clue1: "green and smaller at the top", fruit2: "papayas", clue2: "long with orange fruit inside", action: "write", actionClue: "makes the fruit names on a poster" }
-      ], day);
-      return clozeStory("Fruit Day at School", c.fruit1, [
-        "Today is Fruit Day in Lumi's classroom.",
-        `The first fruit is ${c.clue1}. These are ________.`,
-        "Ludi ________ another plate next to it.",
-        `Those fruits are ${c.clue2}. They are ________.`,
-        "The class talks about the colors and tastes.",
-        `After the fruit show, Lumi ${c.actionClue}. She can ________.`,
-        "Everyone claps for her."
-      ], [c.fruit1, "puts", c.fruit2, c.action]);
-    },
-    "book-2:7–9": (day) => {
-      const c = storyChoice([
-        { room: "garden", roomClue: "the place outside where flowers grow", place: "behind", placeClue: "The tree is in front of the card", animal: "tiger", animalClue: "an animal with black stripes" },
-        { room: "living room", roomClue: "the room where the family sits and watches TV", place: "next to", placeClue: "The card is beside the sofa", animal: "lion", animalClue: "a big animal with a mane" },
-        { room: "kitchen", roomClue: "the room where the family cooks", place: "under", placeClue: "Lumi must look below a chair", animal: "zebra", animalClue: "a black-and-white animal with stripes" },
-        { room: "bedroom", roomClue: "the room where Ludi sleeps", place: "in front of", placeClue: "The card is before the bed, not behind it", animal: "monkey", animalClue: "an animal that climbs and has a long tail" }
-      ], day);
-      return clozeStory("The Animal Card Hunt", c.animal, [
-        "Lumi and Ludi ________ an animal-card hunt at home.",
-        `They go to ${c.roomClue}. They are in the ________.`,
-        `${c.placeClue}. The card is ________ it.`,
-        "Lumi finds the card and turns it over.",
-        `It shows ${c.animalClue}. It is a ________.`,
-        "Lumi says she likes this animal.",
-        "Now it is Ludi's turn to hide a card."
-      ], ["play", c.room, c.place, c.animal]);
-    },
-    "book-3:1–3": (day) => {
-      const c = storyChoice([
-        { pet: "hamsters", petClue: "small pets that run on a wheel", food: "chicken nuggets", foodClue: "small pieces of chicken", hero: "hamsters" },
-        { pet: "bunnies", petClue: "small pets with long ears that hop", food: "pizza", foodClue: "a round lunch with cheese", hero: "bunnies" },
-        { pet: "turtles", petClue: "quiet pets with hard shells", food: "salad", foodClue: "a bowl of vegetables", hero: "turtles" },
-        { pet: "birds", petClue: "pets with wings that can sing", food: "hot dogs", foodClue: "long bread with meat inside", hero: "birds" }
-      ], day);
-      return clozeStory("Lumi's Pet Day", c.hero, [
-        "Lumi has two small pets at home.",
-        `They are ${c.petClue}, so they are ________.`,
-        "Today ________ Pet Day at school, and Lumi brings them to class.",
-        "Her friend Ludi thinks the pets are very cute.",
-        `At lunch, they share ${c.foodClue}. They eat ________.`,
-        `Ludi asks, “Do you like ${c.food}?” Lumi says, “Yes, I ________.”`,
-        "They have a fun day at school."
-      ], [c.pet, "is", c.food, "do"]);
-    },
-    "book-3:4–6": (day) => {
-      const c = storyChoice([
-        { gift: "bicycle", giftClue: "a new gift with two wheels", body: "eyes", bodySentence: "He looks at the gift with his two ________.", hair: "curly", hairClue: "makes soft circles", hero: "bicycle" },
-        { gift: "computer", giftClue: "a new gift with a screen and keyboard", body: "ears", bodySentence: "He hears the birthday song with his two ________.", hair: "long", hairClue: "reaches past her shoulders", hero: "computer" },
-        { gift: "kite", giftClue: "a new gift that can fly in the sky", body: "nose", bodySentence: "He smells the birthday cake with his ________.", hair: "braided", hairClue: "has two neat braids", hero: "kite" },
-        { gift: "model car", giftClue: "a small toy car for his desk", body: "mouth", bodySentence: "He opens his ________ to smile for the picture.", hair: "short", hairClue: "does not reach his ears", hero: "model car" }
-      ], day);
-      return clozeStory("Ludi's Birthday Photo", c.hero, [
-        "Today ________ Ludi's birthday, and his family has a party.",
-        `Ludi wants ${c.giftClue}. He wants a ________.`,
-        "He opens the gift and smiles.",
-        c.bodySentence,
-        "Lumi helps everyone get ready for a photo.",
-        `Her hair ${c.hairClue}, so it is ________.`,
-        "The family takes a happy birthday picture."
-      ], ["is", c.gift, c.body, c.hair]);
-    },
-    "book-3:7–9": (day) => {
-      const c = storyChoice([
-        { day: "Saturday", dayClue: "the day after Friday", weather: "sunny", weatherClue: "There are no clouds, and the sun is bright", sport: "baseball", sportClue: "Ludi hits a ball with a bat", activity: "go swimming", activityClue: "they cool down in the pool", hero: "baseball" },
-        { day: "Sunday", dayClue: "the day after Saturday", weather: "windy", weatherClue: "The trees move from side to side", sport: "soccer", sportClue: "They kick a ball toward a goal", activity: "fly a kite", activityClue: "the strong wind lifts it into the sky", hero: "soccer" },
-        { day: "Monday", dayClue: "the day after Sunday", weather: "rainy", weatherClue: "Rain falls, and everyone has an umbrella", sport: "ping-pong", sportClue: "They hit a small ball across a table", activity: "watch TV", activityClue: "they stay inside and look at a show", hero: "ping-pong" },
-        { day: "Friday", dayClue: "the day before Saturday", weather: "cloudy", weatherClue: "The sky is gray, but there is no rain", sport: "badminton", sportClue: "They hit a small shuttle over a net", activity: "listen to music", activityClue: "they sit down and enjoy songs", hero: "badminton" }
-      ], day);
-      return clozeStory("Lumi and Ludi's Weekend Plan", c.hero, [
-        `Today is ${c.dayClue}. It is ________.`,
-        `${c.weatherClue}. The weather is ________.`,
-        "Lumi and Ludi ________ at the park.",
-        `${c.sportClue}, so they play ________.`,
-        "They have fun together for an hour.",
-        `After that, ${c.activityClue}. They ________.`,
-        "It is a great day for both friends."
-      ], [c.day, c.weather, "meet", c.sport, c.activity]);
-    }
+    "book-1:1–3": () => clozeStory("Lumi and Ludi", "girl", [
+      "Lumi ________ a girl.",
+      "She is ________ a boy.",
+      "Ludi is a boy.",
+      "He is not a girl.",
+      "I am six years old.",
+      "How old ________ I?"
+    ], ["is", "not", "am"]),
+    "book-1:4–6": () => clozeStory("My Red Bag", "school bag", [
+      "This is my red bag.",
+      "It ________ red.",
+      "I have a pencil.",
+      "It is ________ pencil.",
+      "I am happy.",
+      "I ________ not sad."
+    ], ["is", "a", "am"]),
+    "book-1:7–9": () => clozeStory("My Hat and Dog", "hat", [
+      "This is my hat.",
+      "________ is a hat.",
+      "That is my dog.",
+      "________ is a dog.",
+      "We are happy.",
+      "We ________ not sad."
+    ], ["This", "That", "are"]),
+    "book-2:1–3": () => clozeStory("Our Classroom", "door", [
+      "This is our classroom.",
+      "There ________ a door.",
+      "There are twelve books.",
+      "The number is ________.",
+      "Look at the balls.",
+      "There ________ three balls."
+    ], ["is", "twelve", "are"]),
+    "book-2:4–6": () => clozeStory("Fruit Cards", "bananas", [
+      "These are bananas.",
+      "Are ________ bananas?",
+      "Yes, they ________.",
+      "Those are kiwis.",
+      "Lumi can read the cards.",
+      "She can ________ fruit names."
+    ], ["these", "are", "read"]),
+    "book-2:7–9": () => clozeStory("Lumi at Home", "kitchen", [
+      "Lumi is in the kitchen.",
+      "She is ________ the kitchen.",
+      "A cat is under the table.",
+      "Where is the cat?",
+      "It is ________ the table.",
+      "Lumi likes tigers.",
+      "Does she ________ tigers?"
+    ], ["in", "under", "like"]),
+    "book-3:1–3": () => clozeStory("Pet Day Lunch", "hamsters", [
+      "Lumi has two hamsters.",
+      "She ________ two small pets.",
+      "Ludi likes chicken nuggets.",
+      "Does he ________ chicken nuggets?",
+      "Yes, he ________.",
+      "They eat lunch together."
+    ], ["has", "like", "does"]),
+    "book-3:4–6": () => clozeStory("Ludi's Birthday", "bicycle", [
+      "Ludi has a birthday party.",
+      "He ________ a new bicycle.",
+      "He has two hands.",
+      "Who ________ two hands?",
+      "Lumi has curly hair.",
+      "Does she ________ curly hair?"
+    ], ["wants", "has", "have"]),
+    "book-3:7–9": () => clozeStory("A Sunny Sunday", "baseball", [
+      "Today ________ Sunday.",
+      "The weather is sunny.",
+      "Lumi and Ludi play baseball.",
+      "They ________ baseball on sunny days.",
+      "Do they like baseball?",
+      "Yes, they ________."
+    ], ["is", "play", "do"])
   };
 
   function storyAsset(unit, word) {
@@ -1559,7 +1516,7 @@
     const wordBank = clozeWordBank(unit, story, day);
     const items = story.answers.map((answer, index) => ({
       prompt: `Blank ${index + 1}: ________`,
-      expectedAnswer: `${index + 1}. ${answer}`,
+      expectedAnswer: answer,
       asset: null
     }));
     return {
@@ -1573,27 +1530,23 @@
       wordBank,
       heroAssets: [],
       sceneAssets: [],
-      endingLines: ["Choose one completed sentence and write it below."],
+      endingLines: [],
       items
     };
   }
 
   function connectedChainPage(reviewPairs, day) {
-    const items = reviewPairs.slice(0, day >= 4 ? 6 : 4).map((item, index) => ({
+    const items = reviewPairs.slice(0, day >= 4 ? 6 : 4).map((item) => ({
       prompt: item.question,
-      lead: index === 0 ? "Start the conversation." : "Use the last answer and continue.",
       asset: item.asset,
       expectedAnswer: item.answer
     }));
     return {
-      type: "chain_questions",
+      type: "answer_questions",
       layout: "locked_template",
-      title: day >= 4 ? (day === 5 ? "Final Question and Answer Challenge" : "Independent Chain Challenge") : "Follow the Question Chain",
-      instruction: day >= 4
-        ? "Answer in complete sentences. Then write one new question that keeps the conversation going."
-        : "Read from top to bottom. Each answer helps the conversation continue.",
-      skill: "connected questions and complete answers",
-      intro: "Lumi asks the first question. Ludi answers, then they keep the same conversation going.",
+      title: day >= 4 ? "Question and Answer Review" : "Answer the Questions",
+      instruction: "Read each question. Write a complete answer.",
+      skill: "questions and complete answers",
       items
     };
   }
@@ -1869,6 +1822,30 @@
     });
   }
 
+  function removeRepeatedPageItems(pages) {
+    pages.forEach((page) => {
+      const prompts = new Set();
+      const answers = new Set();
+      page.items = (page.items || []).filter((item) => {
+        const prompt = String(item.prompt || item.left || "").trim().toLowerCase();
+        const answer = String(item.expectedAnswer || "").trim().toLowerCase();
+        if ((prompt && prompts.has(prompt)) || (answer && answers.has(answer))) return false;
+        if (prompt) prompts.add(prompt);
+        if (answer) answers.add(answer);
+        return true;
+      });
+      if (page.type === "matching" && page.items.every((item) => String(item.expectedAnswer || "").includes(" → "))) {
+        const oppositeSides = page.items.map((item) => {
+          const [first, ...rest] = String(item.expectedAnswer).split(" → ");
+          const second = rest.join(" → ");
+          return String(item.left) === first ? second : first;
+        });
+        const displayedSides = oppositeSides.slice(1).concat(oppositeSides.slice(0, 1));
+        page.items.forEach((item, index) => { item.right = displayedSides[index]; });
+      }
+    });
+  }
+
   function attach(catalog) {
     (catalog || []).forEach((book) => book.units.forEach((unit) => unit.lessons.forEach((lesson, lessonIndex) => {
       const day = Number(String(lesson.day || lessonIndex + 1).match(/\d+/)?.[0]) || lessonIndex + 1;
@@ -1886,6 +1863,7 @@
         pages[3] = cumulativeMixedAnswerPage(book, unit);
       }
       applyRepresentativeQuestionTypes(book.id, unit.id, day, pages);
+      removeRepeatedPageItems(pages);
       normalizeQuestionWritingPages(pages);
       lesson.worksheet = { ...(lesson.worksheet || {}), day, unitTitle: unit.title, pages };
     })));

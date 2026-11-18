@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#2b59c3">
-    <meta name="description" content="A simple, projection-friendly lesson player for English teachers.">
-    <title>English Teaching Player</title>
+    <meta name="description" content="Come to Live and Sound It Out worksheet and test builder.">
+    <title>English Worksheet Builder</title>
     <script>
       (function () {
         const match = location.pathname.match(/^(.*?\/)(?:book\d+(?:\/unit\d+)?(?:\/day\d+)?|phonics\/[^/]+(?:\/[^/]+)?|literacy\/[^/]+(?:\/[^/]+)?)\/?$/i);
@@ -14,7 +14,7 @@
       })();
     </script>
     <link rel="stylesheet" href="css/style.css?v=24">
-    <link rel="stylesheet" href="css/worksheet.css?v=19">
+    <link rel="stylesheet" href="css/worksheet.css?v=20">
     <link rel="stylesheet" href="css/phonics.css?v=2">
     <link rel="stylesheet" href="css/literacy.css?v=1">
   </head>
@@ -24,12 +24,12 @@
     <main id="home-view" class="view" aria-labelledby="home-title">
       <header class="home-hero">
         <div>
-          <p class="eyebrow">CLASSROOM TOOL</p>
-          <h1 id="home-title">English Teaching Player</h1>
-          <p class="hero-copy">Choose a lesson, then teach one clear step at a time.</p>
+          <p class="eyebrow">WORKSHEET + TEST BUILDER</p>
+          <h1 id="home-title">English Worksheet Builder</h1>
+          <p class="hero-copy">選擇 Come to Live 與 Sound It Out 單元，合併成一份可列印練習卷。</p>
         </div>
         <div class="home-actions">
-          <button id="test-builder-button" class="button test-builder-button" type="button">🗂 題庫／組考卷</button>
+          <button id="test-builder-button" class="button button-primary test-builder-button" type="button">🗂 開始製作練習卷</button>
           <button id="continue-button" class="button button-primary continue-button" type="button" hidden>
             <span>Continue Lesson</span>
             <small id="continue-label"></small>
@@ -37,7 +37,7 @@
         </div>
       </header>
 
-      <section class="library" aria-labelledby="library-title">
+      <section class="library" aria-labelledby="library-title" hidden>
         <div class="section-heading">
           <div>
             <p class="eyebrow">LESSON LIBRARY</p>
@@ -229,7 +229,8 @@
           <aside class="test-builder-setup no-print">
             <label>考卷名稱<input id="test-title" type="text" value="English Review Test"></label>
             <label>Book<select id="test-book"></select></label>
-            <fieldset><legend>Units（可複選）</legend><div id="test-units" class="test-unit-list"></div></fieldset>
+            <fieldset><legend>Come to Live Units（可複選）</legend><div id="test-units" class="test-unit-list"></div></fieldset>
+            <fieldset><legend>Sound It Out Units（可與上方合併）</legend><div id="test-phonics-units" class="test-unit-list"></div></fieldset>
             <label>難度<select id="test-difficulty"><option value="mixed">混合</option><option value="easy">基礎</option><option value="challenge">進階</option></select></label>
             <fieldset><legend>題型與題數</legend><div id="test-types" class="test-type-list"></div><small>同一份考卷不重複同題；若題庫不足，會以可用的不重複題數為準。</small></fieldset>
             <label class="test-check"><input id="test-spiral" type="checkbox" checked> 混入所選 Unit 以前的內容</label>
@@ -241,8 +242,7 @@
               <button id="test-answer-mode" type="button">教師答案</button>
               <button id="test-shuffle" type="button">🔀 洗牌</button>
               <button id="test-regenerate" type="button">↻ 全部重出</button>
-              <button id="test-word" type="button">⬇ Word (.docx)</button>
-              <button id="test-print" class="test-print" type="button">🖨 Print / PDF</button>
+              <button id="test-word" class="test-print" type="button">⬇ 下載 Word 練習卷</button>
             </nav>
             <p id="test-builder-empty" class="test-builder-empty">先選擇左側設定，再按「產生考卷」。</p>
             <div id="test-preview" class="test-preview"></div>
@@ -260,17 +260,19 @@
     <script src="data/review-units.js?v=4" defer></script>
     <script src="data/practice-data.js?v=2" defer></script>
     <script src="data/phonics-data.js?v=2" defer></script>
+    <script src="data/listening-data.js?v=1" defer></script>
     <script src="data/literacy-data.js?v=1" defer></script>
     <script src="data/course-schema.js?v=2" defer></script>
     <script src="js/teaching-flow.js?v=60" defer></script>
-    <script src="data/worksheet-data.js?v=46" defer></script>
+    <script src="data/worksheet-unit-packs.js?v=1" defer></script>
+    <script src="data/worksheet-data.js?v=48" defer></script>
     <script src="js/activities.js?v=23" defer></script>
-    <script src="js/worksheet-components.js?v=20" defer></script>
+    <script src="js/worksheet-components.js?v=21" defer></script>
     <script src="js/worksheet.js?v=6" defer></script>
     <script src="js/classroom-tools.js?v=1" defer></script>
     <script src="js/vendor/docx.iife.js?v=1" defer></script>
-    <script src="js/word-export.js?v=4" defer></script>
-    <script src="js/test-builder.js?v=14" defer></script>
+    <script src="js/word-export.js?v=5" defer></script>
+    <script src="js/test-builder.js?v=15" defer></script>
     <script src="js/daily-handout.js?v=1" defer></script>
     <script src="js/routes.js?v=1" defer></script>
     <script src="js/phonics-practice.js?v=2" defer></script>

@@ -73,63 +73,116 @@
     }
   }
 
-  async function questionContent(question) {
-    const children = [
-      paragraph([text(`${question.label} · ${question.unitLabel} · ${question.points} pts`, { size: 15, color: MUTED, bold: true })], { after: 35, keepNext: true })
-    ];
-    const image = await loadImage(question.asset);
-    if (image) {
-      children.push(paragraph([new docx.ImageRun({ data: image.data, type: image.type, transformation: { width: 76, height: 58 }, altText: { title: "Question picture", description: "Question picture", name: "Question picture" } })], { alignment: docx.AlignmentType.CENTER, after: 35, keepNext: true }));
-    } else if (question.asset?.visual) {
-      children.push(paragraph([text(question.asset.visual, { size: 42 })], { alignment: docx.AlignmentType.CENTER, after: 35, keepNext: true }));
+  async function loadRemotePng(url) {
+    if (!url) return null;
+    try {
+      const response = await fetch(url);
+      if (!response.ok) return null;
+      return { data: await response.arrayBuffer(), type: "png" };
+    } catch (_error) {
+      return null;
     }
-    if (question.prompt) children.push(paragraph(multilineText(question.prompt, { size: 21, bold: true }), { after: 40, keepNext: true }));
+  }
+
+  function qrImageUrl(value) {
+    return `https://quickchart.io/qr?size=240&margin=1&text=${encodeURIComponent(value)}`;
+  }
+
+  async function questionContent(question) {
+    const children = [];
+    if (question.displayPrompt) children.push(paragraph(multilineText(question.displayPrompt, { size: 21, bold: true }), { after: 40, keepNext: true }));
     if (question.choices?.length) children.push(paragraph([text(question.choices.map((choice, index) => `(${String.fromCharCode(65 + index)}) ${choice}`).join("     "), { size: 19 })], { after: 45 }));
     children.push(...handwriting(question.lines || 0));
     if (question.givenAnswer) children.push(paragraph([text("Answer: ", { size: 19, bold: true }), text(question.givenAnswer, { size: 19 })], { before: 25, after: 30 }));
     return children;
   }
 
-  async function questionTable(question, index) {
-    const border = { style: docx.BorderStyle.SINGLE, size: 4, color: "D8E4F0" };
+  async function questionTable(question) {
+    const noBorder = { style: docx.BorderStyle.NONE, size: 0, color: "FFFFFF" };
+    const image = await loadImage(question.asset);
+    const cells = [
+      new docx.TableCell({ width: { size: 620, type: docx.WidthType.DXA }, borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder }, margins: { top: 80, bottom: 80, left: 0, right: 70 }, verticalAlign: docx.VerticalAlign.TOP, children: [paragraph([text(`${question.itemNumber}.`, { size: 23, color: "111111", bold: true })], { alignment: docx.AlignmentType.LEFT, after: 0 })] }),
+      new docx.TableCell({ width: { size: image || question.asset?.visual ? CONTENT_WIDTH - 2420 : CONTENT_WIDTH - 620, type: docx.WidthType.DXA }, borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder }, margins: { top: 70, bottom: 100, left: 70, right: 100 }, children: await questionContent(question) })
+    ];
+    if (image || question.asset?.visual) {
+      const visual = image
+        ? new docx.ImageRun({ data: image.data, type: image.type, transformation: { width: 105, height: 86 }, altText: { title: "Question picture", description: "Question picture", name: "Question picture" } })
+        : text(question.asset.visual, { size: 52 });
+      cells.push(new docx.TableCell({ width: { size: 1800, type: docx.WidthType.DXA }, borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder }, margins: { top: 45, bottom: 60, left: 80, right: 0 }, verticalAlign: docx.VerticalAlign.CENTER, children: [paragraph([visual], { alignment: docx.AlignmentType.CENTER, after: 0 })] }));
+    }
     return new docx.Table({
       width: { size: CONTENT_WIDTH, type: docx.WidthType.DXA },
       layout: docx.TableLayoutType.FIXED,
-      borders: { top: border, bottom: border, left: border, right: border, insideHorizontal: border, insideVertical: border },
-      rows: [new docx.TableRow({ cantSplit: true, children: [
-        new docx.TableCell({ width: { size: 620, type: docx.WidthType.DXA }, shading: { fill: "EAF4FF" }, margins: { top: 100, bottom: 100, left: 80, right: 80 }, verticalAlign: docx.VerticalAlign.CENTER, children: [paragraph([text(`${index + 1}.`, { size: 23, color: BLUE, bold: true })], { alignment: docx.AlignmentType.CENTER, after: 0 })] }),
-        new docx.TableCell({ width: { size: CONTENT_WIDTH - 620, type: docx.WidthType.DXA }, margins: { top: 90, bottom: 100, left: 130, right: 130 }, children: await questionContent(question) })
-      ] })]
+      borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder, insideHorizontal: noBorder, insideVertical: noBorder },
+      rows: [new docx.TableRow({ cantSplit: true, children: cells })]
     });
   }
 
   function header(exam, page, pageTotal) {
     return [
-      paragraph([text(`${exam.bookTitle} · ${exam.unitNames}`, { size: 15, color: ORANGE, bold: true })], { after: 25 }),
-      paragraph([text(exam.title, { size: 34, color: BLUE, bold: true })], { after: 70 }),
       new docx.Table({
         width: { size: CONTENT_WIDTH, type: docx.WidthType.DXA }, layout: docx.TableLayoutType.FIXED,
         borders: { top: { style: docx.BorderStyle.NONE }, bottom: { style: docx.BorderStyle.NONE }, left: { style: docx.BorderStyle.NONE }, right: { style: docx.BorderStyle.NONE }, insideHorizontal: { style: docx.BorderStyle.NONE }, insideVertical: { style: docx.BorderStyle.NONE } },
         rows: [new docx.TableRow({ children: [
-          new docx.TableCell({ width: { size: 3800, type: docx.WidthType.DXA }, children: [paragraph("Name 姓名：________________", { after: 0 })] }),
-          new docx.TableCell({ width: { size: 3200, type: docx.WidthType.DXA }, children: [paragraph("Class 班級：____________", { after: 0 })] }),
-          new docx.TableCell({ width: { size: CONTENT_WIDTH - 7000, type: docx.WidthType.DXA }, children: [paragraph(`Page ${page} / ${pageTotal}`, { alignment: docx.AlignmentType.RIGHT, after: 0 })] })
+          new docx.TableCell({ width: { size: 3100, type: docx.WidthType.DXA }, children: [paragraph([text(`${exam.bookTitle} · ${exam.unitNames}`, { size: 15, color: "111111", bold: true }), text(`Page ${page} / ${pageTotal}`, { size: 14, color: "111111", break: 1 })], { after: 0 })] }),
+          new docx.TableCell({ width: { size: 3600, type: docx.WidthType.DXA }, children: [paragraph([text(exam.title, { size: 32, color: "111111", bold: true })], { alignment: docx.AlignmentType.CENTER, after: 0 })] }),
+          new docx.TableCell({ width: { size: CONTENT_WIDTH - 6700, type: docx.WidthType.DXA }, children: [paragraph("Name: __________________", { alignment: docx.AlignmentType.RIGHT, after: 0 })] })
         ] })]
       }),
-      paragraph([text(" ", { size: 8 })], { after: 35, border: { bottom: { style: docx.BorderStyle.SINGLE, size: 12, color: ORANGE } } })
+      paragraph([text("Class: ________________    Score: ________", { size: 16 })], { alignment: docx.AlignmentType.RIGHT, after: 80 })
     ];
   }
 
-  async function studentChildren(exam) {
+  function paginateSections(sections, capacity = 4) {
     const pages = [];
-    for (let index = 0; index < exam.questions.length; index += 6) pages.push(exam.questions.slice(index, index + 6));
+    let page = { sections: [], count: 0 };
+    sections.forEach((section) => {
+      let offset = 0;
+      while (offset < section.items.length) {
+        if (page.count >= capacity) { pages.push(page); page = { sections: [], count: 0 }; }
+        const take = Math.min(capacity - page.count, section.items.length - offset);
+        page.sections.push({ ...section, continued: offset > 0, items: section.items.slice(offset, offset + take) });
+        page.count += take;
+        offset += take;
+      }
+    });
+    if (page.sections.length) pages.push(page);
+    return pages;
+  }
+
+  async function sectionHeading(section) {
+    const title = `${section.number}、${section.title}${section.continued ? " (continued)" : ""}`;
+    if (!section.playbackUrl || section.continued) return [
+      paragraph([text(title, { size: 25, color: "111111", bold: true })], { before: 40, after: 25, keepNext: true }),
+      ...(section.continued ? [] : [paragraph([text(section.instruction, { size: 19, color: "111111" })], { after: 55, keepNext: true })])
+    ];
+    const qr = await loadRemotePng(qrImageUrl(section.playbackUrl));
+    const noBorder = { style: docx.BorderStyle.NONE, size: 0, color: "FFFFFF" };
+    const qrChildren = qr
+      ? [paragraph([new docx.ImageRun({ data: qr.data, type: qr.type, transformation: { width: 82, height: 82 }, altText: { title: "Listening QR code", description: "Scan to play the listening tracks", name: "Listening QR code" } })], { alignment: docx.AlignmentType.CENTER, after: 0 }), paragraph([text("Scan to listen", { size: 14, color: "111111", bold: true })], { alignment: docx.AlignmentType.CENTER, after: 0 })]
+      : [paragraph([text("Open listening page:", { size: 14, bold: true })], { after: 10 }), paragraph([text(section.playbackUrl, { size: 12 })], { after: 0 })];
+    return [new docx.Table({
+      width: { size: CONTENT_WIDTH, type: docx.WidthType.DXA }, layout: docx.TableLayoutType.FIXED,
+      borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder, insideHorizontal: noBorder, insideVertical: noBorder },
+      rows: [new docx.TableRow({ cantSplit: true, children: [
+        new docx.TableCell({ width: { size: CONTENT_WIDTH - 1650, type: docx.WidthType.DXA }, borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder }, children: [paragraph([text(title, { size: 25, color: "111111", bold: true })], { before: 40, after: 25, keepNext: true }), paragraph([text(section.instruction, { size: 19, color: "111111" })], { after: 55, keepNext: true })] }),
+        new docx.TableCell({ width: { size: 1650, type: docx.WidthType.DXA }, borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder }, children: qrChildren })
+      ] })]
+    })];
+  }
+
+  async function studentChildren(exam) {
+    const pages = paginateSections(exam.sections || [], 4);
     const children = [];
     for (let page = 0; page < pages.length; page += 1) {
       if (page) children.push(paragraph([new docx.PageBreak()], { after: 0 }));
       children.push(...header(exam, page + 1, pages.length));
-      for (let index = 0; index < pages[page].length; index += 1) {
-        children.push(await questionTable(pages[page][index], page * 8 + index));
-        children.push(paragraph([text(" ", { size: 5 })], { after: 25 }));
+      for (const section of pages[page].sections) {
+        children.push(...await sectionHeading(section));
+        for (const question of section.items) {
+          children.push(await questionTable(question));
+          children.push(paragraph([text(" ", { size: 5 })], { after: 20 }));
+        }
       }
     }
     return children;
@@ -140,11 +193,19 @@
       paragraph([text("TEACHER ANSWER KEY", { size: 15, color: ORANGE, bold: true })], { after: 25 }),
       paragraph([text(exam.title, { size: 34, color: BLUE, bold: true })], { after: 90 })
     ];
-    exam.questions.forEach((question, index) => children.push(paragraph([
-      text(`${index + 1}. `, { size: 21, color: BLUE, bold: true }),
-      text(question.answer, { size: 21, bold: true }),
-      text(`   (${question.label} · ${question.points} pts)`, { size: 16, color: MUTED })
-    ], { after: 75 })));
+    (exam.sections || []).forEach((section) => {
+      children.push(paragraph([text(`${section.number}、${section.title}`, { size: 24, color: "111111", bold: true })], { before: 35, after: 45 }));
+      section.items.forEach((question) => {
+        children.push(paragraph([
+          text(`${question.itemNumber}. `, { size: 21, color: "111111", bold: true }),
+          text(question.answer, { size: 21, bold: true })
+        ], { after: question.transcript?.length ? 20 : 65 }));
+        if (question.transcript?.length) children.push(paragraph([
+          text("Transcript: ", { size: 17, color: "111111", bold: true }),
+          text(question.transcript.join(" "), { size: 17, color: "111111" })
+        ], { after: 65 }));
+      });
+    });
     return children;
   }
 
@@ -152,9 +213,9 @@
     if (!window.docx && typeof docx === "undefined") throw new Error("Word export library is unavailable.");
     const children = exam.mode === "answer" ? answerChildren(exam) : await studentChildren(exam);
     const documentFile = new docx.Document({
-      creator: "English Teaching Player",
+      creator: "English Worksheet Builder",
       title: exam.title,
-      description: "Editable English assessment generated by English Teaching Player",
+      description: "Editable English worksheet generated by English Worksheet Builder",
       styles: { default: { document: { run: { font: "Arial", size: 21, color: "17233A" }, paragraph: { spacing: { after: 80, line: 276 } } } } },
       sections: [{
         properties: { page: { size: A4, margin: { top: MARGIN, right: MARGIN, bottom: MARGIN, left: MARGIN, header: 360, footer: 360 } } },

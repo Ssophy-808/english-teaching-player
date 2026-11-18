@@ -25,6 +25,10 @@ assert.match(global.LISTENING_CONFIG.publicPlayerUrl, /^https:\/\//, "Listening 
 const listeningItems = Object.values(global.LISTENING_ITEMS || {});
 assert.ok(listeningItems.some((item) => item.kind === "context"), "Come to Live listening data must exist");
 assert.ok(listeningItems.some((item) => item.kind === "phonics-word"), "Sound It Out listening data must exist");
+for (let unit = 1; unit <= 12; unit += 1) {
+  const unitItems = listeningItems.filter((item) => item.source === `sio2/unit${unit}` && item.kind === "phonics-word");
+  assert.ok(unitItems.length >= 3, `Sound It Out Unit ${unit} must provide at least three listening questions`);
+}
 listeningItems.forEach((item) => {
   assert.equal(item.choices.length, 3, `${item.source} listening must have three choices`);
   assert.equal(item.choices.filter((choice) => choice === item.answer).length, 1, `${item.source} listening must have exactly one correct choice`);

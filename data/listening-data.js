@@ -66,27 +66,35 @@
   };
 
   const phonicsChoices = {
-    unit1: ["cape", "cap", "pan"], unit2: ["eve", "bed", "pet"],
-    unit3: ["bike", "bit", "pin"], unit4: ["bone", "hot", "fox"],
-    unit5: ["cute", "cut", "sun"], unit6: ["cake", "city", "cup"],
-    unit7: ["game", "gem", "gym"], unit8: ["barn", "corn", "fork"],
-    unit9: ["fern", "bird", "burn"], unit10: ["cheese", "sheep", "fish"],
-    unit11: ["thin", "them", "whale"], unit12: ["phone", "ghost", "laugh"]
+    unit1: [["cape", "cap", "pan"], ["rain", "ran", "ray"], ["hay", "hat", "late"]],
+    unit2: [["eve", "bed", "pet"], ["meat", "feet", "leg"], ["bee", "hen", "key"]],
+    unit3: [["bike", "bit", "pin"], ["night", "nine", "sit"], ["wild", "find", "kit"]],
+    unit4: [["bone", "hot", "fox"], ["road", "rod", "cot"], ["toe", "hoe", "hop"]],
+    unit5: [["cute", "cut", "sun"], ["blue", "cub", "hug"], ["juice", "suit", "run"]],
+    unit6: [["cake", "city", "cup"], ["cone", "cent", "cube"], ["face", "fancy", "cake"]],
+    unit7: [["game", "gem", "gym"], ["goat", "gull", "page"], ["giant", "gate", "gem"]],
+    unit8: [["barn", "corn", "fork"], ["car", "horn", "pork"], ["jar", "park", "corn"]],
+    unit9: [["fern", "bird", "burn"], ["mermaid", "summer", "dirt"], ["first", "hurt", "turn"]],
+    unit10: [["cheese", "chin", "ship"], ["peach", "rich", "fish"], ["sheep", "wash", "cheese"]],
+    unit11: [["thin", "them", "whale"], ["math", "mother", "wheat"], ["match", "witch", "them"]],
+    unit12: [["phone", "ghost", "laugh"], ["photo", "cough", "graph"], ["dolphin", "ghee", "phone"]]
   };
 
-  Object.entries(phonicsChoices).forEach(([unitId, choices], index) => {
-    const word = choices[0];
-    items[`sio2-${unitId}-${word}`] = {
-      source: `sio2/${unitId}`,
-      kind: "phonics-word",
-      title: `Sound It Out ${index + 1}`,
-      audio: `assets/audio/phonics/sio2-${unitId}-${word}.wav`,
-      transcript: [word, word],
-      question: "Which word do you hear?",
-      choices,
-      answer: word,
-      phonicsSkill: "whole word"
-    };
+  Object.entries(phonicsChoices).forEach(([unitId, questionSets], index) => {
+    questionSets.forEach((choices, questionIndex) => {
+      const word = choices[0];
+      items[`sio2-${unitId}-${word}`] = {
+        source: `sio2/${unitId}`,
+        kind: "phonics-word",
+        title: `Sound It Out ${index + 1}.${questionIndex + 1}`,
+        audio: `assets/audio/phonics/sio2-${unitId}-${word}.wav`,
+        transcript: [word, word],
+        question: "Which word do you hear?",
+        choices,
+        answer: word,
+        phonicsSkill: "whole word"
+      };
+    });
   });
 
   window.LISTENING_CONFIG = { publicPlayerUrl: PUBLIC_PLAYER_URL };

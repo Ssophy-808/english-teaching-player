@@ -1,13 +1,13 @@
 (function () {
   "use strict";
 
-  const STORAGE_KEY = "englishTeachingPlayer.testBuilder.v1";
+  const STORAGE_KEY = "englishTeachingPlayer.testBuilder.v2";
   const TYPES = [
     ["vocab-image", "看圖寫單字", 2], ["image-sentence", "看圖問答", 2],
     ["choice", "文法選擇題", 2], ["sentence-choice", "選出正確句", 2],
     ["error", "改錯題", 2], ["reorder", "句子重組", 2], ["transform", "句型轉換", 2],
     ["reading", "短文閱讀", 1], ["cloze", "複習克漏字", 1],
-    ["listening-context", "情境聽力", 1], ["phonics-listening", "Sound It Out 聽辨", 1],
+    ["listening-context", "情境聽力", 1], ["phonics-listening", "Sound It Out 聽辨", 6],
     ["phonics-choice", "Sound It Out 音組選擇", 2], ["phonics-odd", "Sound It Out 找不同", 2]
   ];
   const SECTION_META = {
@@ -295,14 +295,14 @@
           answer: correct, choices: shuffle([correct, ...shuffle(distractors).slice(0, 2)]), points: 2, difficulty: 2, lines: 0
         });
       });
-      const listeningId = Object.keys(window.LISTENING_ITEMS || {}).find((id) => window.LISTENING_ITEMS[id].source === `${phonicsCourse.id}/${unit.id}`);
-      const listening = window.LISTENING_ITEMS?.[listeningId];
-      if (listening) result["phonics-listening"].push({
-        id: `q-${++serial}`, type: "phonics-listening", label: "Sound It Out Listening", unitLabel,
-        listeningId, prompt: listening.question, answer: listening.answer,
-        choices: [...listening.choices], transcript: [...listening.transcript],
-        audio: listening.audio, points: 2, difficulty: 1, lines: 0
-      });
+      Object.entries(window.LISTENING_ITEMS || {})
+        .filter(([, item]) => item.source === `${phonicsCourse.id}/${unit.id}` && item.kind === "phonics-word")
+        .forEach(([listeningId, listening]) => result["phonics-listening"].push({
+          id: `q-${++serial}`, type: "phonics-listening", label: "Sound It Out Listening", unitLabel,
+          listeningId, prompt: listening.question, answer: listening.answer,
+          choices: [...listening.choices], transcript: [...listening.transcript],
+          audio: listening.audio, points: 2, difficulty: 1, lines: 0
+        }));
     });
   }
 
@@ -599,7 +599,7 @@
     if (catalog.some((book) => book.id === saved.bookId)) bookSelect.value = saved.bookId;
     renderUnits(saved.units || []);
     renderPhonicsUnits(saved.phonicsUnits || []);
-    typeList.innerHTML = TYPES.map(([id, label, defaultCount]) => `<label><span>${label}</span><input data-type-count="${id}" type="number" min="0" max="10" value="${saved.counts?.[id] ?? defaultCount}"></label>`).join("");
+    typeList.innerHTML = TYPES.map(([id, label, defaultCount]) => `<label><span>${label}</span><input data-type-count="${id}" type="number" min="0" max="30" value="${saved.counts?.[id] ?? defaultCount}"></label>`).join("");
     if (saved.title) document.getElementById("test-title").value = saved.title;
     if (saved.difficulty) document.getElementById("test-difficulty").value = saved.difficulty;
     document.getElementById("test-spiral").checked = saved.spiral ?? true;

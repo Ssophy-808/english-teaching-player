@@ -440,8 +440,10 @@ body.test-builder-open { overflow: hidden; }
 .test-builder-setup input[type="text"], .test-builder-setup select { width: 100%; min-height: 44px; border: 2px solid #cfdeed; border-radius: 12px; padding: 8px 11px; color: var(--ink); background: white; }
 .test-builder-setup fieldset { min-width: 0; margin: 0; border: 2px solid #dbe6f2; border-radius: 14px; padding: 10px; }
 .test-builder-setup legend { padding: 0 6px; color: var(--navy); font-weight: 900; }
-.test-unit-list { display: grid; max-height: 185px; overflow: auto; gap: 6px; }
+.test-unit-list { display: grid; max-height: 300px; overflow: auto; gap: 10px; }
 .test-unit-list label, .test-check { display: flex !important; grid-template-columns: auto 1fr; align-items: flex-start; gap: 8px !important; color: #40516a; font-size: 0.86rem; font-weight: 700 !important; }
+.test-phonics-course { display: grid; gap: 6px; padding: 8px 9px; border: 1px solid #d5e3f1; border-radius: 10px; background: #f8fbff; }
+.test-phonics-course > strong { color: #17325c; font-size: 0.9rem; }
 .test-type-list { display: grid; gap: 6px; }
 .test-type-list label { display: grid; grid-template-columns: 1fr 58px; align-items: center; gap: 8px; color: #40516a; font-size: 0.86rem; font-weight: 750; }
 .test-type-list input { width: 58px; min-height: 34px; border: 1px solid #bdcfe2; border-radius: 9px; padding: 4px; text-align: center; }

@@ -65,7 +65,7 @@
     }
   };
 
-  const phonicsChoices = {
+  const sio2PhonicsChoices = {
     unit1: [["cape", "cap", "pan"], ["rain", "ran", "ray"], ["hay", "hat", "late"]],
     unit2: [["eve", "bed", "pet"], ["meat", "feet", "leg"], ["bee", "hen", "key"]],
     unit3: [["bike", "bit", "pin"], ["night", "nine", "sit"], ["wild", "find", "kit"]],
@@ -80,22 +80,40 @@
     unit12: [["phone", "ghost", "laugh"], ["photo", "cough", "graph"], ["dolphin", "ghee", "phone"]]
   };
 
-  Object.entries(phonicsChoices).forEach(([unitId, questionSets], index) => {
-    questionSets.forEach((choices, questionIndex) => {
+  const sio3PhonicsChoices = {
+    unit1: [["August", "lawn", "pause"], ["faucet", "paw", "sauce"], ["yawn", "saw", "August"]],
+    unit2: [["couch", "clown", "house"], ["loud", "owl", "town"], ["shout", "bow", "couch"]],
+    unit3: [["oil", "boy", "toy"], ["coin", "soybean", "point"], ["oyster", "soil", "boy"]],
+    unit4: [["head", "seat", "book"], ["weather", "leak", "pool"], ["cook", "moon", "head"]],
+    unit5: [["baby", "fly", "sky"], ["candy", "shy", "windy"], ["why", "forty", "baby"]],
+    unit6: [["blade", "cloud", "flag"], ["clip", "flute", "glass"], ["plate", "plug", "slide"]],
+    unit7: [["brown", "crab", "dream"], ["brush", "drum", "frog"], ["grape", "pray", "press"]],
+    unit8: [["scarf", "smell", "snail"], ["skate", "smoke", "spill"], ["stand", "sweets", "swim"]],
+    unit9: [["school", "screen", "shrimp"], ["throw", "splash", "spray"], ["street", "squid", "school"]],
+    unit10: [["train", "tweet", "twins"], ["trap", "tree", "twenty"], ["tray", "twist", "train"]],
+    unit11: [["knee", "wrap", "bomb"], ["knit", "wrist", "comb"], ["know", "write", "thumb"]],
+    unit12: [["back", "hang", "bank"], ["lick", "lung", "drink"], ["sick", "ring", "trunk"]]
+  };
+
+  function addPhonicsListening(courseId, banks) {
+    Object.entries(banks).forEach(([unitId, questionSets], index) => questionSets.forEach((choices, questionIndex) => {
       const word = choices[0];
-      items[`sio2-${unitId}-${word}`] = {
-        source: `sio2/${unitId}`,
+      items[`${courseId}-${unitId}-${word.toLowerCase()}`] = {
+        source: `${courseId}/${unitId}`,
         kind: "phonics-word",
-        title: `Sound It Out ${index + 1}.${questionIndex + 1}`,
-        audio: `assets/audio/phonics/sio2-${unitId}-${word}.wav`,
+        title: `${courseId.toUpperCase()} ${index + 1}.${questionIndex + 1}`,
+        audio: `assets/audio/phonics/${courseId}-${unitId}-${word.toLowerCase()}.wav`,
         transcript: [word, word],
         question: "Which word do you hear?",
         choices,
         answer: word,
         phonicsSkill: "whole word"
       };
-    });
-  });
+    }));
+  }
+
+  addPhonicsListening("sio2", sio2PhonicsChoices);
+  addPhonicsListening("sio3", sio3PhonicsChoices);
 
   window.LISTENING_CONFIG = { publicPlayerUrl: PUBLIC_PLAYER_URL };
   window.LISTENING_ITEMS = items;

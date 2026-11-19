@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  const STORAGE_KEY = "englishTeachingPlayer.testBuilder.v2";
+  const STORAGE_KEY = "englishTeachingPlayer.testBuilder.v3";
   const TYPES = [
     ["vocab-image", "看圖寫單字", 2], ["image-sentence", "看圖問答", 2],
     ["choice", "文法選擇題", 2], ["sentence-choice", "選出正確句", 2],
@@ -27,7 +27,7 @@
   };
   const CHINESE_NUMBERS = ["一", "二", "三", "四", "五", "六", "七", "八", "九", "十", "十一", "十二"];
   const catalog = window.COURSE_CATALOG || [];
-  const phonicsCourse = (window.PHONICS_COURSES || [])[0] || { units: [] };
+  const phonicsCourses = window.PHONICS_COURSES || [];
   const modal = document.getElementById("test-builder-modal");
   const preview = document.getElementById("test-preview");
   const empty = document.getElementById("test-builder-empty");
@@ -68,8 +68,10 @@
   }
 
   function selectedPhonicsUnits() {
-    const selected = [...phonicsUnitList.querySelectorAll("input:checked")].map((input) => input.value);
-    return phonicsCourse.units.filter((unit) => selected.includes(unit.id));
+    const selected = new Set([...phonicsUnitList.querySelectorAll("input:checked")].map((input) => input.value));
+    return phonicsCourses.flatMap((course) => course.units
+      .filter((unit) => selected.has(`${course.id}/${unit.id}`))
+      .map((unit) => ({ ...unit, courseId: course.id, courseTitle: course.title })));
   }
 
   function tagged(unit, unitIndex, data) { return { ...data, id: `q-${++serial}`, unitLabel: `Unit ${unitIndex + 1}`, points: 2 }; }
@@ -264,7 +266,7 @@
 
   function addPhonicsQuestions(result, units) {
     units.forEach((unit) => {
-      const unitLabel = `Sound It Out Unit ${unit.number}`;
+      const unitLabel = `${unit.courseTitle || "Sound It Out"} · Unit ${unit.number}`;
       const bySound = Object.groupBy(unit.words || [], (word) => word.vowelType);
       Object.entries(bySound).forEach(([sound, words]) => {
         const otherWords = Object.entries(bySound).filter(([otherSound]) => otherSound !== sound).flatMap(([, values]) => values);
@@ -296,7 +298,7 @@
         });
       });
       Object.entries(window.LISTENING_ITEMS || {})
-        .filter(([, item]) => item.source === `${phonicsCourse.id}/${unit.id}` && item.kind === "phonics-word")
+        .filter(([, item]) => item.source === `${unit.courseId}/${unit.id}` && item.kind === "phonics-word")
         .forEach(([listeningId, listening]) => result["phonics-listening"].push({
           id: `q-${++serial}`, type: "phonics-listening", label: "Sound It Out Listening", unitLabel,
           listeningId, prompt: listening.question, answer: listening.answer,
@@ -519,7 +521,7 @@
     const total = questions.reduce((sum, q) => sum + Number(q.points || 0), 0);
     const unitNames = [
       ...selectedUnits().map((unit) => unit.title),
-      ...selectedPhonicsUnits().map((unit) => `SIO ${unit.number} ${unit.title}`)
+      ...selectedPhonicsUnits().map((unit) => `${unit.courseTitle} Unit ${unit.number} ${unit.title}`)
     ].join(" · ");
     return `<section class="test-page">
       <header class="test-page-header"><span>${esc(selectedBook().title)} · ${esc(unitNames)} · ${page}/${pageTotal}</span><h1>${esc(settings.title)}</h1><strong>Name: __________________</strong></header>
@@ -562,7 +564,7 @@
         bookTitle: selectedBook().title,
         unitNames: [
           ...selectedUnits().map((unit) => unit.title),
-          ...selectedPhonicsUnits().map((unit) => `SIO ${unit.number} ${unit.title}`)
+          ...selectedPhonicsUnits().map((unit) => `${unit.courseTitle} Unit ${unit.number} ${unit.title}`)
         ].join(" · "),
         questions,
         sections: groupedSections()
@@ -590,7 +592,10 @@
   }
 
   function renderPhonicsUnits(saved = []) {
-    phonicsUnitList.innerHTML = phonicsCourse.units.map((unit) => `<label><input type="checkbox" value="${esc(unit.id)}" ${saved.includes(unit.id) ? "checked" : ""}> Unit ${unit.number} · ${esc(unit.title)}</label>`).join("");
+    phonicsUnitList.innerHTML = phonicsCourses.map((course) => `<div class="test-phonics-course"><strong>${esc(course.title)}</strong>${course.units.map((unit) => {
+      const value = `${course.id}/${unit.id}`;
+      return `<label><input type="checkbox" value="${esc(value)}" ${saved.includes(value) ? "checked" : ""}> Unit ${unit.number} · ${esc(unit.title)}</label>`;
+    }).join("")}</div>`).join("");
   }
 
   function init() {

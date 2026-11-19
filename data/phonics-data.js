@@ -36,7 +36,7 @@
     };
   }
 
-  const units = [
+  const sio2Units = [
     makeUnit({
       number: 1, title: "Long a", shortSound: "short-a", longSound: "long-a",
       recognitionPrompt: "Short a or Long a?", classificationSummary: "Short a · Long a", contrastLabel: "Short a",
@@ -129,5 +129,81 @@
     ], contrastPairs: [["ghee", "phone"], ["ghost", "photo"], ["cough", "dolphin"], ["laugh", "graph"]] })
   ];
 
-  window.PHONICS_COURSES = [{ id: "sio2", title: "Sound It Out 2", subtitle: "Phonics Practice", units }];
+  const sio3Units = [
+    makeUnit({ number: 1, title: "au and aw", recognitionPrompt: "au or aw?", classificationSummary: "au · aw", groups: [
+      { id: "au", display: "A-U", sound: "au", words: ["August", "faucet", "pause", "sauce"] },
+      { id: "aw", display: "A-W", sound: "aw", words: ["lawn", "paw", "saw", "yawn"] }
+    ], contrastPairs: [["August", "lawn"], ["faucet", "paw"], ["pause", "saw"], ["sauce", "yawn"]] }),
+    makeUnit({ number: 2, title: "ou and ow", recognitionPrompt: "ou or ow?", classificationSummary: "ou · ow", groups: [
+      { id: "ou", display: "O-U", sound: "ou", words: ["couch", "house", "loud", "shout"] },
+      { id: "ow", display: "O-W", sound: "ow", words: ["owl", "bow", "clown", "town"] }
+    ], contrastPairs: [["couch", "owl"], ["house", "bow"], ["loud", "clown"], ["shout", "town"]] }),
+    makeUnit({ number: 3, title: "oi and oy", recognitionPrompt: "oi or oy?", classificationSummary: "oi · oy", groups: [
+      { id: "oi", display: "O-I", sound: "oi", words: ["oil", "coin", "point", "soil", "oyster"] },
+      { id: "oy", display: "O-Y", sound: "oy", words: ["boy", "soybean", "toy"] }
+    ], contrastPairs: [["oil", "boy"], ["coin", "soybean"], ["point", "toy"]] }),
+    makeUnit({ number: 4, title: "ea and oo", recognitionPrompt: "Which vowel sound?", classificationSummary: "ea /e/ · ea /ee/ · oo /u/ · oo /oo/", groups: [
+      { id: "ea-short", display: "E-A /e/", sound: "ea-short", words: ["head", "weather"] },
+      { id: "ea-long", display: "E-A /ee/", sound: "ea-long", words: ["leak", "seat"] },
+      { id: "oo-short", display: "O-O /u/", sound: "oo-short", words: ["book", "cook"] },
+      { id: "oo-long", display: "O-O /oo/", sound: "oo-long", words: ["moon", "pool"] }
+    ], contrastPairs: [["head", "seat"], ["weather", "leak"], ["book", "moon"], ["cook", "pool"]] }),
+    makeUnit({ number: 5, title: "y Sounds", recognitionPrompt: "Which final y sound?", classificationSummary: "y /ee/ · y /long i/", groups: [
+      { id: "y-ee", display: "Y /ee/", sound: "y-ee", words: ["baby", "candy", "forty", "windy"] },
+      { id: "y-long-i", display: "Y /long i/", sound: "y-long-i", words: ["fly", "shy", "sky", "why"] }
+    ], contrastPairs: [["baby", "fly"], ["candy", "shy"], ["forty", "sky"], ["windy", "why"]] }),
+    makeUnit({ number: 6, title: "l Blends", recognitionPrompt: "Which l blend?", classificationSummary: "bl · cl · fl · gl · pl · sl", groups: [
+      { id: "bl", display: "B-L", sound: "bl", words: ["blade", "blow"] },
+      { id: "cl", display: "C-L", sound: "cl", words: ["clip", "cloud"] },
+      { id: "fl", display: "F-L", sound: "fl", words: ["flag", "flute"] },
+      { id: "gl", display: "G-L", sound: "gl", words: ["glass", "globe"] },
+      { id: "pl", display: "P-L", sound: "pl", words: ["plate", "plug"] },
+      { id: "sl", display: "S-L", sound: "sl", words: ["sled", "slide"] }
+    ] }),
+    makeUnit({ number: 7, title: "r Blends", recognitionPrompt: "Which r blend?", classificationSummary: "br · cr · dr · fr · gr · pr", groups: [
+      { id: "br", display: "B-R", sound: "br", words: ["brown", "brush"] },
+      { id: "cr", display: "C-R", sound: "cr", words: ["crab", "crane"] },
+      { id: "dr", display: "D-R", sound: "dr", words: ["dream", "drum"] },
+      { id: "fr", display: "F-R", sound: "fr", words: ["frog", "fry"] },
+      { id: "gr", display: "G-R", sound: "gr", words: ["grape", "grow"] },
+      { id: "pr", display: "P-R", sound: "pr", words: ["pray", "press"] }
+    ] }),
+    makeUnit({ number: 8, title: "s Blends", recognitionPrompt: "Which s blend?", classificationSummary: "sc/sk · sm · sn · sp · st · sw", groups: [
+      { id: "sc-sk", display: "S-C / S-K", sound: "sc-sk", words: ["scarf", "skate"] },
+      { id: "sm", display: "S-M", sound: "sm", words: ["smell", "smoke"] },
+      { id: "sn", display: "S-N", sound: "sn", words: ["snail", "snore"] },
+      { id: "sp", display: "S-P", sound: "sp", words: ["spill", "spot"] },
+      { id: "st", display: "S-T", sound: "st", words: ["stand", "stone"] },
+      { id: "sw", display: "S-W", sound: "sw", words: ["sweets", "swim"] }
+    ] }),
+    makeUnit({ number: 9, title: "Three-letter Blends", recognitionPrompt: "Which three-letter blend?", classificationSummary: "sch · scr · shr · thr · spl · spr · str · squ", groups: [
+      { id: "sch", display: "S-C-H", sound: "sch", words: ["school"] },
+      { id: "scr", display: "S-C-R", sound: "scr", words: ["screen"] },
+      { id: "shr", display: "S-H-R", sound: "shr", words: ["shrimp"] },
+      { id: "thr", display: "T-H-R", sound: "thr", words: ["throw"] },
+      { id: "spl", display: "S-P-L", sound: "spl", words: ["splash"] },
+      { id: "spr", display: "S-P-R", sound: "spr", words: ["spray"] },
+      { id: "str", display: "S-T-R", sound: "str", words: ["street"] },
+      { id: "squ", display: "S-Q-U", sound: "squ", words: ["squid"] }
+    ] }),
+    makeUnit({ number: 10, title: "tr and tw", recognitionPrompt: "tr or tw?", classificationSummary: "tr · tw", groups: [
+      { id: "tr", display: "T-R", sound: "tr", words: ["train", "trap", "tray", "tree"] },
+      { id: "tw", display: "T-W", sound: "tw", words: ["tweet", "twenty", "twins", "twist"] }
+    ], contrastPairs: [["train", "tweet"], ["trap", "twenty"], ["tray", "twins"], ["tree", "twist"]] }),
+    makeUnit({ number: 11, title: "kn, wr, and mb", recognitionPrompt: "Which silent-letter spelling?", classificationSummary: "kn · wr · mb", groups: [
+      { id: "kn", display: "K-N", sound: "kn", words: ["knee", "knit", "knob", "know"] },
+      { id: "wr", display: "W-R", sound: "wr", words: ["wrap", "wrist", "write", "wrong"] },
+      { id: "mb", display: "M-B", sound: "mb", words: ["bomb", "comb", "lamb", "thumb"] }
+    ], contrastPairs: [["knee", "wrap"], ["knit", "wrist"], ["know", "comb"]] }),
+    makeUnit({ number: 12, title: "ck, ng, and nk", recognitionPrompt: "Which ending spelling?", classificationSummary: "ck · ng · nk", groups: [
+      { id: "ck", display: "C-K", sound: "ck", words: ["back", "lick", "neck", "sick"] },
+      { id: "ng", display: "N-G", sound: "ng", words: ["hang", "lung", "ring", "wing"] },
+      { id: "nk", display: "N-K", sound: "nk", words: ["bank", "drink", "pink", "trunk"] }
+    ], contrastPairs: [["back", "bank"], ["lick", "ring"], ["sick", "pink"]] })
+  ];
+
+  window.PHONICS_COURSES = [
+    { id: "sio2", title: "Sound It Out 2", subtitle: "Phonics Practice", units: sio2Units },
+    { id: "sio3", title: "Sound It Out 3", subtitle: "Phonics Practice", units: sio3Units }
+  ];
 })();

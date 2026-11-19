@@ -28,7 +28,11 @@ assert.ok(listeningItems.some((item) => item.kind === "phonics-word"), "Sound It
 for (let unit = 1; unit <= 12; unit += 1) {
   const unitItems = listeningItems.filter((item) => item.source === `sio2/unit${unit}` && item.kind === "phonics-word");
   assert.ok(unitItems.length >= 3, `Sound It Out Unit ${unit} must provide at least three listening questions`);
+  const sio3Items = listeningItems.filter((item) => item.source === `sio3/unit${unit}` && item.kind === "phonics-word");
+  assert.ok(sio3Items.length >= 3, `Sound It Out 3 Unit ${unit} must provide at least three listening questions`);
 }
+const sio3 = (global.PHONICS_COURSES || []).find((course) => course.id === "sio3");
+assert.equal(sio3?.units.length, 12, "Sound It Out 3 must contain 12 units");
 listeningItems.forEach((item) => {
   assert.equal(item.choices.length, 3, `${item.source} listening must have three choices`);
   assert.equal(item.choices.filter((choice) => choice === item.answer).length, 1, `${item.source} listening must have exactly one correct choice`);

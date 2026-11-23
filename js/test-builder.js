@@ -7,8 +7,7 @@
     ["choice", "文法選擇題", 2], ["sentence-choice", "選出正確句", 2],
     ["error", "改錯題", 2], ["reorder", "句子重組", 2], ["transform", "句型轉換", 2],
     ["reading", "短文閱讀", 1], ["cloze", "複習克漏字", 1],
-    ["listening-context", "情境聽力", 1], ["phonics-listening", "Sound It Out 聽辨", 6],
-    ["phonics-choice", "Sound It Out 音組選擇", 2], ["phonics-odd", "Sound It Out 找不同", 2]
+    ["listening-context", "情境聽力", 1], ["phonics-listening", "Sound It Out 聽辨", 10]
   ];
   const SECTION_META = {
     "vocab-image": { title: "Look and Write", instruction: "Look at each picture. Write the word." },
@@ -21,9 +20,7 @@
     reading: { title: "Read and Answer", instruction: "Read the passage. Answer each question." },
     cloze: { title: "Reading Cloze", instruction: "Read the passage and complete the blanks." },
     "listening-context": { title: "Listen and Choose", instruction: "Scan the QR code. Listen to each track and choose the best answer." },
-    "phonics-listening": { title: "Sound It Out Listening", instruction: "Scan the QR code. Listen to each track and choose the word you hear." },
-    "phonics-choice": { title: "Sound It Out", instruction: "Choose the word with the correct sound or spelling." },
-    "phonics-odd": { title: "Which Word Does Not Belong?", instruction: "Choose the word that does not belong." }
+    "phonics-listening": { title: "Sound It Out Listening", instruction: "Scan the QR code. Listen to each track and choose the word or word pair you hear." }
   };
   const CHINESE_NUMBERS = ["一", "二", "三", "四", "五", "六", "七", "八", "九", "十", "十一", "十二"];
   const catalog = window.COURSE_CATALOG || [];
@@ -267,42 +264,12 @@
   function addPhonicsQuestions(result, units) {
     units.forEach((unit) => {
       const unitLabel = `${unit.courseTitle || "Sound It Out"} · Unit ${unit.number}`;
-      const bySound = Object.groupBy(unit.words || [], (word) => word.vowelType);
-      Object.entries(bySound).forEach(([sound, words]) => {
-        const otherWords = Object.entries(bySound).filter(([otherSound]) => otherSound !== sound).flatMap(([, values]) => values);
-        if (!words.length || otherWords.length < 2) return;
-        const correct = words[0].word;
-        const distractors = shuffle(otherWords.map((word) => word.word)).filter((word) => word !== correct).slice(0, 2);
-        if (distractors.length === 2) result["phonics-choice"].push({
-          id: `q-${++serial}`, type: "phonics-choice", label: "Sound It Out", unitLabel,
-          prompt: `Which word has the ${unit.soundLabels?.[sound] || sound} sound?`,
-          answer: correct, choices: shuffle([correct, ...distractors]), points: 2, difficulty: 1, lines: 0
-        });
-        if (words.length >= 2 && otherWords.length) {
-          const odd = otherWords[0].word;
-          result["phonics-odd"].push({
-            id: `q-${++serial}`, type: "phonics-odd", label: "Sound It Out", unitLabel,
-            prompt: `Which word does not belong with the ${unit.soundLabels?.[sound] || sound} group?`,
-            answer: odd, choices: shuffle([words[0].word, words[1].word, odd]), points: 2, difficulty: 2, lines: 0
-          });
-        }
-      });
-      (unit.patterns || []).forEach((pattern) => {
-        const correct = pattern.words?.[0];
-        const distractors = (unit.words || []).filter((word) => word.pattern !== pattern.id).map((word) => word.word);
-        if (!correct || distractors.length < 2) return;
-        result["phonics-choice"].push({
-          id: `q-${++serial}`, type: "phonics-choice", label: "Sound It Out", unitLabel,
-          prompt: `Which word uses the ${pattern.display} spelling?`,
-          answer: correct, choices: shuffle([correct, ...shuffle(distractors).slice(0, 2)]), points: 2, difficulty: 2, lines: 0
-        });
-      });
       Object.entries(window.LISTENING_ITEMS || {})
         .filter(([, item]) => item.source === `${unit.courseId}/${unit.id}` && item.kind === "phonics-word")
         .forEach(([listeningId, listening]) => result["phonics-listening"].push({
           id: `q-${++serial}`, type: "phonics-listening", label: "Sound It Out Listening", unitLabel,
           listeningId, prompt: listening.question, answer: listening.answer,
-          choices: [...listening.choices], transcript: [...listening.transcript],
+          choices: shuffle([...listening.choices]), transcript: [...listening.transcript],
           audio: listening.audio, points: 2, difficulty: 1, lines: 0
         }));
     });

@@ -80,21 +80,6 @@
     unit12: [["phone", "ghost", "laugh"], ["photo", "cough", "graph"], ["dolphin", "ghee", "phone"]]
   };
 
-  const sio3PhonicsChoices = {
-    unit1: [["August", "lawn", "pause"], ["faucet", "paw", "sauce"], ["yawn", "saw", "August"]],
-    unit2: [["couch", "clown", "house"], ["loud", "owl", "town"], ["shout", "bow", "couch"]],
-    unit3: [["oil", "boy", "toy"], ["coin", "soybean", "point"], ["oyster", "soil", "boy"]],
-    unit4: [["head", "seat", "book"], ["weather", "leak", "pool"], ["cook", "moon", "head"]],
-    unit5: [["baby", "fly", "sky"], ["candy", "shy", "windy"], ["why", "forty", "baby"]],
-    unit6: [["blade", "cloud", "flag"], ["clip", "flute", "glass"], ["plate", "plug", "slide"]],
-    unit7: [["brown", "crab", "dream"], ["brush", "drum", "frog"], ["grape", "pray", "press"]],
-    unit8: [["scarf", "smell", "snail"], ["skate", "smoke", "spill"], ["stand", "sweets", "swim"]],
-    unit9: [["school", "screen", "shrimp"], ["throw", "splash", "spray"], ["street", "squid", "school"]],
-    unit10: [["train", "tweet", "twins"], ["trap", "tree", "twenty"], ["tray", "twist", "train"]],
-    unit11: [["knee", "wrap", "bomb"], ["knit", "wrist", "comb"], ["know", "write", "thumb"]],
-    unit12: [["back", "hang", "bank"], ["lick", "lung", "drink"], ["sick", "ring", "trunk"]]
-  };
-
   function addPhonicsListening(courseId, banks) {
     Object.entries(banks).forEach(([unitId, questionSets], index) => questionSets.forEach((choices, questionIndex) => {
       const word = choices[0];
@@ -112,8 +97,54 @@
     }));
   }
 
+  function safeId(value) {
+    return String(value).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  }
+
+  function addSio3Listening() {
+    const course = (window.PHONICS_COURSES || []).find((item) => item.id === "sio3");
+    (course?.units || []).forEach((unit) => {
+      const words = unit.words.map((item) => item.word);
+      words.slice(0, 10).forEach((word, index) => {
+        const distractorOne = words[(index + 1) % words.length];
+        const distractorTwo = words[(index + Math.ceil(words.length / 2)) % words.length];
+        const id = `sio3-${unit.id}-${safeId(word)}`;
+        items[id] = {
+          source: `sio3/${unit.id}`,
+          kind: "phonics-word",
+          title: `SIO3 ${unit.number}.${index + 1}`,
+          audio: `assets/audio/phonics/${id}.wav`,
+          transcript: [word, word],
+          question: "Which word do you hear?",
+          choices: [word, distractorOne, distractorTwo],
+          answer: word,
+          phonicsSkill: "whole word"
+        };
+      });
+      const pairsNeeded = Math.max(0, 10 - Math.min(10, words.length));
+      for (let index = 0; index < pairsNeeded; index += 1) {
+        const first = words[(index * 2) % words.length];
+        const second = words[(index * 2 + 1) % words.length];
+        const other = words[(index * 2 + 3) % words.length];
+        const id = `sio3-${unit.id}-${safeId(first)}-${safeId(second)}`;
+        const answer = `${first} – ${second}`;
+        items[id] = {
+          source: `sio3/${unit.id}`,
+          kind: "phonics-word",
+          title: `SIO3 ${unit.number}.${words.length + index + 1}`,
+          audio: `assets/audio/phonics/${id}.wav`,
+          transcript: [first, second],
+          question: "Which pair do you hear?",
+          choices: [answer, `${second} – ${first}`, `${first} – ${other}`],
+          answer,
+          phonicsSkill: "word order"
+        };
+      }
+    });
+  }
+
   addPhonicsListening("sio2", sio2PhonicsChoices);
-  addPhonicsListening("sio3", sio3PhonicsChoices);
+  addSio3Listening();
 
   window.LISTENING_CONFIG = { publicPlayerUrl: PUBLIC_PLAYER_URL };
   window.LISTENING_ITEMS = items;

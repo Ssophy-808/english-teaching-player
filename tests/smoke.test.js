@@ -218,13 +218,14 @@ books.forEach((book) => {
     review.lessons.flatMap((lesson) => lesson.worksheet.pages)
       .filter((page) => page.type === "reading_cloze")
       .forEach((page) => {
-        assert.ok(page.wordBank.length > page.answers.length, `${book.id}/${review.id} Reading Cloze Word Bank needs distractor words`);
-        assert.ok(page.wordBank.length <= page.answers.length + 3, `${book.id}/${review.id} Reading Cloze needs only 1–3 distractors`);
+        assert.equal(page.wordBank.length, 8, `${book.id}/${review.id} Reading Cloze Word Bank needs eight choices`);
+        assert.equal(new Set(page.wordBank.map((word) => word.toLowerCase())).size, 8, `${book.id}/${review.id} Reading Cloze Word Bank choices must be unique`);
         page.answers.forEach((answer) => assert.ok(page.wordBank.includes(answer), `${book.id}/${review.id} Word Bank must include ${answer}`));
         if (page.answers.includes("do")) assert.ok(page.wordBank.includes("does"), `${book.id}/${review.id} Word Bank should contrast do and does`);
         assert.ok(page.passageLines.length >= 5 && page.passageLines.length <= 8, `${book.id}/${review.id} Reading Cloze needs a 5–8 sentence passage`);
         assert.equal(page.heroAssets.length, 0, `${book.id}/${review.id} Reading Cloze must use context and the Word Bank, not answer pictures`);
-        assert.ok(page.answers.length >= 3 && page.answers.length <= 5, `${book.id}/${review.id} Reading Cloze needs 3–5 focused vocabulary and grammar blanks`);
+        assert.equal(page.answers.length, 5, `${book.id}/${review.id} Reading Cloze needs five focused vocabulary and grammar blanks`);
+        assert.equal(new Set(page.answers.map((word) => word.toLowerCase())).size, 5, `${book.id}/${review.id} Reading Cloze answers must be unique`);
         assert.equal((page.passageLines.join(" ").match(/________/g) || []).length, page.answers.length, `${book.id}/${review.id} Reading Cloze blank count must match its answers`);
         const storyWordCount = page.passageLines.join(" ").replace(/_+/g, "").trim().split(/\s+/).filter(Boolean).length;
         const storyRanges = { "book-1": [20, 40], "book-2": [20, 50], "book-3": [20, 60] };

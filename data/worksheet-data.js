@@ -1360,8 +1360,8 @@
     return { question: item.question, prompt, asset: item.asset, missing, expectedAnswer: `${missing} — ${answer}` };
   }
 
-  function clozeStory(title, heroWord, passageLines, answers) {
-    return { title, heroWord, passageLines, answers };
+  function clozeStory(title, heroWord, passageLines, answers, distractors = []) {
+    return { title, heroWord, passageLines, answers, distractors };
   }
 
   function storyChoice(options, day) {
@@ -1370,80 +1370,87 @@
 
   const REVIEW_CLOZE_BUILDERS = {
     "book-1:1–3": () => clozeStory("Lumi and Ludi", "girl", [
-      "Lumi ________ a girl.",
-      "She is ________ a boy.",
-      "Ludi is a boy.",
-      "He is not a girl.",
-      "I am six years old.",
-      "How old ________ I?"
-    ], ["is", "not", "am"]),
+      "Lumi is six years old.",
+      "She is a ________.",
+      "Ludi is six years old.",
+      "He is a ________.",
+      "I ________ Lumi.",
+      "She ________ six years old.",
+      "How old ________ you?"
+    ], ["girl", "boy", "am", "is", "are"], ["man", "woman", "not"]),
     "book-1:4–6": () => clozeStory("My Red Bag", "school bag", [
-      "This is my red bag.",
+      "This is my ________.",
       "It ________ red.",
-      "I have a pencil.",
-      "It is ________ pencil.",
-      "I am happy.",
-      "I ________ not sad."
-    ], ["is", "a", "am"]),
+      "I have ________ pencil.",
+      "It is a ________.",
+      "I ________ not sad.",
+      "Red is my favorite color."
+    ], ["school bag", "is", "a", "pencil", "am"], ["are", "an", "eraser"]),
     "book-1:7–9": () => clozeStory("My Hat and Dog", "hat", [
-      "This is my hat.",
-      "________ is a hat.",
-      "That is my dog.",
-      "________ is a dog.",
-      "We are happy.",
+      "My favorite color is red.",
+      "The hat is ________.",
+      "This ________ my hat.",
+      "That is my ________.",
+      "It is ________ a cat.",
       "We ________ not sad."
-    ], ["This", "That", "are"]),
+    ], ["red", "is", "dog", "not", "are"], ["blue", "cat", "am"]),
     "book-2:1–3": () => clozeStory("Our Classroom", "door", [
       "This is our classroom.",
-      "There ________ a door.",
-      "There are twelve books.",
+      "Look at the door.",
+      "There is a ________.",
+      "There ________ twelve books.",
       "The number is ________.",
-      "Look at the balls.",
-      "There ________ three balls."
-    ], ["is", "twelve", "are"]),
+      "Look at the ball.",
+      "There is one ________.",
+      "There ________ a fan."
+    ], ["door", "are", "twelve", "ball", "is"], ["books", "fifteen", "there"]),
     "book-2:4–6": () => clozeStory("Fruit Cards", "bananas", [
-      "These are bananas.",
-      "Are ________ bananas?",
+      "________ are bananas.",
+      "Are these bananas?",
       "Yes, they ________.",
-      "Those are kiwis.",
-      "Lumi can read the cards.",
-      "She can ________ fruit names."
-    ], ["these", "are", "read"]),
+      "________ are kiwis.",
+      "Are those kiwis?",
+      "Lumi ________ read.",
+      "Can Ludi read?",
+      "No, he ________."
+    ], ["These", "are", "Those", "can", "can't"], ["This", "That", "is"]),
     "book-2:7–9": () => clozeStory("Lumi at Home", "kitchen", [
-      "Lumi is in the kitchen.",
+      "Lumi is in the ________.",
       "She is ________ the kitchen.",
       "A cat is under the table.",
       "Where is the cat?",
       "It is ________ the table.",
-      "Lumi likes tigers.",
-      "Does she ________ tigers?"
-    ], ["in", "under", "like"]),
+      "Does she ________ tigers?",
+      "Yes, she ________."
+    ], ["kitchen", "in", "under", "like", "does"], ["on", "likes", "do"]),
     "book-3:1–3": () => clozeStory("Pet Day Lunch", "hamsters", [
       "Lumi has two hamsters.",
       "She ________ two small pets.",
-      "Ludi likes chicken nuggets.",
+      "The pets are ________.",
+      "Ludi likes ________ for lunch.",
       "Does he ________ chicken nuggets?",
       "Yes, he ________.",
       "They eat lunch together."
-    ], ["has", "like", "does"]),
-    "book-3:4–6": () => clozeStory("Ludi's Birthday", "bicycle", [
-      "Ludi has a birthday party.",
-      "He ________ a new bicycle.",
-      "He has two hands.",
-      "Who ________ two hands?",
-      "Lumi has curly hair.",
-      "Does she ________ curly hair?"
-    ], ["wants", "has", "have"]),
+    ], ["has", "hamsters", "chicken nuggets", "like", "does"], ["have", "likes", "do"]),
+    "book-3:4–6": () => clozeStory("Ludi and Lumi", "bicycle", [
+      "Ludi has a new ________.",
+      "He ________ two hands.",
+      "Who has two ________?",
+      "Lumi has ________ hair.",
+      "Does she ________ curly hair?",
+      "Yes, she does."
+    ], ["bicycle", "has", "hands", "curly", "have"], ["hand", "short", "does"]),
     "book-3:7–9": () => clozeStory("A Sunny Sunday", "baseball", [
-      "Today ________ Sunday.",
-      "The weather is sunny.",
-      "Lumi and Ludi play baseball.",
+      "Tomorrow is Monday.",
+      "Today is ________.",
+      "It is not rainy.",
+      "The weather is ________.",
       "They ________ baseball on sunny days.",
+      "The sport is ________.",
       "Do they like baseball?",
       "Yes, they ________."
-    ], ["is", "play", "do"])
+    ], ["Sunday", "sunny", "play", "baseball", "do"], ["Saturday", "rainy", "does"])
   };
-
   function storyAsset(unit, word) {
     const wanted = String(word || "").toLowerCase();
     const assets = unit.vocabulary || [];
@@ -1502,7 +1509,7 @@
       .filter((word, index, words) => word && !answerKeys.has(word.toLowerCase())
         && words.findIndex((candidate) => candidate.toLowerCase() === word.toLowerCase()) === index);
     const offset = candidates.length ? (Math.max(1, day) - 1) % candidates.length : 0;
-    const distractors = [...confusingForms, ...candidates.slice(offset), ...candidates.slice(0, offset)]
+    const distractors = [...(story.distractors || []), ...confusingForms, ...candidates.slice(offset), ...candidates.slice(0, offset)]
       .filter((word, index, words) => word && !answerKeys.has(word.toLowerCase())
         && words.findIndex((candidate) => candidate.toLowerCase() === word.toLowerCase()) === index)
       .slice(0, 3);

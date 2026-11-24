@@ -579,6 +579,21 @@
     return { type, title, instruction, skill, items, ...options };
   }
 
+  function distributeMultipleChoiceAnswers(pages) {
+    (pages || []).filter((page) => page.type === "multiple_choice").forEach((page) => {
+      (page.items || []).forEach((item, index) => {
+        if (!Array.isArray(item.choices) || item.choices.length < 2) return;
+        const correctIndex = item.choices.indexOf(item.expectedAnswer);
+        if (correctIndex < 0) return;
+        const targetIndex = index % item.choices.length;
+        const choices = item.choices.slice();
+        const [correct] = choices.splice(correctIndex, 1);
+        choices.splice(targetIndex, 0, correct);
+        item.choices = choices;
+      });
+    });
+  }
+
   function book3ProgressivePages(unit, day) {
     const profile = BOOK3_PROGRESSIVE_PROFILES[unit.id];
     const pairsForDay = book3ProgressivePairs(unit, day);
@@ -1938,6 +1953,7 @@
       applyRepresentativeQuestionTypes(book.id, unit.id, day, pages);
       removeRepeatedPageItems(pages);
       normalizeQuestionWritingPages(pages);
+      distributeMultipleChoiceAnswers(pages);
       lesson.worksheet = { ...(lesson.worksheet || {}), day, unitTitle: unit.title, pages };
     })));
   }

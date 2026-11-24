@@ -263,6 +263,18 @@ answerQuestionPages.forEach((page) => {
   assert.ok(page.items.every((item) => item.asset), `${page.title} needs a picture for every question`);
 });
 
+const multipleChoicePages = books.flatMap((book) => book.units)
+  .flatMap((unit) => unit.lessons)
+  .flatMap((lesson) => lesson.worksheet.pages)
+  .filter((page) => page.type === "multiple_choice");
+multipleChoicePages.forEach((page) => {
+  const correctPositions = page.items.map((item) => item.choices.indexOf(item.expectedAnswer));
+  assert.ok(correctPositions.every((position) => position >= 0), `${page.title} must include its correct answer`);
+  if (page.items.length >= 3) {
+    assert.deepEqual([...new Set(correctPositions.slice(0, 3))].sort(), [0, 1, 2], `${page.title} must distribute the first three answers across A, B, and C`);
+  }
+});
+
 assert.deepEqual([...reviewFocusTypesSeen].sort(), ["grammar_circle", "read_write_clues", "story_cloze", "word_path"], "Review worksheets must use all four approved focus types");
 
 const book1FirstReview = books.find((book) => book.id === "book-1")

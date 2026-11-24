@@ -919,6 +919,7 @@
       title: "Answer the Questions",
       instruction: "Read each question. Write a complete answer.",
       skill: "questions and complete answers",
+      showPictures: true,
       items: pairsForDay.slice(0, 4).map((pair) => ({
         prompt: pair.question,
         asset: pair.asset,
@@ -1592,6 +1593,7 @@
       title: day >= 4 ? "Question and Answer Review" : "Answer the Questions",
       instruction: "Read each question. Write a complete answer.",
       skill: "questions and complete answers",
+      showPictures: true,
       items
     };
   }

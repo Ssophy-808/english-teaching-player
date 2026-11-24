@@ -253,6 +253,16 @@ books.forEach((book) => {
   });
 });
 
+const answerQuestionPages = books.flatMap((book) => book.units)
+  .flatMap((unit) => unit.lessons)
+  .flatMap((lesson) => lesson.worksheet.pages)
+  .filter((page) => page.type === "answer_questions");
+assert.ok(answerQuestionPages.length > 0, "Worksheets must include answer-question practice");
+answerQuestionPages.forEach((page) => {
+  assert.equal(page.showPictures, true, `${page.title} must display pictures`);
+  assert.ok(page.items.every((item) => item.asset), `${page.title} needs a picture for every question`);
+});
+
 assert.deepEqual([...reviewFocusTypesSeen].sort(), ["grammar_circle", "read_write_clues", "story_cloze", "word_path"], "Review worksheets must use all four approved focus types");
 
 const book1FirstReview = books.find((book) => book.id === "book-1")

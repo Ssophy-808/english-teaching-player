@@ -269,6 +269,18 @@ const book2Unit1 = books.find((book) => book.id === "book-2").units.find((unit) 
 assert.doesNotMatch(JSON.stringify(book2Unit1.passportSentences), /\b(?:dog|cat)\b/i, "Book 2 Unit 1 classroom pictures must not use unrelated animal prompts");
 assert.match(JSON.stringify(book2Unit1.passportSentences), /Is there a television\?/, "Book 2 Unit 1 television picture must use a television question");
 
+const book2Review13WithPictures = books.find((book) => book.id === "book-2")
+  .units.find((unit) => unit.isReview && unit.reviewRange === "1–3");
+const book2ReviewDay1Pages = book2Review13WithPictures.lessons[0].worksheet.pages;
+const book2CountPage = book2ReviewDay1Pages.find((page) => page.type === "read_write_clues");
+assert.ok(book2CountPage.items.every((item) => item.asset), "Book 2 Review 1–3 count writing needs a picture for every item");
+assert.ok(book2CountPage.items.every((item) => !item.prompt.trim()), "Book 2 Review 1–3 count writing must not print answer words beside pictures");
+const book2ContextPage = book2ReviewDay1Pages.find((page) => page.title === "Read, Look, and Answer");
+assert.equal(book2ContextPage.type, "story_cloze", "Book 2 Review 1–3 needs a picture-supported context page");
+assert.equal(book2ContextPage.introLines.length, 3, "Book 2 Review 1–3 context page needs a short three-sentence passage");
+assert.equal(book2ContextPage.heroAssets.length, 3, "Book 2 Review 1–3 context page needs a visible picture strip");
+assert.ok(book2ContextPage.items.every((item) => item.asset), "Book 2 Review 1–3 context questions need supporting pictures");
+
 const book2FruitUnits = books.find((book) => book.id === "book-2").units
   .filter((unit) => ["unit-4", "unit-5"].includes(unit.id));
 book2FruitUnits.forEach((unit) => {

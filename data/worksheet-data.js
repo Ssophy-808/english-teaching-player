@@ -1387,7 +1387,7 @@
     };
   }
 
-  function reviewStoryPage(title, instruction, skill, introLines, items) {
+  function reviewStoryPage(title, instruction, skill, introLines, items, heroAssets = []) {
     return {
       type: "story_cloze",
       layout: "locked_template",
@@ -1395,7 +1395,7 @@
       instruction,
       skill,
       introLines,
-      heroAssets: [],
+      heroAssets,
       endingLines: [],
       items
     };
@@ -1473,10 +1473,12 @@
         "Look at each picture and number. Write one complete sentence.",
         "There is / There are · numbers",
         unusedPairs.map((pair) => {
+          const numberOnly = numberWord.test(worksheetWord(pair.asset));
+          const bookPicture = { image: "assets/images/book1/unit5/book.png" };
           const sentences = String(pair.answer).match(/There (?:is|are)[^.!?]*[.!?]/g) || [];
           return {
-            prompt: numberWord.test(worksheetWord(pair.asset)) ? "Books:" : worksheetWord(pair.asset) + ":",
-            asset: pair.asset,
+            prompt: "",
+            asset: numberOnly ? { image: bookPicture.image, sprite: bookPicture.sprite, visual: bookPicture.visual } : pair.asset,
             expectedAnswer: sentences.at(-1) || firstSentence(pair.answer)
           };
         }),
@@ -1594,6 +1596,30 @@
     };
   }
 
+  function book2Review13ContextPage(unit) {
+    return reviewStoryPage(
+      "Read, Look, and Answer",
+      "Read the short text. Look at the pictures. Write a complete answer.",
+      "There is / There are · numbers",
+      [
+        "Lumi and Ludi are in the classroom.",
+        "They look at some books and robots.",
+        "There is a table, too."
+      ],
+      [
+        { question: "Are there thirteen books?", asset: { image: "assets/images/book1/unit5/book.png" }, expectedAnswer: "No, there aren't; there are sixteen books." },
+        { question: "How many robots are there?", asset: storyAsset(unit, "robot"), expectedAnswer: "There are two robots." },
+        { question: "Is there a table?", asset: storyAsset(unit, "table"), expectedAnswer: "Yes, there is." },
+        { question: "Are there fifteen books?", asset: { image: "assets/images/book1/unit5/book.png" }, expectedAnswer: "No, there aren't. There are sixteen books." }
+      ],
+      [
+        { image: "assets/images/book1/unit5/book.png" },
+        storyAsset(unit, "robot"),
+        storyAsset(unit, "table")
+      ]
+    );
+  }
+
   function bookReviewPages(unit, day) {
     const reviewPairs = reviewWorksheetPairs(unit, day, 24);
     const storySource = day === 2 ? reviewPairs.slice(18, 24) : day === 3 ? reviewPairs.slice(14, 20) : reviewPairs.slice(0, 6);
@@ -1631,7 +1657,9 @@
       reviewFocusPage(unit, day),
       standard("matching", "Review Matching", "Match each question to the answer that keeps the conversation correct.", matchingItems),
       standard("multiple_choice", "Review Choice Check", "Circle the correct complete answer.", answerChoices),
-      connectedChainPage(chainSource, day)
+      unit.bookId === "book-2" && activeReviewRange(unit, day) === "1–3"
+        ? book2Review13ContextPage(unit)
+        : connectedChainPage(chainSource, day)
     ];
 
     if (day === 2) return [

@@ -6,7 +6,8 @@
     ["vocab-image", "看圖寫單字", 2], ["image-sentence", "看圖問答", 2],
     ["choice", "文法選擇題", 2], ["sentence-choice", "選出正確句", 2],
     ["error", "改錯題", 2], ["reorder", "句子重組", 2], ["transform", "句型轉換", 2],
-    ["reading", "短文閱讀", 1], ["cloze", "複習克漏字", 1],
+    ["reading", "短文閱讀", 1], ["grammar-circle", "圈選文法", 2],
+    ["read-write-clues", "看圖寫句", 2], ["guided-reading", "圖文閱讀", 1], ["word-path", "選字組句", 2],
     ["listening-context", "情境聽力", 1], ["phonics-listening", "Sound It Out 聽辨", 10]
   ];
   const SECTION_META = {
@@ -18,7 +19,10 @@
     reorder: { title: "Put the Words in Order", instruction: "Put the words in the correct order." },
     transform: { title: "Change the Sentence", instruction: "Rewrite each sentence as directed." },
     reading: { title: "Read and Answer", instruction: "Read the passage. Answer each question." },
-    cloze: { title: "Reading Cloze", instruction: "Read the passage and complete the blanks." },
+    "grammar-circle": { title: "Look and Circle", instruction: "Circle the correct grammar word." },
+    "read-write-clues": { title: "Look, Count, and Write", instruction: "Use the picture and number to write a complete sentence." },
+    "guided-reading": { title: "Read, Look, and Write", instruction: "Read the short text and answer each question." },
+    "word-path": { title: "Read and Circle the Correct Words", instruction: "Circle the words that make the correct sentence." },
     "listening-context": { title: "Listen and Choose", instruction: "Scan the QR code. Listen to each track and choose the best answer." },
     "phonics-listening": { title: "Sound It Out Listening", instruction: "Scan the QR code. Listen to each track and choose the word or word pair you hear." }
   };
@@ -301,12 +305,28 @@
           answer: question.a, lines: 2, difficulty: 2
         }));
       });
-      const clozePage = unit.lessons?.flatMap((lesson) => lesson.worksheet?.pages || []).find((page) => page.type === "reading_cloze");
-      if (clozePage) result.cloze.push(tagged(unit, unitIndex, {
-        type: "cloze", label: "複習克漏字",
-        prompt: `Word Bank: ${(clozePage.wordBank || []).join(" · ")}\n\n${(clozePage.passageLines || []).join(" ")}`,
-        answer: (clozePage.answers || []).join(" / "), lines: 2, difficulty: 2
-      }));
+      const reviewTypeMap = {
+        grammar_circle: ["grammar-circle", "圈選文法", 0],
+        read_write_clues: ["read-write-clues", "看圖寫句", 2],
+        story_cloze: ["guided-reading", "圖文閱讀", 2],
+        word_path: ["word-path", "選字組句", 0]
+      };
+      unit.lessons?.flatMap((lesson) => lesson.worksheet?.pages || [])
+        .filter((page) => reviewTypeMap[page.type])
+        .forEach((page) => {
+          const [type, label, lines] = reviewTypeMap[page.type];
+          page.items.forEach((item) => result[type].push(tagged(unit, unitIndex, {
+            type,
+            label,
+            prompt: page.type === "story_cloze"
+              ? (page.introLines || []).join(" ") + "\n\n" + item.question
+              : item.prompt,
+            answer: item.expectedAnswer,
+            asset: item.asset,
+            lines,
+            difficulty: page.type === "story_cloze" ? 2 : 1
+          })));
+        });
       words.forEach((word) => {
         result["vocab-image"].push(tagged(unit, unitIndex, { type: "vocab-image", label: "看圖寫單字", prompt: "Look and write the word.", answer: word.word, asset: word, lines: 1, difficulty: 1 }));
       });

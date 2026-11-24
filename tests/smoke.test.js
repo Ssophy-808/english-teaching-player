@@ -35,6 +35,8 @@ const sio3 = (global.PHONICS_COURSES || []).find((course) => course.id === "sio3
 assert.equal(sio3?.units.length, 12, "Sound It Out 3 must contain 12 units");
 const testBuilderSource = require("node:fs").readFileSync(path.join(root, "js/test-builder.js"), "utf8");
 assert.doesNotMatch(testBuilderSource, /phonics-choice|phonics-odd/, "Custom tests must keep only Sound It Out listening questions");
+assert.doesNotMatch(testBuilderSource, /"cloze", "複習克漏字"/, "Custom tests must remove the old Reading Cloze type");
+["grammar-circle", "read-write-clues", "guided-reading", "word-path"].forEach((type) => assert.match(testBuilderSource, new RegExp(type), "Custom tests must include " + type));
 listeningItems.forEach((item) => {
   assert.equal(item.choices.length, 3, `${item.source} listening must have three choices`);
   assert.equal(item.choices.filter((choice) => choice === item.answer).length, 1, `${item.source} listening must have exactly one correct choice`);
@@ -77,7 +79,7 @@ books.forEach((book) => {
       assert.equal(lesson.worksheet.pages.length, 4, `${lesson.id} must have four worksheet pages`);
       lesson.worksheet.pages.forEach((page) => {
         assert.ok(page.items.length > 0, `${lesson.id}/${page.type} must contain questions`);
-        const textContextTypes = new Set(["choose_next_line", "put_dialogue_in_order", "read_find_mistake", "use_information", "change_one_part", "which_sentence_not_fit", "complete_information"]);
+        const textContextTypes = new Set(["choose_next_line", "put_dialogue_in_order", "read_find_mistake", "use_information", "change_one_part", "which_sentence_not_fit", "complete_information", "grammar_circle", "story_cloze", "word_path"]);
         assert.ok(page.type === "reading_cloze" || textContextTypes.has(page.type) || page.fruitScene || (page.heroAssets || []).length > 0 || (page.sceneAssets || []).length > 0 || page.items.some((item) => item.asset?.image || item.asset?.sprite?.src || item.asset?.visual), `${lesson.id}/${page.type} must contain visible picture assets or a shared text context`);
         if (page.type === "sentence_transform") page.items.forEach((item) => {
           const source = item.prompt.split("→")[0].trim();
@@ -202,6 +204,7 @@ books.forEach((book) => {
   });
 });
 
+const reviewFocusTypesSeen = new Set();
 books.forEach((book) => {
   const reviews = book.units.filter((unit) => unit.isReview);
   assert.deepEqual(reviews.map((unit) => unit.reviewRange), ["1–3", "4–6", "7–9", "1–9"], `${book.id} must include three section reviews and a final 1–9 review`);
@@ -209,34 +212,48 @@ books.forEach((book) => {
     const finalReview = review.reviewRange === "1–9";
     assert.equal(review.lessons.length, finalReview ? 5 : 4, `${book.id}/${review.id} must have the correct review day count`);
     assert.equal(review.reviewSections.length, finalReview ? 9 : 3, `${book.id}/${review.id} must combine the correct source units`);
-    const expectedFirstPageTypes = ["reading_cloze", "template_picture_question", "answer_questions", "reading_cloze"];
-    if (finalReview) expectedFirstPageTypes.push("reading_cloze");
-    assert.deepEqual(review.lessons.map((lesson) => lesson.worksheet.pages[0].type), expectedFirstPageTypes, `${book.id}/${review.id} must increase independence across all review days`);
+    const focusTypeByRange = {
+      "book-1": { "1–3": "grammar_circle", "4–6": "word_path", "7–9": "word_path" },
+      "book-2": { "1–3": "read_write_clues", "4–6": "word_path", "7–9": "story_cloze" },
+      "book-3": { "1–3": "grammar_circle", "4–6": "read_write_clues", "7–9": "story_cloze" }
+    };
+    const rangeForDay = (day) => finalReview ? ["1–3", "4–6", "7–9"][(day - 1) % 3] : review.reviewRange;
+    const expectedFirstPageTypes = review.lessons.map((lesson) => {
+      const day = Number(lesson.worksheet.day);
+      if (day === 2) return "template_picture_question";
+      if (day === 3) return "answer_questions";
+      return focusTypeByRange[book.id][rangeForDay(day)];
+    });
+    assert.deepEqual(review.lessons.map((lesson) => lesson.worksheet.pages[0].type), expectedFirstPageTypes, book.id + "/" + review.id + " must increase independence across all review days");
     const worksheetJson = JSON.stringify(review.lessons.map((lesson) => lesson.worksheet.pages));
-    assert.doesNotMatch(worksheetJson, /\[Unit\s+\d+\]/, `${book.id}/${review.id} must not label individual questions by unit number`);
-    assert.match(worksheetJson, /reading_cloze/, `${book.id}/${review.id} must include a Reading Cloze writing page`);
-    review.lessons.flatMap((lesson) => lesson.worksheet.pages)
-      .filter((page) => page.type === "reading_cloze")
-      .forEach((page) => {
-        assert.equal(page.wordBank.length, 8, `${book.id}/${review.id} Reading Cloze Word Bank needs eight choices`);
-        assert.equal(new Set(page.wordBank.map((word) => word.toLowerCase())).size, 8, `${book.id}/${review.id} Reading Cloze Word Bank choices must be unique`);
-        page.answers.forEach((answer) => assert.ok(page.wordBank.includes(answer), `${book.id}/${review.id} Word Bank must include ${answer}`));
-        if (page.answers.includes("do")) assert.ok(page.wordBank.includes("does"), `${book.id}/${review.id} Word Bank should contrast do and does`);
-        assert.ok(page.passageLines.length >= 5 && page.passageLines.length <= 8, `${book.id}/${review.id} Reading Cloze needs a 5–8 sentence passage`);
-        assert.equal(page.heroAssets.length, 0, `${book.id}/${review.id} Reading Cloze must use context and the Word Bank, not answer pictures`);
-        assert.equal(page.answers.length, 5, `${book.id}/${review.id} Reading Cloze needs five focused vocabulary and grammar blanks`);
-        assert.equal(new Set(page.answers.map((word) => word.toLowerCase())).size, 5, `${book.id}/${review.id} Reading Cloze answers must be unique`);
-        assert.equal((page.passageLines.join(" ").match(/________/g) || []).length, page.answers.length, `${book.id}/${review.id} Reading Cloze blank count must match its answers`);
-        const storyWordCount = page.passageLines.join(" ").replace(/_+/g, "").trim().split(/\s+/).filter(Boolean).length;
-        const storyRanges = { "book-1": [20, 40], "book-2": [20, 50], "book-3": [20, 60] };
-        const [minimumWords, maximumWords] = storyRanges[book.id];
-        assert.ok(storyWordCount >= minimumWords && storyWordCount <= maximumWords, `${book.id}/${review.id} Reading Cloze must fit its book-level text length; got ${storyWordCount}`);
-        assert.doesNotMatch(page.passageLines.join(" "), /Picture\s*[123]|\bFirst, look|\bNext, look|\bLast, look/i, `${book.id}/${review.id} Reading Cloze must not stitch unrelated picture prompts together`);
-        assert.ok(page.items.every((item) => item.prompt.includes("________")), `${book.id}/${review.id} Reading Cloze sentences need blanks`);
-      });
-    assert.match(worksheetJson, /answer_questions/, `${book.id}/${review.id} must include complete question-and-answer practice`);
+    assert.ok(!worksheetJson.includes("[Unit "), book.id + "/" + review.id + " must not label individual questions by unit number");
+    assert.doesNotMatch(worksheetJson, /reading_cloze/, book.id + "/" + review.id + " must not use the removed Reading Cloze format");
+    const focusPages = review.lessons.flatMap((lesson) => lesson.worksheet.pages)
+      .filter((page) => ["grammar_circle", "read_write_clues", "story_cloze", "word_path"].includes(page.type));
+    assert.ok(focusPages.length >= 2, book.id + "/" + review.id + " must use grammar-matched review focus pages");
+    focusPages.forEach((page) => {
+      reviewFocusTypesSeen.add(page.type);
+      assert.ok(page.items.length >= 3 && page.items.length <= 5, book.id + "/" + review.id + "/" + page.type + " needs 3–5 focused items");
+      const answers = page.items.map((item) => item.expectedAnswer);
+      assert.ok(answers.every(Boolean), book.id + "/" + review.id + "/" + page.type + " needs a reference answer for every item");
+      assert.equal(new Set(answers.map((answer) => answer.toLowerCase())).size, answers.length, book.id + "/" + review.id + "/" + page.type + " answers must be unique");
+      if (page.type === "grammar_circle" || page.type === "word_path") {
+        assert.ok(page.items.every((item) => item.prompt.includes("[") && item.prompt.includes("/") && item.prompt.includes("]")), book.id + "/" + review.id + "/" + page.type + " needs visible word choices");
+      }
+      if (page.type === "read_write_clues") {
+        assert.ok(page.items.every((item) => item.asset), book.id + "/" + review.id + "/read_write_clues needs a picture for every item");
+      }
+      if (page.type === "story_cloze") {
+        assert.notEqual(book.id, "book-1", "Book 1 must not use a reading passage");
+        const expectedLines = book.id === "book-2" ? [3, 4] : [4, 6];
+        assert.ok(page.introLines.length >= expectedLines[0] && page.introLines.length <= expectedLines[1], book.id + "/" + review.id + "/story_cloze must fit its book reading length");
+        assert.ok(page.items.every((item) => item.asset), book.id + "/" + review.id + "/story_cloze needs a supporting picture for every question");
+      }
+    });    assert.match(worksheetJson, /answer_questions/, `${book.id}/${review.id} must include complete question-and-answer practice`);
   });
 });
+
+assert.deepEqual([...reviewFocusTypesSeen].sort(), ["grammar_circle", "read_write_clues", "story_cloze", "word_path"], "Review worksheets must use all four approved focus types");
 
 const book1FirstReview = books.find((book) => book.id === "book-1")
   .units.find((unit) => unit.isReview && unit.reviewRange === "1–3");

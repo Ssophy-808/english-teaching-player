@@ -1360,97 +1360,6 @@
     return { question: item.question, prompt, asset: item.asset, missing, expectedAnswer: `${missing} — ${answer}` };
   }
 
-  function clozeStory(title, heroWord, passageLines, answers, distractors = []) {
-    return { title, heroWord, passageLines, answers, distractors };
-  }
-
-  function storyChoice(options, day) {
-    return options[(Math.max(1, day) - 1) % options.length];
-  }
-
-  const REVIEW_CLOZE_BUILDERS = {
-    "book-1:1–3": () => clozeStory("Lumi and Ludi", "girl", [
-      "Lumi is six years old.",
-      "She is a ________.",
-      "Ludi is six years old.",
-      "He is a ________.",
-      "I ________ Lumi.",
-      "She ________ six years old.",
-      "How old ________ you?"
-    ], ["girl", "boy", "am", "is", "are"], ["man", "woman", "not"]),
-    "book-1:4–6": () => clozeStory("My Red Bag", "school bag", [
-      "This is my ________.",
-      "It ________ red.",
-      "I have ________ pencil.",
-      "It is a ________.",
-      "I ________ not sad.",
-      "Red is my favorite color."
-    ], ["school bag", "is", "a", "pencil", "am"], ["are", "an", "eraser"]),
-    "book-1:7–9": () => clozeStory("My Hat and Dog", "hat", [
-      "My favorite color is red.",
-      "The hat is ________.",
-      "This ________ my hat.",
-      "That is my ________.",
-      "It is ________ a cat.",
-      "We ________ not sad."
-    ], ["red", "is", "dog", "not", "are"], ["blue", "cat", "am"]),
-    "book-2:1–3": () => clozeStory("Our Classroom", "door", [
-      "This is our classroom.",
-      "Look at the door.",
-      "There is a ________.",
-      "There ________ twelve books.",
-      "The number is ________.",
-      "Look at the ball.",
-      "There is one ________.",
-      "There ________ a fan."
-    ], ["door", "are", "twelve", "ball", "is"], ["books", "fifteen", "there"]),
-    "book-2:4–6": () => clozeStory("Fruit Cards", "bananas", [
-      "________ are bananas.",
-      "Are these bananas?",
-      "Yes, they ________.",
-      "________ are kiwis.",
-      "Are those kiwis?",
-      "Lumi ________ read.",
-      "Can Ludi read?",
-      "No, he ________."
-    ], ["These", "are", "Those", "can", "can't"], ["This", "That", "is"]),
-    "book-2:7–9": () => clozeStory("Lumi at Home", "kitchen", [
-      "Lumi is in the ________.",
-      "She is ________ the kitchen.",
-      "A cat is under the table.",
-      "Where is the cat?",
-      "It is ________ the table.",
-      "Does she ________ tigers?",
-      "Yes, she ________."
-    ], ["kitchen", "in", "under", "like", "does"], ["on", "likes", "do"]),
-    "book-3:1–3": () => clozeStory("Pet Day Lunch", "hamsters", [
-      "Lumi has two hamsters.",
-      "She ________ two small pets.",
-      "The pets are ________.",
-      "Ludi likes ________ for lunch.",
-      "Does he ________ chicken nuggets?",
-      "Yes, he ________.",
-      "They eat lunch together."
-    ], ["has", "hamsters", "chicken nuggets", "like", "does"], ["have", "likes", "do"]),
-    "book-3:4–6": () => clozeStory("Ludi and Lumi", "bicycle", [
-      "Ludi has a new ________.",
-      "He ________ two hands.",
-      "Who has two ________?",
-      "Lumi has ________ hair.",
-      "Does she ________ curly hair?",
-      "Yes, she does."
-    ], ["bicycle", "has", "hands", "curly", "have"], ["hand", "short", "does"]),
-    "book-3:7–9": () => clozeStory("A Sunny Sunday", "baseball", [
-      "Tomorrow is Monday.",
-      "Today is ________.",
-      "It is not rainy.",
-      "The weather is ________.",
-      "They ________ baseball on sunny days.",
-      "The sport is ________.",
-      "Do they like baseball?",
-      "Yes, they ________."
-    ], ["Sunday", "sunny", "play", "baseball", "do"], ["Saturday", "rainy", "does"])
-  };
   function storyAsset(unit, word) {
     const wanted = String(word || "").toLowerCase();
     const assets = unit.vocabulary || [];
@@ -1460,88 +1369,215 @@
     }) || assets[0] || null;
   }
 
-  function coherentReviewStory(unit, day) {
-    const ranges = unit.reviewRange === "1–9" ? ["1–3", "4–6", "7–9"] : [unit.reviewRange];
-    const range = ranges[(Math.max(1, day) - 1) % ranges.length];
-    const builder = REVIEW_CLOZE_BUILDERS[`${unit.bookId}:${range}`];
-    return builder ? builder(day) : clozeStory("A Review Day", reviewWord(unit.vocabulary?.[0]), [
-      "Lumi and Ludi work together on one review story.",
-      "They read every sentence and use the context clues.",
-      "The first missing word is ________.",
-      "They check the story from beginning to end.",
-      "Now the whole passage makes sense."
-    ], [reviewWord(unit.vocabulary?.[0])]);
+  function activeReviewRange(unit, day) {
+    if (unit.reviewRange !== "1–9") return unit.reviewRange;
+    const ranges = ["1–3", "4–6", "7–9"];
+    return ranges[(Math.max(1, day) - 1) % ranges.length];
   }
 
-  function clozeWordBank(unit, story, day) {
-    const answerKeys = new Set(story.answers.map((answer) => String(answer).toLowerCase()));
-    const grammarPairs = {
-      am: "is", are: "is", do: "does", does: "do", eat: "eats", eats: "eat",
-      have: "has", has: "have", is: "are", like: "likes", likes: "like",
-      meet: "meets", meets: "meet", play: "plays", plays: "play", put: "puts",
-      puts: "put", visit: "visits", visits: "visit", walk: "walks", walks: "walk",
-      want: "wants", wants: "want",
-      "fly a kite": "flies a kite", "go swimming": "goes swimming",
-      "listen to music": "listens to music", "watch TV": "watches TV"
-    };
-    const singularForm = (answer) => {
-      const words = String(answer).split(" ");
-      const last = words.pop();
-      const singular = /ies$/i.test(last) ? `${last.slice(0, -3)}y`
-        : /(?:ches|shes|xes|zes|oes)$/i.test(last) ? last.slice(0, -2)
-          : /s$/i.test(last) && !/ss$/i.test(last) ? last.slice(0, -1) : "";
-      return singular ? [...words, singular].join(" ") : "";
-    };
-    const grammarForms = story.answers.map((answer) => grammarPairs[String(answer).toLowerCase()]).filter(Boolean);
-    const numberForms = story.answers.flatMap((answer) => {
-      const key = String(answer).toLowerCase();
-      if (grammarPairs[key]) return [];
-      const singular = singularForm(answer);
-      if (singular) return [singular];
-      const isVocabularyNoun = (unit.vocabulary || []).some((asset) => reviewVocabularyTerms(asset)
-        .some((term) => term.toLowerCase() === key));
-      return isVocabularyNoun && !/\s/.test(String(answer)) ? [pluralReviewWord(String(answer))] : [];
-    });
-    const confusingForms = [...grammarForms, ...numberForms];
-    const candidates = (unit.vocabulary || [])
-      .flatMap((asset) => reviewVocabularyTerms(asset))
-      .map((word) => String(word).trim())
-      .filter((word, index, words) => word && !answerKeys.has(word.toLowerCase())
-        && words.findIndex((candidate) => candidate.toLowerCase() === word.toLowerCase()) === index);
-    const offset = candidates.length ? (Math.max(1, day) - 1) % candidates.length : 0;
-    const distractors = [...(story.distractors || []), ...confusingForms, ...candidates.slice(offset), ...candidates.slice(0, offset)]
-      .filter((word, index, words) => word && !answerKeys.has(word.toLowerCase())
-        && words.findIndex((candidate) => candidate.toLowerCase() === word.toLowerCase()) === index)
-      .slice(0, 3);
-    const bank = [...story.answers, ...distractors];
-    const rotateBy = bank.length ? Math.max(1, day) % bank.length : 0;
-    return [...bank.slice(rotateBy), ...bank.slice(0, rotateBy)];
-  }
-
-  function connectedClozePage(unit, day) {
-    const story = coherentReviewStory(unit, day);
-    const wordBank = clozeWordBank(unit, story, day);
-    const items = story.answers.map((answer, index) => ({
-      prompt: `Blank ${index + 1}: ________`,
-      expectedAnswer: answer,
-      asset: null
-    }));
+  function reviewSelectionPage(type, title, instruction, skill, items, showPictures = false) {
     return {
-      type: "reading_cloze",
+      type,
       layout: "locked_template",
-      title: story.title,
-      instruction: "Read the whole passage. Choose from the Word Bank. Some words are not used.",
-      skill: "reading cloze and sentence writing",
-      passageLines: story.passageLines,
-      answers: story.answers,
-      wordBank,
+      title,
+      instruction,
+      skill,
+      showPictures,
+      items
+    };
+  }
+
+  function reviewStoryPage(title, instruction, skill, introLines, items) {
+    return {
+      type: "story_cloze",
+      layout: "locked_template",
+      title,
+      instruction,
+      skill,
+      introLines,
       heroAssets: [],
-      sceneAssets: [],
       endingLines: [],
       items
     };
   }
 
+  const REVIEW_FOCUS_BUILDERS = {
+    "book-1:1–3": (unit) => reviewSelectionPage(
+      "grammar_circle",
+      "Look and Circle",
+      "Circle the correct word in each sentence.",
+      "am / is / are · identity and age",
+      [
+        { prompt: "I [ am / is / are ] Lumi.", expectedAnswer: "I am Lumi." },
+        { prompt: "Lumi [ am / is / are ] a girl.", expectedAnswer: "Lumi is a girl." },
+        { prompt: "Ludi [ am / is / are ] a boy.", expectedAnswer: "Ludi is a boy." },
+        { prompt: "How old [ am / is / are ] you?", expectedAnswer: "How old are you?" }
+      ]
+    ),
+    "book-1:4–6": (unit) => reviewSelectionPage(
+      "word_path",
+      "Read and Circle the Correct Words",
+      "Read the question. Circle the words that make the correct answer.",
+      "It is · articles · school things",
+      [
+        {
+          prompt: "What is it?  [ It / They ] [ is / are ] [ a / an ] [ pencil / pencils ].",
+          asset: storyAsset(unit, "pencil"),
+          expectedAnswer: "It is a pencil."
+        },
+        {
+          prompt: "Is it an eraser?  [ Yes, / No, ] [ it / they ] [ is / are ].",
+          asset: storyAsset(unit, "eraser"),
+          expectedAnswer: "Yes, it is."
+        },
+        {
+          prompt: "Is it a pencil?  [ Yes, / No, ] [ it / they ] [ is / are ] [ not / no ].",
+          asset: storyAsset(unit, "eraser"),
+          expectedAnswer: "No, it is not."
+        }
+      ],
+      true
+    ),
+    "book-1:7–9": (unit) => reviewSelectionPage(
+      "word_path",
+      "Read and Circle the Correct Words",
+      "Look at the picture. Circle the words that make the correct answer.",
+      "this / that · singular answers",
+      [
+        {
+          prompt: "What is this?  [ It / They ] [ is / are ] [ a / an ] [ hat / hats ].",
+          asset: storyAsset(unit, "hat"),
+          expectedAnswer: "It is a hat."
+        },
+        {
+          prompt: "What is that?  [ It / They ] [ is / are ] [ a / an ] [ dog / dogs ].",
+          asset: storyAsset(unit, "dog"),
+          expectedAnswer: "It is a dog."
+        },
+        {
+          prompt: "Is this a cat?  [ Yes, / No, ] [ it / they ] [ is / are ] [ not / no ].",
+          asset: storyAsset(unit, "dog"),
+          expectedAnswer: "No, it is not."
+        }
+      ],
+      true
+    ),
+    "book-2:1–3": (unit, day) => {
+      const unusedPool = reviewWorksheetPairs(unit, day, 24).slice(19, 24);
+      const numberWord = /^(?:one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty)$/i;
+      const numberPair = unusedPool.find((pair) => numberWord.test(worksheetWord(pair.asset)));
+      const unusedPairs = [numberPair, ...unusedPool.filter((pair) => pair !== numberPair && !numberWord.test(worksheetWord(pair.asset)))].filter(Boolean).slice(0, 4);
+      return reviewSelectionPage(
+        "read_write_clues",
+        "Look, Count, and Write",
+        "Look at each picture and number. Write one complete sentence.",
+        "There is / There are · numbers",
+        unusedPairs.map((pair) => {
+          const sentences = String(pair.answer).match(/There (?:is|are)[^.!?]*[.!?]/g) || [];
+          return {
+            prompt: numberWord.test(worksheetWord(pair.asset)) ? "Books:" : worksheetWord(pair.asset) + ":",
+            asset: pair.asset,
+            expectedAnswer: sentences.at(-1) || firstSentence(pair.answer)
+          };
+        }),
+        true
+      );
+    },
+    "book-2:4–6": (unit) => reviewSelectionPage(
+      "word_path",
+      "Read and Circle the Correct Words",
+      "Look at the picture. Circle the words that make the correct answer.",
+      "these / those · can / can't",
+      [
+        {
+          prompt: "What are these?  [ They / It ] [ are / is ] [ bananas / banana ].",
+          asset: storyAsset(unit, "bananas"),
+          expectedAnswer: "They are bananas."
+        },
+        {
+          prompt: "What are those?  [ They / It ] [ are / is ] [ mangoes / mango ].",
+          asset: storyAsset(unit, "mangoes"),
+          expectedAnswer: "They are mangoes."
+        },
+        {
+          prompt: "Are these tomatoes?  [ Yes, / No, ] [ they / it ] [ are / aren't ].",
+          asset: storyAsset(unit, "oranges"),
+          expectedAnswer: "No, they aren't."
+        },
+        {
+          prompt: "Can she read?  [ Yes, / No, ] [ she / he ] [ can / can't ].",
+          asset: storyAsset(unit, "read"),
+          expectedAnswer: "Yes, she can."
+        }
+      ],
+      true
+    ),
+    "book-2:7–9": (unit) => reviewStoryPage(
+      "Read, Look, and Write",
+      "Read the short text. Answer each question with a complete sentence.",
+      "where · place words · like",
+      [
+        "Lumi is in the kitchen.",
+        "A tiger is in the garden.",
+        "Lumi likes tigers."
+      ],
+      [
+        { question: "Where is Lumi?", asset: storyAsset(unit, "kitchen"), expectedAnswer: "She is in the kitchen." },
+        { question: "Where is the tiger?", asset: storyAsset(unit, "tiger"), expectedAnswer: "It is in the garden." },
+        { question: "Does Lumi like tigers?", asset: storyAsset(unit, "tiger"), expectedAnswer: "Yes, she does." }
+      ]
+    ),
+    "book-3:1–3": (unit) => reviewSelectionPage(
+      "grammar_circle",
+      "Look and Circle",
+      "Circle the correct grammar word or words.",
+      "has / have · do / does",
+      [
+        { prompt: "Lumi [ have / has ] two hamsters.", expectedAnswer: "Lumi has two hamsters." },
+        { prompt: "They [ have / has ] chicken nuggets.", expectedAnswer: "They have chicken nuggets." },
+        { prompt: "He [ don't / doesn't ] like potato chips.", expectedAnswer: "He doesn't like potato chips." },
+        { prompt: "[ Do / Does ] Lumi like hamsters?", expectedAnswer: "Does Lumi like hamsters?" },
+        { prompt: "Yes, she [ do / does ].", expectedAnswer: "Yes, she does." }
+      ]
+    ),
+    "book-3:4–6": (unit) => reviewSelectionPage(
+      "read_write_clues",
+      "Look and Write",
+      "Look at each picture and number. Write one complete sentence.",
+      "has / have · body and appearance",
+      [
+        { prompt: "Hands:", asset: storyAsset(unit, "hand"), expectedAnswer: "He has two hands." },
+        { prompt: "Eyes:", asset: storyAsset(unit, "eye"), expectedAnswer: "She has two eyes." },
+        { prompt: "Hair:", asset: storyAsset(unit, "curly"), expectedAnswer: "Lumi has curly hair." },
+        { prompt: "Bicycle:", asset: storyAsset(unit, "bicycle"), expectedAnswer: "Ludi has a bicycle." }
+      ],
+      true
+    ),
+    "book-3:7–9": (unit) => reviewStoryPage(
+      "Read, Look, and Write",
+      "Read the short text. Answer each question with a complete sentence.",
+      "days · weather · activities",
+      [
+        "Today is Sunday.",
+        "It is sunny.",
+        "Lumi and Ludi play baseball.",
+        "They like baseball."
+      ],
+      [
+        { question: "What day is today?", asset: storyAsset(unit, "Sunday"), expectedAnswer: "It is Sunday." },
+        { question: "How's the weather?", asset: storyAsset(unit, "sunny"), expectedAnswer: "It is sunny." },
+        { question: "What do they play?", asset: storyAsset(unit, "baseball"), expectedAnswer: "They play baseball." },
+        { question: "Do they like baseball?", asset: storyAsset(unit, "baseball"), expectedAnswer: "Yes, they do." }
+      ]
+    )
+  };
+
+  function reviewFocusPage(unit, day) {
+    const range = activeReviewRange(unit, day);
+    const builder = REVIEW_FOCUS_BUILDERS[unit.bookId + ":" + range];
+    if (!builder) throw new Error("Missing review focus builder for " + unit.bookId + ":" + range);
+    return builder(unit, day);
+  }
   function connectedChainPage(reviewPairs, day) {
     const items = reviewPairs.slice(0, day >= 4 ? 6 : 4).map((item) => ({
       prompt: item.question,
@@ -1592,7 +1628,7 @@
     );
 
     if (day === 1) return [
-      connectedClozePage(unit, day),
+      reviewFocusPage(unit, day),
       standard("matching", "Review Matching", "Match each question to the answer that keeps the conversation correct.", matchingItems),
       standard("multiple_choice", "Review Choice Check", "Circle the correct complete answer.", answerChoices),
       connectedChainPage(chainSource, day)
@@ -1602,25 +1638,25 @@
       locked("template_picture_question", "Review: Make the Question", "Read each answer and write its question.", writingSource.map((item) => ({ prompt: `Answer: ${item.answer}`, asset: item.asset, expectedAnswer: item.question })), true),
       standard("matching", "Review Question Match", "Match each question to its complete answer.", matchingItems),
       standard("multiple_choice", "Choose the Review Question", "Circle the question that matches the answer.", questionChoices),
-      connectedClozePage(unit, day)
+      reviewFocusPage(unit, day)
     ];
 
     if (day === 3) return [
       connectedChainPage(chainSource, day),
       standard("matching", "Mixed Review Dialogue", "Match questions and answers to complete the dialogue.", matchingItems),
       standard("multiple_choice", "Mixed Grammar Check", "Circle the only correct complete question.", questionChoices),
-      connectedClozePage(unit, day)
+      reviewFocusPage(unit, day)
     ];
 
     if (day === 5) return [
-      connectedClozePage(unit, day),
+      reviewFocusPage(unit, day),
       standard("matching", "Final Question and Answer Match", "Match every question to its complete answer.", matchingItems),
       standard("multiple_choice", "Final Mixed Check", "Circle the correct complete answer.", answerChoices),
       connectedChainPage(reviewPairs.slice(13, 19), day)
     ];
 
     return [
-      connectedClozePage(unit, day),
+      reviewFocusPage(unit, day),
       standard("matching", "Cumulative Dialogue", "Match each question to the best complete answer.", matchingItems),
       standard("multiple_choice", "Final Cumulative Check", "Circle the only correct question.", questionChoices),
       connectedChainPage(chainSource, day)

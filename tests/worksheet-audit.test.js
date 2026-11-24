@@ -341,14 +341,14 @@ function auditForbiddenStrings(page, location) {
 }
 
 function readingSentences(page) {
-  return [...(page.passageLines || []), ...(page.endingLines || [])].flatMap(sentences);
+  return [...(page.introLines || []), ...(page.passageLines || []), ...(page.endingLines || [])].flatMap(sentences);
 }
 
 function auditReading(page, location, bookId, profile) {
   if (bookId === "book-1" && page.type === "reading_comprehension") {
     add("book1_reading_comprehension", location, "Book 1 must not contain reading_comprehension pages.");
   }
-  if (!["reading_comprehension", "reading_cloze"].includes(page.type)) return;
+  if (!["reading_comprehension", "reading_cloze", "story_cloze"].includes(page.type)) return;
   const passageSentences = readingSentences(page);
   passageSentences.forEach((sentence, sentenceIndex) => {
     const count = words(sentence).length;
@@ -356,7 +356,7 @@ function auditReading(page, location, bookId, profile) {
       add("reading_sentence_too_long", `${location}/sentence-${sentenceIndex + 1}`, `${count} words exceed limit ${profile.maxSentenceWords}: ${sentence}`);
     }
   });
-  if (page.type === "reading_comprehension" && profile.readingLines) {
+  if (["reading_comprehension", "story_cloze"].includes(page.type) && profile.readingLines) {
     const [min, max] = profile.readingLines;
     if (passageSentences.length < min || passageSentences.length > max) {
       add("reading_sentence_count", location, `${passageSentences.length} sentences fall outside ${min}–${max}.`);

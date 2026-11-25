@@ -830,12 +830,13 @@
     const sourceUnit = { ...unit, bookId };
     const candidates = Array.from({ length: Math.min(8, vocabulary.length) }, (_, index) => {
       const asset = vocabulary[(index + offset) % Math.max(vocabulary.length, 1)] || {};
-      const pair = unitPairForVocabulary(bookId, unit.id, asset, index + offset, day)
+      const pair = window.UNIT_PACKS?.[`${bookId}/${unit.id}`]?.pairForVocabulary?.(worksheetWord(asset), index, day, vocabulary.map(worksheetWord))
+        || unitPairForVocabulary(bookId, unit.id, asset, index + offset, day)
         || reviewPairForVocabulary(sourceUnit, unit, asset, index + offset);
       return {
         ...pair,
         answer: bookId === "book-1" ? oneSentenceAnswer(pair.answer) : pair.answer,
-        asset,
+        asset: pair.sprite ? { ...asset, image: "", sprite: pair.sprite } : asset,
         cue: `Answer: ${bookId === "book-1" ? oneSentenceAnswer(pair.answer) : pair.answer}`
       };
     });
@@ -1038,6 +1039,9 @@
       expectedAnswer: pair.answer
     }));
     const pictureSentenceChoices = pairsForDay.slice(0, 6).map((pair) => {
+      if (window.UNIT_PACKS?.[`${bookId}/${unit.id}`]?.pictureQuestionAnswers) {
+        return { prompt: pair.question, choices: choicesFor(pair.answer), asset: pair.asset, expectedAnswer: pair.answer };
+      }
       const normalized = (value) => String(value).toLowerCase().replace(/[^a-z0-9']+/g, " ").trim();
       const seen = new Set();
       const choices = [
@@ -1088,8 +1092,11 @@
       locked("template_guided_question", "Write Your Question", "Read each answer. Write the matching question.", pairsForDay.map((pair) => ({ prompt: pair.answer, asset: pair.asset, expectedAnswer: pictureQuestionAnswer(pair, bookId, unit.id) })), true),
       page("multiple_choice", "Choose the Correct Grammar", "Look at the picture. Circle the only grammatically correct complete sentence.", answerChoices),
       locked("template_mixed_correction", "Fix the Questions", "Find the mistake. Rewrite each question correctly.", pairsForDay.map((pair) => ({ prompt: secondGrammarError(pair.question), asset: pair.asset, expectedAnswer: pair.question }))),
-      locked("template_answer_order", "Build the Answer", "Put the words in order. Write the first complete answer sentence.", pairsForDay.map((pair) => {
-        const answer = firstSentence(pair.answer);
+      locked("template_answer_order", "Build the Answer", "Put the words in order. Write the complete sentence.", pairsForDay.map((pair) => {
+        const first = firstSentence(pair.answer);
+        const repeatedShortAnswer = /^(?:Yes|No),/i.test(first)
+          && pairsForDay.some((other) => other !== pair && firstSentence(other.answer) === first);
+        const answer = repeatedShortAnswer ? firstSentence(pair.answer.slice(first.length).trim()) || first : first;
         return { prompt: scramble(answer, bookId), asset: pair.asset, expectedAnswer: answer };
       }))
     ];

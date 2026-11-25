@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="100" viewBox="0 0 300 100">
+  <defs>
+    <path id="chair" d="M0 0v50m0-21h20v21M0 0h8v29" fill="none" stroke="#86532d" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle id="ball" r="10" fill="#e9534d" stroke="#a42724" stroke-width="2"/>
+  </defs>
+  <rect width="300" height="100" fill="white"/>
+  <rect x="12" y="27" width="76" height="46" rx="10" fill="#a7dcf5" stroke="#306786" stroke-width="3"/>
+  <path d="M16 55h67" stroke="#306786" stroke-width="2" stroke-dasharray="3 2"/>
+  <path d="M25 43h46l9 6-9 6H25z" fill="#ffca4c" stroke="#864e25" stroke-width="2"/>
+  <use href="#chair" x="109" y="27"/>
+  <use href="#chair" x="170" y="27"/>
+  <use href="#ball" x="150" y="68"/>
+  <path d="M207 48h50v10h-50zm3 10v22m44-22v22" fill="#80b7db" stroke="#28567a" stroke-width="4" stroke-linejoin="round"/>
+  <use href="#ball" x="282" y="70"/>
+</svg>

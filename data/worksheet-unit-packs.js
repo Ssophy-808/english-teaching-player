@@ -7,6 +7,16 @@
 
   window.UNIT_PACKS = {
     ...(window.UNIT_PACKS || {}),
+    "book-1/unit-6": {
+      pairForVocabulary(word, index, day, vocabulary) {
+        if (index === 0) return { question: "What color is it?", answer: `It is ${word}.` };
+        const contrast = day === 1 ? vocabulary[({ 2: 4, 4: 6, 6: 2 })[index]] : null;
+        if (contrast && contrast !== word) {
+          return { question: `Is it ${contrast}?`, answer: `No, it is ${word}.` };
+        }
+        return { question: `Is it ${word}?`, answer: `Yes, it is ${word}.` };
+      }
+    },
     "book-2/unit-1": { reading: reading("Mia's Classroom", "There is / There is not", [
       "This is Mia's classroom.",
       "There is a door and a fan.",
@@ -73,7 +83,27 @@
       { q: "Can Ludi read?", a: "Yes, he can." },
       { q: "Can Ludi write?", a: "Yes, he can." }
     ], ["jump", "run", "read", "write", "swim"]) },
-    "book-2/unit-7": { reading: reading("Where Are the Things?", "where / place words", [
+    "book-2/unit-7": {
+      pictureQuestionAnswers: true,
+      pairForVocabulary(word) {
+        const scenes = {
+          on: ["Where is the book?", "It is on the desk."],
+          in: ["Is the pencil in the pencil case?", "Yes, it is in the pencil case."],
+          under: ["Is the book under the desk?", "Yes, it is under the desk."],
+          behind: ["Where is the boy?", "He is behind the chair."],
+          "in front of": ["Where is the girl?", "She is in front of the table."],
+          between: ["Where is the ball?", "It is between the chairs."],
+          "next to": ["Where is the chair?", "It is next to the desk."],
+          near: ["Where is the desk?", "It is near the ball."]
+        };
+        const scene = scenes[word];
+        const col = ({ in: 0, between: 1, near: 2 })[word];
+        const sprite = Number.isInteger(col)
+          ? { src: "assets/images/book2/unit7/worksheet-scenes.svg", cols: 3, rows: 1, col, row: 0 }
+          : undefined;
+        return scene && { question: scene[0], answer: scene[1], sprite };
+      },
+      reading: reading("Where Are the Things?", "where / place words", [
       "My book is under the desk.",
       "My pen is on the table.",
       "Goody is behind the door.",

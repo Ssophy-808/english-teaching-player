@@ -279,6 +279,29 @@ const multipleChoicePages = books.flatMap((book) => book.units)
   .flatMap((unit) => unit.lessons)
   .flatMap((lesson) => lesson.worksheet.pages)
   .filter((page) => page.type === "multiple_choice");
+const colorLessons = books.find((book) => book.id === "book-1").units.find((unit) => unit.id === "unit-6").lessons;
+for (const book of books) for (const unit of book.units) for (const lesson of unit.lessons) {
+  lesson.worksheet.pages.forEach((page, index) => {
+    assert.ok(page.items.length >= 2, `${book.id}/${unit.id}/Day ${lesson.worksheet.day}/Page ${index + 1}: ${page.title} must not collapse to a single item`);
+  });
+}
+const locationLessons = books.find((book) => book.id === "book-2").units.find((unit) => unit.id === "unit-7").lessons;
+assert.equal(locationLessons[0].worksheet.pages[0].items.length, 8);
+const sportsLesson = books.find((book) => book.id === "book-3").units.find((unit) => unit.id === "unit-7").lessons[2];
+assert.equal(sportsLesson.worksheet.pages.find((page) => page.type === "template_answer_order").items.length, 8);
+const colorPicturePage = colorLessons[0].worksheet.pages[0];
+assert.equal(colorPicturePage.type, "template_picture_answer");
+assert.equal(colorPicturePage.items.length, 8, "The color picture worksheet must not collapse to one repeated question");
+assert.equal(new Set(colorPicturePage.items.map((item) => item.asset.word)).size, 8);
+assert.ok(colorPicturePage.items.some((item) => /^Yes,/.test(item.expectedAnswer)));
+assert.ok(colorPicturePage.items.some((item) => /^No,/.test(item.expectedAnswer)));
+for (const item of colorPicturePage.items) {
+  assert.ok(item.asset.image || item.asset.sprite?.src, "Each color needs an actual picture");
+  assert.ok(item.expectedAnswer.endsWith(` ${item.asset.word}.`), "The answer must match the picture color");
+}
+for (const lesson of colorLessons) {
+  assert.ok(lesson.worksheet.pages.every((page) => page.items.length >= 2), "No color worksheet should be left with one item");
+}
 multipleChoicePages.forEach((page) => {
   const correctPositions = page.items.map((item) => item.choices.indexOf(item.expectedAnswer));
   assert.ok(correctPositions.every((position) => position >= 0), `${page.title} must include its correct answer`);

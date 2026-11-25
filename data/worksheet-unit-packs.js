@@ -8,13 +8,27 @@
   window.UNIT_PACKS = {
     ...(window.UNIT_PACKS || {}),
     "book-1/unit-6": {
+      dialogueOrder: [
+        { lines: ["A. It is yellow.", "B. Is your book green?", "C. What color is it?", "D. No, it is not."], expectedAnswer: "B → D → C → A" },
+        { lines: ["A. Is the pen blue?", "B. It is a pen.", "C. Yes, it is blue.", "D. What is it?"], expectedAnswer: "D → B → A → C" },
+        { lines: ["A. Is it a ruler?", "B. What color is the pencil?", "C. No, it is a pencil.", "D. It is green."], expectedAnswer: "A → C → B → D" },
+        { lines: ["A. Yes, it is an eraser.", "B. It is pink.", "C. Is it an eraser?", "D. What color is the eraser?"], expectedAnswer: "C → A → D → B" }
+      ],
       pairForVocabulary(word, index, day, vocabulary) {
-        if (index === 0) return { question: "What color is it?", answer: `It is ${word}.` };
+        const objects = ["book", "book", "pen", "pencil", "ruler", "eraser", "pencil case", "school bag", "desk", "chair"];
+        const col = vocabulary.indexOf(word);
+        const object = objects[col];
+        if (!object) return null;
+        const sprite = { src: "assets/images/book1/unit6/color-school-objects.svg", cols: 10, rows: 1, col, row: 0 };
+        if (index === 0) return { question: `What color is the ${object}?`, answer: `It is ${word}.`, sprite };
+        const possessive = index % 3 === 1;
+        const questionSubject = `${possessive ? "your" : "the"} ${object}`;
+        const answerSubject = `${possessive ? "my" : "the"} ${object}`;
         const contrast = day === 1 ? vocabulary[({ 2: 4, 4: 6, 6: 2 })[index]] : null;
         if (contrast && contrast !== word) {
-          return { question: `Is it ${contrast}?`, answer: `No, it is ${word}.` };
+          return { question: `Is ${questionSubject} ${contrast}?`, answer: `No, ${answerSubject} is ${word}.`, sprite };
         }
-        return { question: `Is it ${word}?`, answer: `Yes, it is ${word}.` };
+        return { question: `Is ${questionSubject} ${word}?`, answer: `Yes, ${answerSubject} is ${word}.`, sprite };
       }
     },
     "book-2/unit-1": { reading: reading("Mia's Classroom", "There is / There is not", [

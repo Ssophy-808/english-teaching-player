@@ -136,7 +136,8 @@
   }
 
   function dialogueOrder(page) {
-    return `<ol class="wb-order-list">${page.items.map((item, index) => `<li><span class="wb-template-number">${index + 1}.</span>${dialogueBlock(item.lines, "wb-order-lines")}<div class="wb-order-answer"><strong>Order:</strong> ____ → ____ → ____ → ____</div></li>`).join("")}</ol><div class="wb-context-write"><strong>Write the complete conversation.</strong>${answerLines(1)}</div>`;
+    const copySpace = page.orderOnly ? "" : `<div class="wb-context-write"><strong>Write the complete conversation.</strong>${answerLines(1)}</div>`;
+    return `<ol class="wb-order-list">${page.items.map((item, index) => `<li><span class="wb-template-number">${index + 1}.</span>${dialogueBlock(item.lines, "wb-order-lines")}<div class="wb-order-answer"><strong>Order:</strong> ____ → ____ → ____ → ____</div></li>`).join("")}</ol>${copySpace}`;
   }
 
   function findDialogueMistake(page) {

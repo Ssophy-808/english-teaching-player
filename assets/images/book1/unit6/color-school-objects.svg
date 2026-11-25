@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="100" viewBox="0 0 1000 100">
+  <defs>
+    <g id="book"><rect x="24" y="16" width="53" height="69" rx="4"/><path d="M32 16v69m0-10h45" fill="none"/><path d="M38 78h33" stroke="#fff"/></g>
+    <g id="pen"><path d="M24 67l39-44 12 11-39 44-15 4z"/><path d="M57 30l12 11M25 67l11 11m31-57 8-8 12 11-8 9"/></g>
+    <g id="pencil"><path d="M21 64l49-48 14 14-49 48-17 5z"/><path d="M21 64l14 14-17 5z" fill="#f1d3aa"/><path d="M63 23l14 14"/></g>
+    <g id="ruler"><path d="M13 64l59-48 15 19-59 48z"/><path d="M24 56l6 8m3-16 6 8m3-16 6 8m3-16 6 8m3-16 6 8m3-16 6 8" fill="none"/></g>
+    <g id="eraser"><path d="M14 56 38 29q5-5 11-2l32 19q7 4 3 10L61 79q-5 4-12 1L17 63q-5-3-3-7z"/><path d="M14 59v8l38 21 32-29v-6" fill="none"/></g>
+    <g id="case"><rect x="11" y="31" width="78" height="42" rx="12"/><path d="M13 45h74m-10 1v9" fill="none"/></g>
+    <g id="bag"><path d="M41 25v-6q9-12 18 0v6m-29 3q20-12 40 0l11 19v34H19V47z"/><rect x="31" y="52" width="38" height="24" rx="5"/><path d="M31 57h38" fill="none"/></g>
+    <g id="desk"><path d="M17 32h66v12H17zm5 12h56v20H22zm3 20v20m50-20v20"/><path d="M43 55h14" fill="none"/></g>
+    <g id="chair"><path d="M28 20h44v32H28zm0 35h44v12H28zm2 12v15m40-15v15"/></g>
+  </defs>
+  <g stroke="#29293a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <use href="#book" fill="#e64646"/>
+    <use href="#book" x="100" fill="#ffd23f"/>
+    <use href="#pen" x="200" fill="#5cc357"/>
+    <use href="#pencil" x="300" fill="#4e9df0"/>
+    <use href="#ruler" x="400" fill="#f777b5"/>
+    <use href="#eraser" x="500" fill="#505056"/>
+    <use href="#case" x="600" fill="#fff"/>
+    <use href="#bag" x="700" fill="#9f6537"/>
+    <use href="#desk" x="800" fill="#fd9946"/>
+    <use href="#chair" x="900" fill="#ac75dd"/>
+  </g>
+</svg>

@@ -1804,23 +1804,16 @@
       };
     }
 
-    if (bookId === "book-1" && unitId === "unit-6" && day === 2) {
+    const dialogueOrder = window.UNIT_PACKS?.[`${bookId}/${unitId}`]?.dialogueOrder;
+    if (dialogueOrder?.length && day === 2) {
       pages[2] = {
         type: "put_dialogue_in_order",
         layout: "locked_template",
         title: "Put the Dialogue in Order",
         instruction: "Put the sentences in the correct order to make a complete conversation.",
         skill: "color questions · dialogue sequence",
-        items: [
-          {
-            lines: ["A. It is red.", "B. What color is your pen?", "C. Thank you.", "D. My pen is red, too."],
-            expectedAnswer: "B → A → D → C"
-          },
-          {
-            lines: ["A. No, it is not.", "B. It is yellow.", "C. Is your book green?", "D. What color is it?"],
-            expectedAnswer: "C → A → D → B"
-          }
-        ]
+        orderOnly: true,
+        items: dialogueOrder.map((item) => ({ ...item, lines: [...item.lines] }))
       };
     }
 

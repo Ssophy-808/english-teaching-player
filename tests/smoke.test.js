@@ -88,7 +88,12 @@ books.forEach((book) => {
           assert.notEqual(item.expectedAnswer, source, `${lesson.id} sentence transformation must change the sentence`);
         });
         const studentMarkup = global.WorksheetComponents.studentPage(lesson, page, 0, 1);
-        assert.match(studentMarkup, /wb-handwriting-row/, `${lesson.id}/${page.type} must include four-line handwriting guides`);
+        if (page.type === "put_dialogue_in_order" && page.orderOnly) {
+          assert.equal((studentMarkup.match(/class="wb-order-answer"/g) || []).length, page.items.length);
+          assert.doesNotMatch(studentMarkup, /Write the complete conversation/);
+        } else {
+          assert.match(studentMarkup, /wb-handwriting-row/, `${lesson.id}/${page.type} must include four-line handwriting guides`);
+        }
         const itemLimit = page.layout === "locked_template" ? 8 : page.type === "multiple_choice" ? 6 : 4;
         assert.ok(page.items.length <= itemLimit, `${lesson.id}/${page.type} must leave one full-width writing row per sentence`);
         if (page.type === "unscramble") page.items.forEach((item) => {
@@ -290,6 +295,13 @@ assert.equal(locationLessons[0].worksheet.pages[0].items.length, 8);
 const sportsLesson = books.find((book) => book.id === "book-3").units.find((unit) => unit.id === "unit-7").lessons[2];
 assert.equal(sportsLesson.worksheet.pages.find((page) => page.type === "template_answer_order").items.length, 8);
 const colorPicturePage = colorLessons[0].worksheet.pages[0];
+const colorDialoguePage = colorLessons[1].worksheet.pages[2];
+assert.equal(colorDialoguePage.type, "put_dialogue_in_order");
+assert.equal(colorDialoguePage.items.length, 4);
+for (const item of colorDialoguePage.items) {
+  assert.equal(item.lines.length, 4);
+  assert.deepEqual(item.expectedAnswer.split(" → ").sort(), ["A", "B", "C", "D"]);
+}
 assert.equal(colorPicturePage.type, "template_picture_answer");
 assert.equal(colorPicturePage.items.length, 8, "The color picture worksheet must not collapse to one repeated question");
 assert.equal(new Set(colorPicturePage.items.map((item) => item.asset.word)).size, 8);
@@ -301,6 +313,9 @@ for (const item of colorPicturePage.items) {
 }
 for (const lesson of colorLessons) {
   assert.ok(lesson.worksheet.pages.every((page) => page.items.length >= 2), "No color worksheet should be left with one item");
+  const text = JSON.stringify(lesson.worksheet.pages);
+  assert.match(text, /Is your (?:book|pen|pencil|ruler|eraser|pencil case|school bag|desk|chair) \w+\?/);
+  assert.match(text, /Is the (?:book|pen|pencil|ruler|eraser|pencil case|school bag|desk|chair) \w+\?/);
 }
 multipleChoicePages.forEach((page) => {
   const correctPositions = page.items.map((item) => item.choices.indexOf(item.expectedAnswer));

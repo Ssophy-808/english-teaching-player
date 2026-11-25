@@ -927,7 +927,34 @@
     };
   }
 
-  function questionChainPage(pairsForDay) {
+  function answerQuestionCandidates(bookId, sections, day) {
+    return [0, 1, 2, 3].flatMap((offset) => sections.flatMap((section) =>
+      vocabularyItems(section).map((asset, index) => {
+        const pair = unitPairForVocabulary(bookId, section.id, asset, index, day + offset);
+        if (!pair) return null;
+        return { ...pair, asset, answer: bookId === "book-1" ? oneSentenceAnswer(pair.answer) : pair.answer };
+      }).filter(Boolean)
+    ));
+  }
+
+  function selectAnswerQuestions(candidates, limit) {
+    const prompts = new Set();
+    const answers = new Set();
+    const items = [];
+    for (const { question, answer, asset } of candidates) {
+      const promptKey = String(question || "").trim().toLowerCase();
+      const answerKey = String(answer || "").trim().toLowerCase();
+      if (!promptKey || !answerKey || prompts.has(promptKey) || answers.has(answerKey)) continue;
+      if (!asset?.image && !asset?.sprite?.src && !asset?.visual) continue;
+      prompts.add(promptKey);
+      answers.add(answerKey);
+      items.push({ prompt: question, asset, expectedAnswer: answer, alt: "Picture clue" });
+      if (items.length === limit) break;
+    }
+    return items;
+  }
+
+  function questionChainPage(pairsForDay, unit, bookId, day) {
     return {
       type: "answer_questions",
       layout: "locked_template",
@@ -935,12 +962,19 @@
       instruction: "Read each question. Write a complete answer.",
       skill: "questions and complete answers",
       showPictures: true,
-      items: pairsForDay.slice(0, 4).map((pair) => ({
-        prompt: pair.question,
-        asset: pair.asset,
-        expectedAnswer: pair.answer
-      }))
+      items: selectAnswerQuestions([...pairsForDay, ...answerQuestionCandidates(bookId, [unit], day)], 8)
     };
+  }
+
+  function fillAnswerQuestionReview(pages, book, unit, day) {
+    const page = pages.find((entry) => entry.type === "answer_questions" && entry.title === "Answer the Questions");
+    if (!page || page.items.length >= 8 || unit.isReview || day !== 4) return;
+    const teachingUnits = book.units.filter((entry) => !entry.isReview);
+    const earlierUnits = teachingUnits.slice(0, teachingUnits.indexOf(unit)).reverse();
+    const currentItems = page.items.map((item) => ({
+      question: item.prompt, answer: item.expectedAnswer, asset: item.asset
+    }));
+    page.items = selectAnswerQuestions([...currentItems, ...answerQuestionCandidates(book.id, earlierUnits, day)], 8);
   }
 
   function unitSkillLabel(unit) {
@@ -1062,7 +1096,7 @@
 
     return [
       locked("template_independent_picture", "Picture Question Challenge", "Read each answer. Write the matching question.", pairsForDay.map((pair) => ({ prompt: pair.answer, asset: pair.asset, expectedAnswer: pictureQuestionAnswer(pair, bookId, unit.id) })), true),
-      questionChainPage(pairsForDay),
+      questionChainPage(pairsForDay, unit, bookId, day),
       unitApplicationPage(unit, bookId, pairsForDay),
       page("multiple_choice", "Mixed Choice Review", "Look at each picture. Circle the best complete sentence.", pictureSentenceChoices)
     ];
@@ -1597,11 +1631,7 @@
     return builder(unit, day);
   }
   function connectedChainPage(reviewPairs, day) {
-    const items = reviewPairs.slice(0, day >= 4 ? 6 : 4).map((item) => ({
-      prompt: item.question,
-      asset: item.asset,
-      expectedAnswer: item.answer
-    }));
+    const items = selectAnswerQuestions(reviewPairs, day >= 4 ? 6 : 8);
     return {
       type: "answer_questions",
       layout: "locked_template",
@@ -1642,7 +1672,11 @@
     const storySource = day === 2 ? reviewPairs.slice(18, 24) : day === 3 ? reviewPairs.slice(14, 20) : reviewPairs.slice(0, 6);
     const matchingSource = day === 2 ? reviewPairs.slice(8, 12) : day === 3 ? reviewPairs.slice(4, 8) : reviewPairs.slice(3, 7);
     const choiceSource = day === 2 ? reviewPairs.slice(12, 18) : day === 3 ? reviewPairs.slice(8, 14) : reviewPairs.slice(7, 13);
-    const chainSource = day === 2 ? reviewPairs.slice(18, 22) : day === 3 ? reviewPairs.slice(0, 4) : reviewPairs.slice(13, 19);
+    const chainOffset = day === 2 ? 16 : day === 3 ? 0 : day >= 4 ? 13 : 12;
+    const chainSource = day >= 4
+      ? reviewPairs.slice(chainOffset, chainOffset + 6)
+      : reviewPairs.slice(chainOffset).concat(reviewPairs.slice(0, chainOffset),
+        answerQuestionCandidates(unit.bookId, unit.reviewSections || [], day));
     const writingSource = reviewPairs.slice(0, 8);
     const rotatedAnswers = matchingSource.map((item) => item.answer).slice(1).concat(matchingSource[0]?.answer || []);
     const matchingItems = matchingSource.map((item, index) => ({
@@ -1952,6 +1986,7 @@
       }
       applyRepresentativeQuestionTypes(book.id, unit.id, day, pages);
       removeRepeatedPageItems(pages);
+      fillAnswerQuestionReview(pages, book, unit, day);
       normalizeQuestionWritingPages(pages);
       distributeMultipleChoiceAnswers(pages);
       lesson.worksheet = { ...(lesson.worksheet || {}), day, unitTitle: unit.title, pages };

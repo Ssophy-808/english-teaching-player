@@ -262,6 +262,18 @@ answerQuestionPages.forEach((page) => {
   assert.equal(page.showPictures, true, `${page.title} must display pictures`);
   assert.ok(page.items.every((item) => item.asset), `${page.title} needs a picture for every question`);
 });
+books.forEach((book) => book.units.forEach((unit) => unit.lessons.forEach((lesson) => {
+  lesson.worksheet.pages.filter((page) => page.title === "Answer the Questions").forEach((page) => {
+    const location = `${book.id}/${unit.id}/Day ${lesson.worksheet.day}`;
+    const expected = book.id === "book-1" && unit.id === "unit-1" ? 6 : 8;
+    assert.equal(page.items.length, expected, `${location} must use the full available question count`);
+    assert.equal(new Set(page.items.map((item) => item.prompt.toLowerCase().trim())).size, expected);
+    assert.equal(new Set(page.items.map((item) => item.expectedAnswer.toLowerCase().trim())).size, expected);
+    const html = global.WorksheetComponents.studentPage(lesson, page, 0, 1);
+    assert.equal((html.match(/wb-handwriting-row/g) || []).length, expected, `${location} must show four-line guides`);
+    assert.equal((html.match(/Picture clue/g) || []).length, expected, `${location} must render each picture cue`);
+  });
+})));
 
 const multipleChoicePages = books.flatMap((book) => book.units)
   .flatMap((unit) => unit.lessons)

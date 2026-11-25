@@ -145,6 +145,16 @@
 }
 .wb-template-item > .wb-answer-lines { width: 100%; margin: 0; }
 .wb-template-item.has-picture > .wb-answer-lines { width: calc(100% + 24mm); }
+.workbook-page[data-worksheet-type="answer_questions"] .wb-template-item { min-height: 28mm; }
+.workbook-page[data-worksheet-type="answer_questions"] .wb-template-item p { white-space: normal; }
+.workbook-page[data-worksheet-type="answer_questions"] .wb-template-item > .wb-answer-lines { width: 100%; }
+.workbook-page[data-worksheet-type="answer_questions"] .wb-template-item > .wb-picture-cue {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 24mm;
+  height: 24mm;
+}
 .wb-template-item .wb-handwriting-row { height: 10mm; }
 .wb-template-item .wb-handwriting-row b { border-top-color: #222; border-top-width: 1px; }
 .wb-template-item .wb-handwriting-row b:nth-child(2),

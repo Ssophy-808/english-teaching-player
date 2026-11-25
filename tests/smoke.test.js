@@ -285,6 +285,26 @@ const multipleChoicePages = books.flatMap((book) => book.units)
   .flatMap((lesson) => lesson.worksheet.pages)
   .filter((page) => page.type === "multiple_choice");
 const colorLessons = books.find((book) => book.id === "book-1").units.find((unit) => unit.id === "unit-6").lessons;
+const mockTestBook = { value: "book-1", addEventListener() {} };
+const testBuilderContext = {
+  window: global,
+  document: { getElementById: () => mockTestBook }
+};
+vm.runInNewContext(testBuilderSource.replace(/\binit\(\);(?=\s*\}\)\(\);\s*$)/, "window.__testBuilderChecks = { buildPools, selectDiverse };"), testBuilderContext);
+const { buildPools, selectDiverse } = global.__testBuilderChecks;
+delete global.__testBuilderChecks;
+const colorUnit = books.find((book) => book.id === "book-1").units.find((unit) => unit.id === "unit-6");
+const colorPools = buildPools([colorUnit]);
+const colorQuestions = colorPools["image-sentence"];
+assert.equal(new Set(colorQuestions.map((item) => item.asset.word)).size, 10, "Custom tests must have all ten reviewed colors");
+assert.ok(colorQuestions.every((item) => item.asset.sprite?.src.endsWith("color-school-objects.svg")));
+assert.ok(colorQuestions.some((item) => item.givenAnswer));
+assert.ok(colorQuestions.every((item) => (item.givenAnswer || item.answer).endsWith(` ${item.asset.word}.`)));
+for (let i = 0; i < 12; i += 1) {
+  const vocabulary = selectDiverse(colorPools["vocab-image"], 2, []);
+  const mixed = [...vocabulary, ...selectDiverse(colorQuestions, 8, vocabulary)];
+  assert.equal(new Set(mixed.map((item) => item.pictureGroup)).size, 10, "Custom tests should use available colors before repeating them");
+}
 for (const book of books) for (const unit of book.units) for (const lesson of unit.lessons) {
   lesson.worksheet.pages.forEach((page, index) => {
     assert.ok(page.items.length >= 2, `${book.id}/${unit.id}/Day ${lesson.worksheet.day}/Page ${index + 1}: ${page.title} must not collapse to a single item`);

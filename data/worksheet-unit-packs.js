@@ -8,6 +8,7 @@
   window.UNIT_PACKS = {
     ...(window.UNIT_PACKS || {}),
     "book-1/unit-6": {
+      useWorksheetPictureQuestions: true,
       dialogueOrder: [
         { lines: ["A. It is yellow.", "B. Is your book green?", "C. What color is it?", "D. No, it is not."], expectedAnswer: "B → D → C → A" },
         { lines: ["A. Is the pen blue?", "B. It is a pen.", "C. Yes, it is blue.", "D. What is it?"], expectedAnswer: "D → B → A → C" },

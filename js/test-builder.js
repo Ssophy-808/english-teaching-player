@@ -12,7 +12,7 @@
   ];
   const SECTION_META = {
     "vocab-image": { title: "Look and Write", instruction: "Look at each picture. Write the word." },
-    "image-sentence": { title: "Look and Answer", instruction: "Look at each picture. Write a complete answer." },
+    "image-sentence": { title: "Look and Write", instruction: "Look at the picture. If you see a question, answer it. If you see an answer, write the question." },
     choice: { title: "Choose the Answer", instruction: "Choose the best answer." },
     "sentence-choice": { title: "Choose the Correct Sentence", instruction: "Choose the correct complete sentence." },
     error: { title: "Find the Mistake", instruction: "Find the mistake and rewrite the whole sentence." },
@@ -288,7 +288,11 @@
       const words = data.vocabulary || [];
       const sentences = (data.mainSentences || []).filter(Boolean);
       const pairedAnswerIndexes = new Set();
-      const reading = window.UNIT_PACKS?.[`${book.id}/${unit.id}`]?.reading;
+      const pack = window.UNIT_PACKS?.[`${book.id}/${unit.id}`];
+      const reading = pack?.reading;
+      const pictureGroup = (asset) => pack?.useWorksheetPictureQuestions && asset?.word
+        ? `${book.id}/${unit.id}/${asset.word}`
+        : undefined;
       Object.entries(window.LISTENING_ITEMS || {})
         .filter(([, item]) => item.source === `${book.id}/${unit.id}` && item.kind === "context")
         .forEach(([listeningId, item]) => {
@@ -328,18 +332,32 @@
           })));
         });
       words.forEach((word) => {
-        result["vocab-image"].push(tagged(unit, unitIndex, { type: "vocab-image", label: "看圖寫單字", prompt: "Look and write the word.", answer: word.word, asset: word, lines: 1, difficulty: 1 }));
+        result["vocab-image"].push(tagged(unit, unitIndex, { type: "vocab-image", label: "看圖寫單字", prompt: "Look and write the word.", answer: word.word, asset: word, pictureGroup: pictureGroup(word), lines: 1, difficulty: 1 }));
       });
+      if (pack?.useWorksheetPictureQuestions) {
+        unit.lessons?.flatMap((lesson) => lesson.worksheet?.pages || [])
+          .filter((page) => page.type === "template_picture_answer")
+          .flatMap((page) => page.items)
+          .filter((item) => item.asset?.image || item.asset?.sprite?.src)
+          .forEach((item) => {
+            const shared = { type: "image-sentence", asset: item.asset, pictureGroup: pictureGroup(item.asset), lines: 2, difficulty: 2 };
+            result["image-sentence"].push(tagged(unit, unitIndex, { ...shared, label: "看圖回答", prompt: item.prompt, answer: item.expectedAnswer }));
+            // The affirmative answer supplies the same object and color, so it points back to one question.
+            if (/^Is /i.test(item.prompt) && /^Yes,/i.test(item.expectedAnswer)) {
+              result["image-sentence"].push(tagged(unit, unitIndex, { ...shared, label: "看圖寫問句", prompt: "", givenAnswer: item.expectedAnswer, answer: item.prompt }));
+            }
+          });
+      }
       sentences.forEach((sentence, sentenceIndex) => {
         const pair = questionAnswerPair(sentence, sentences[sentenceIndex + 1]);
         if (pair) {
           const pairAsset = vocabularyAsset(words, `${pair.question} ${pair.answer}`);
-          if (pairAsset) {
+          if (pairAsset && !pack?.useWorksheetPictureQuestions) {
             result["image-sentence"].push(tagged(unit, unitIndex, { type: "image-sentence", label: "看圖回答", prompt: `Question: ${pair.question}`, answer: pair.answer, asset: pairAsset, lines: 2, difficulty: 2 }));
             result["image-sentence"].push(tagged(unit, unitIndex, { type: "image-sentence", label: "看圖寫問句", prompt: "", givenAnswer: pair.answer, answer: pair.question, asset: pairAsset, lines: 2, difficulty: 2 }));
           }
           if (pair.consumesNext) pairedAnswerIndexes.add(sentenceIndex + 1);
-        } else if (!pairedAnswerIndexes.has(sentenceIndex) && !sentence.includes("?")) {
+        } else if (!pack?.useWorksheetPictureQuestions && !pairedAnswerIndexes.has(sentenceIndex) && !sentence.includes("?")) {
           const word = vocabularyAsset(words, sentence);
           if (word) {
             const cue = imageSentenceCue(sentence);
@@ -382,9 +400,15 @@
         const unit = question.unitLabel || "";
         usage.set(`a:${answer}`, (usage.get(`a:${answer}`) || 0) + 1);
         usage.set(`u:${unit}`, (usage.get(`u:${unit}`) || 0) + 1);
+        if (question.pictureGroup) {
+          usage.set(`p:${question.pictureGroup}`, (usage.get(`p:${question.pictureGroup}`) || 0) + 1);
+          usage.set(`k:${question.label}`, (usage.get(`k:${question.label}`) || 0) + 1);
+        }
       });
       remaining.sort((a, b) => {
-        const score = (q) => (usage.get(`a:${normalized(q.answer)}`) || 0) * 6 + (usage.get(`u:${q.unitLabel}`) || 0);
+        const score = (q) => (usage.get(`a:${normalized(q.answer)}`) || 0) * 6
+          + (usage.get(`u:${q.unitLabel}`) || 0)
+          + (q.pictureGroup ? (usage.get(`p:${q.pictureGroup}`) || 0) * 12 + (usage.get(`k:${q.label}`) || 0) : 0);
         return score(a) - score(b);
       });
       picked.push(remaining.shift());
@@ -613,7 +637,10 @@
     if (event.target.closest("[data-remove]")) questions.splice(index, 1);
     if (event.target.closest("[data-replace]")) {
       const alternatives = (pools[questions[index].type] || []).filter((q) => !questions.some((current) => current.answer === q.answer));
-      if (alternatives.length) questions[index] = { ...alternatives[Math.floor(Math.random() * alternatives.length)], id: `replacement-${Date.now()}` };
+      const candidate = questions[index].pictureGroup
+        ? selectDiverse(alternatives, 1, questions)[0]
+        : alternatives[Math.floor(Math.random() * alternatives.length)];
+      if (candidate) questions[index] = { ...candidate, id: `replacement-${Date.now()}` };
     }
     render();
   });
